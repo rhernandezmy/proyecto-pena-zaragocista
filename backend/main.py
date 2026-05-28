@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 import database
@@ -22,6 +22,7 @@ class PartidoCrear(BaseModel):
 # ESQUEMA DE VALIDACIÓN PARA VIAJES: Definimos qué datos son obligatorios
 # enviar para poder dar de alta un viaje nuevo en la peña.
 class ViajeCrear(BaseModel):
+    partido_id: int                      # ID del partido obligatorio al que pertenece el viaje
     destino: str
     tipo_transporte: str = "Coche"       # Por defecto, viaje en coche particular
     plazas_totales: int
@@ -78,8 +79,23 @@ def crear_partido(partido: PartidoCrear, db: Session = Depends(get_db)):
 # RUTA POST: Permite registrar un nuevo viaje organizado en la base de datos
 @app.post("/viajes")
 def crear_viaje(viaje: ViajeCrear, db: Session = Depends(get_db)):
-    # 1. Mapeamos todos los campos del esquema de Pydantic hacia las columnas de SQLAlchemy
+    # 1. CONTROL DE SEGURIDAD: Buscamos en la base de datos el partido asociado
+    partido_asociado = db.query(models.Partido).filter(models.Partido.id == viaje.partido_id).first()
+    
+    # Si el partido no existe, lanzamos un error 404
+    if not partido_asociado:
+        raise HTTPException(status_code=404, detail="El partido especificado no existe.")
+        
+    # 2. REGLA DE NEGOCIO: Si el partido es en casa, prohibimos crear el viaje
+    if "Ibercaja estadio" in partido_asociado.lugar:
+        raise HTTPException(
+            status_code=400, 
+            detail="No se pueden organizar viajes para partidos en el Ibercaja Estadio (Local)."
+        )
+
+    # 3. Si pasa los controles, mapeamos y guardamos el viaje
     nuevo_viaje = models.Viaje(
+        partido_id=viaje.partido_id,  # Guardamos la relación
         destino=viaje.destino,
         tipo_transporte=viaje.tipo_transporte,
         plazas_totales=viaje.plazas_totales,
@@ -88,12 +104,8 @@ def crear_viaje(viaje: ViajeCrear, db: Session = Depends(get_db)):
         detalles_precio=viaje.detalles_precio,
         hace_noche=viaje.hace_noche
     )
-    # 2. Registramos la operación en la transacción actual
     db.add(nuevo_viaje)
-    # 3. Guardamos los cambios físicamente en PostgreSQL
     db.commit()
-    # 4. Refrescamos el objeto para obtener el ID autoincremental asignado
     db.refresh(nuevo_viaje)
     
-    # 5. Retornamos el viaje completo con su nueva estructura estructurada
     return nuevo_viaje

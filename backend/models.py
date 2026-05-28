@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Float, Integer, String, DateTime
+from sqlalchemy import Boolean, Column, Float, Integer, String, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from database import Base
 
@@ -30,7 +30,10 @@ class Viaje(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     destino = Column(String(100), nullable=False)
-    
+
+    # CLAVE FORÁNEA: Conecta este viaje con un ID de la tabla partidos. Si el partido se borra, sus viajes asociados se borran en cascada.
+    partido_id = Column(Integer, ForeignKey("partidos.id", ondelete="CASCADE"), nullable=False)
+
     # TIPO DE TRANSPORTE: Por defecto será 'Coche', pero permite 'Autobús'
     tipo_transporte = Column(String(30), default="Coche")
     
