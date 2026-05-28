@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Float, Integer, String, DateTime
+from sqlalchemy import Boolean, Column, Float, Integer, String, DateTime
 from sqlalchemy.sql import func
 from database import Base
 
@@ -30,6 +30,17 @@ class Viaje(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     destino = Column(String(100), nullable=False)
+    
+    # TIPO DE TRANSPORTE: Por defecto será 'Coche', pero permite 'Autobús'
+    tipo_transporte = Column(String(30), default="Coche")
+    
+    # PLAZAS: Flexibilidad para controlar el aforo inicial y los huecos libres
     plazas_totales = Column(Integer, nullable=False)
     plazas_disponibles = Column(Integer, nullable=False)
-    precio = Column(Float, nullable=False)
+    
+    # PRECIO Y CONDICIONES: Precio base numérico y texto libre para especificar escalas o acuerdos
+    precio = Column(Float, default=0.0)
+    detalles_precio = Column(String(255), nullable=True)
+    
+    # ALOJAMIENTO: Check booleano (True = Hace noche / False = En el día)
+    hace_noche = Column(Boolean, default=False)
