@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean, Column, Float, Integer, String, DateTime, ForeignKey
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from database import Base
 
 # Definimos el modelo de datos para los usuarios
@@ -23,6 +24,7 @@ class Partido(Base):
     fecha = Column(DateTime, nullable=False)
     lugar = Column(String(100), default="La Romareda")  # Por defecto jugamos en casa
     estado = Column(String(20), default="Programado")   # Programado, Jugado, Aplazado
+    viajes = relationship("Viaje", back_populates="partido", cascade="all, delete-orphan") # Un partido puede tener varios viajes asociados
 
 # Definimos el modelo de datos para los viajes
 class Viaje(Base):
@@ -47,3 +49,5 @@ class Viaje(Base):
     
     # ALOJAMIENTO: Check booleano (True = Hace noche / False = En el día)
     hace_noche = Column(Boolean, default=False)
+
+    partido = relationship("Partido", back_populates="viajes")     # Relación directa: cada viaje pertenece a un único partido
