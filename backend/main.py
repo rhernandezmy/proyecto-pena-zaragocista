@@ -109,3 +109,62 @@ def crear_viaje(viaje: ViajeCrear, db: Session = Depends(get_db)):
     db.refresh(nuevo_viaje)
     
     return nuevo_viaje
+
+# RUTA DELETE: Elimina un partido específico usando su ID
+@app.delete("/partidos/{partido_id}")
+def borrar_partido(partido_id: int, db: Session = Depends(get_db)):
+    # 1. Buscamos el partido en la base de datos por su ID
+    partido = db.query(models.Partido).filter(models.Partido.id == partido_id).first()
+    
+    # 2. CONTROL DE SEGURIDAD: Si el partido no existe, lanzamos un error 404
+    if not partido:
+        raise HTTPException(status_code=404, detail="El partido que intentas borrar no existe.")
+    
+    # 3. Si existe, le decimos a la sesión que lo elimine
+    db.delete(partido)
+    # 4. Consolidamos los cambios en PostgreSQL (aquí actúa el CASCADE y borra sus viajes)
+    db.commit()
+    
+    # 5. Devolvemos un mensaje de confirmación
+    return {"ok": True, "mensaje": f"Partido con ID {partido_id} eliminado con éxito de la base de datos."}
+
+# RUTA DELETE: Elimina un viaje específico de la peña usando su ID
+@app.delete("/viajes/{viaje_id}")
+def borrar_viaje(viaje_id: int, db: Session = Depends(get_db)):
+    # 1. Buscamos el viaje por su ID en la base de datos
+    viaje = db.query(models.Viaje).filter(models.Viaje.id == viaje_id).first()
+    
+    # 2. CONTROL DE SEGURIDAD: Si no existe, lanzamos error 404
+    if not viaje:
+        raise HTTPException(status_code=404, detail="El viaje que intentas borrar no existe o ya ha sido eliminado.")
+    
+    # 3. Si existe, lo borramos de la sesión
+    db.delete(viaje)
+    # 4. Confirmamos los cambios en PostgreSQL
+    db.commit()
+    
+    # 5. Respuesta de éxito
+    return {"ok": True, "mensaje": f"Viaje con ID {viaje_id} cancelado y eliminado correctamente."}
+
+# RUTA PUT: Permite modificar los datos de un partido existente
+@app.put("/partidos/{partido_id}")
+def actualizar_partido(partido_id: int, partido_editado: PartidoCrear, db: Session = Depends(get_db)):
+    # 1. Buscamos el partido original en la base de datos
+    db_partido = db.query(models.Partido).filter(models.Partido.id == partido_id).first()
+    
+    # 2. CONTROL DE SEGURIDAD: Si no existe, avisamos
+    if not db_partido:
+        raise HTTPException(status_code=404, detail="No se puede actualizar porque el partido no existe.")
+    
+    # 3. Sobrescribimos los campos con los nuevos datos que nos envía el usuario
+    db_partido.rival = partido_editado.rival
+    db_partido.fecha = partido_editado.fecha
+    db_partido.lugar = partido_editado.lugar
+    
+    # 4. Guardamos los cambios en la base de datos a través de la sesión (CORREGIDO)
+    db.commit()
+    # 5. Refrescamos para ver cómo ha quedado
+    db.refresh(db_partido)
+    
+    # 6. Devolvemos el partido ya modificado
+    return db_partido
