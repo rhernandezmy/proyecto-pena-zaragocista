@@ -24,7 +24,15 @@ class Partido(Base):
     fecha = Column(DateTime, nullable=False)
     lugar = Column(String(100), default="La Romareda")  # Por defecto jugamos en casa
     estado = Column(String(20), default="Programado")   # Programado, Jugado, Aplazado
+    latitud = Column(Float, nullable=True)   # Para mostrar el partido en un mapa (Ej: 41.656)
+    longitud = Column(Float, nullable=True)  # Para mostrar el partido en un mapa (Ej: -0.877)
+
+    rival_maestro_id = Column(Integer, ForeignKey("rivales_maestros.id", ondelete="SET NULL"), nullable=True) # Relación opcional con el rival maestro
+    
+    # Relaciones
     viajes = relationship("Viaje", back_populates="partido", cascade="all, delete-orphan") # Un partido puede tener varios viajes asociados
+    rival_maestro = relationship("RivalMaestro", back_populates="partidos")
+   
 
 # Definimos el modelo de datos para los viajes
 class Viaje(Base):
@@ -51,3 +59,42 @@ class Viaje(Base):
     hace_noche = Column(Boolean, default=False)
 
     partido = relationship("Partido", back_populates="viajes")     # Relación directa: cada viaje pertenece a un único partido
+    reservas = relationship("Reserva", back_populates="viaje", cascade="all, delete-orphan") # Un viaje puede tener varias reservas asociadas, si el viaje se borra, sus reservas también se borran en cascada
+    # Coordenadas para mostrar el destino en un mapa (Ej: Estadio de El Alcoraz)
+    latitud = Column(Float, nullable=True)   # Para la chincheta del mapa (Ej: 39.494)
+    longitud = Column(Float, nullable=True)  # Para la chincheta del mapa (Ej: -0.364)
+
+# MODELO DE RESERVAS: Para controlar qué socios van en cada coche/viaje
+class Reserva(Base):
+    __tablename__ = "reservas"
+
+    id = Column(Integer, primary_key=True, index=True)
+    viaje_id = Column(Integer, ForeignKey("viajes.id", ondelete="CASCADE"), nullable=False)
+    nombre_socio = Column(String, nullable=False)
+    asientos_reservados = Column(Integer, default=1)
+
+    # Relación: Cada reserva pertenece a un viaje
+    viaje = relationship("Viaje", back_populates="reservas")
+
+# MODELO DE PATROCINADORES: Negocios o bares colaboradores de la peña
+class Patrocinador(Base):
+    __tablename__ = "patrocinadores"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String, nullable=False)
+    tipo_negocio = Column(String, default="Bar")  # Bar, Tienda, Gimnasio, etc.
+    logo_url = Column(String, nullable=True)       # Enlace a la imagen de su logo
+    contribucion = Column(Float, default=0.0)      # Cuánto aporta al año a la peña
+
+# TABLA MAESTRA DE RIVALES: Agenda fija de equipos, estadios y coordenadas
+class RivalMaestro(Base):
+    __tablename__ = "rivales_maestros"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nombre_equipo = Column(String, unique=True, nullable=False) # Ej: "Levante UD"
+    estadio = Column(String, nullable=False)                    # Ej: "Estadio Ciutat de València"
+    latitud = Column(Float, nullable=False)
+    longitud = Column(Float, nullable=False)
+
+    # Relación: Un rival maestro puede tener muchos partidos a lo largo de las temporadas
+    partidos = relationship("Partido", back_populates="rival_maestro")
