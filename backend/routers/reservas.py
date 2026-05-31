@@ -5,6 +5,14 @@ from database import get_db
 # Importamos el servicio de correo que creamos en el paso anterior
 from services.email import enviar_correo_cancelacion
 
+# Importamos y cargamos el entorno seguro para el puente de variables
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+# Hacemos el puente para que 'services/email.py' sepa de dónde leer las credenciales modificadas
+os.environ["EMAIL_USER"] = os.getenv("EMAIL_REMITENTE", "presentesxelescudo@gmail.com")
+
 router = APIRouter(prefix="/reservas", tags=["Reservas"])
 
 # 1. RUTA GET: Obtener todas las reservas de la peña

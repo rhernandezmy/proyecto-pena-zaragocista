@@ -56,3 +56,11 @@ class RivalMaestroCrear(BaseModel):
 
     class Config:
         from_attributes = True
+
+# 6. FORMULARIO PARA LA SIMULACIÓN DE PAGOS DE CUOTAS (Stripe)
+class CuotaPagoCrear(BaseModel):
+    usuario_id: int
+    ano_ejercicio: int
+
+    class Config:
+        from_attributes = True

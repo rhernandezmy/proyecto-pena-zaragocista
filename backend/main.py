@@ -4,8 +4,7 @@ from database import get_db
 import database
 import models
 
-# Importamos los módulos de rutas que acabamos de crear
-from routers import partidos, viajes, reservas, patrocinadores, rivales
+from routers import partidos, viajes, reservas, patrocinadores, rivales, cuotas
 
 # Creamos las tablas en la base de datos (si no existen)
 models.Base.metadata.create_all(bind=database.engine)
@@ -19,6 +18,7 @@ app.include_router(viajes.router)
 app.include_router(reservas.router)
 app.include_router(patrocinadores.router)
 app.include_router(rivales.router)
+app.include_router(cuotas.router)
 
 # Ruta base de bienvenida
 @app.get("/", tags=["General"])

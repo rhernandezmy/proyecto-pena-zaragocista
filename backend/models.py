@@ -14,6 +14,7 @@ class Usuario(Base):
     password_hash = Column(String, nullable=False)
     rol = Column(String(20), default="Socio")
     fecha_registro = Column(DateTime, server_default=func.now())
+    cuotas = relationship("Cuota", back_populates="usuario", cascade="all, delete-orphan")
 
 # Definimos el modelo de datos para los partidos
 class Partido(Base):
@@ -102,3 +103,17 @@ class RivalMaestro(Base):
 
     # Relación: Un rival maestro puede tener muchos partidos a lo largo de las temporadas
     partidos = relationship("Partido", back_populates="rival_maestro")
+
+# MODELO DE CUOTAS: Registro de anualidades y pasarela Stripe
+class Cuota(Base):
+    __tablename__ = "cuotas"
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False)
+    ano_ejercicio = Column(Integer, nullable=False)              # Ej: 2026
+    estado_pago = Column(String(20), default="Pendiente")         # 'Pendiente' o 'Pagado'
+    stripe_intent_id = Column(String(100), nullable=True)         # ID de la transacción simulada de Stripe
+    fecha_pago = Column(DateTime, nullable=True)                  # Cuándo pagó efectivamente
+
+    # Relación inversa hacia el usuario dueño de la cuota
+    usuario = relationship("Usuario", back_populates="cuotas")
