@@ -17,6 +17,7 @@ class PartidoCrear(BaseModel):
 class ViajeCrear(BaseModel):
     partido_id: int
     destino: str
+    email_conductor: str
     tipo_transporte: str = "Coche"
     plazas_totales: int
     plazas_disponibles: int

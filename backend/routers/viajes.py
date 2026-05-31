@@ -24,6 +24,7 @@ def crear_viaje(viaje: schemas.ViajeCrear, db: Session = Depends(get_db)):
     nuevo_viaje = models.Viaje(
         partido_id=viaje.partido_id,
         destino=viaje.destino,
+        email_conductor=viaje.email_conductor,  # 🌟 NUEVA LÍNEA: Guardamos el correo real
         tipo_transporte=viaje.tipo_transporte,
         plazas_totales=viaje.plazas_totales,
         plazas_disponibles=viaje.plazas_disponibles,

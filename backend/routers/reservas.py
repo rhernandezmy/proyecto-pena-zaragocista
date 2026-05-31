@@ -63,10 +63,10 @@ def cancelar_reserva(reserva_id: int, db: Session = Depends(get_db)):
     
     # D. DISPARO DEL EMAIL AUTOMÁTICO DE ALERTA
     # De momento mandamos el correo a un email de prueba simulando el del conductor de ese coche
-    email_simulado_conductor = "presentesxelescudo@gmail.com" # <-- Aquí iría el email real del conductor que tenemos en la base de datos en un campo nuevo (que no hemos implementado aún)
+    email_conductor_real = viaje.email_conductor if viaje else "presentesxelescudo@gmail.com" # Fallback por si el viaje no existe (aunque debería existir)
     
     enviar_correo_cancelacion(
-        email_conductor=email_simulado_conductor,
+        email_conductor=email_conductor_real,
         nombre_socio=socio_afectado,
         destino_viaje=destino,
         plazas=asientos_liberados

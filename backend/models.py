@@ -35,11 +35,15 @@ class Partido(Base):
    
 
 # Definimos el modelo de datos para los viajes
+# Definimos el modelo de datos para los viajes
 class Viaje(Base):
     __tablename__ = "viajes"
 
     id = Column(Integer, primary_key=True, index=True)
     destino = Column(String(100), nullable=False)
+    
+    # 🌟 NUEVA COLUMNA: Correo de la persona que conduce el coche
+    email_conductor = Column(String(100), nullable=False, default="presentesxelescudo@gmail.com")
 
     # CLAVE FORÁNEA: Conecta este viaje con un ID de la tabla partidos. Si el partido se borra, sus viajes asociados se borran en cascada.
     partido_id = Column(Integer, ForeignKey("partidos.id", ondelete="CASCADE"), nullable=False)
