@@ -25,7 +25,7 @@ app.include_router(cuotas.router)
 def read_root():
     return {"message": "¡Hola, Roberto! El backend modular de la Peña Zaragocista está funcionando a nivel experto."}
 
-# Ruta temporal para usuarios (la dejamos aquí de momento)
-@app.get("/usuarios", tags=["General"])
-def obtener_usuarios(db: Session = Depends(get_db)):
+# Ruta temporal para socios (la dejamos aquí de momento)
+@app.get("/socios", tags=["General"])
+def obtener_socios(db: Session = Depends(get_db)):
     return db.query(models.Usuario).all()

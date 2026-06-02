@@ -59,6 +59,16 @@ def borrar_partido(partido_id: int, db: Session = Depends(get_db)):
     partido = db.query(models.Partido).filter(models.Partido.id == partido_id).first()
     if not partido:
         raise HTTPException(status_code=404, detail="El partido que intentas borrar no existe.")
+    
+    # Capturar correos de conductores afectados antes de que actúe el CASCADE físico
+    correos_afectados = set()
+    for viaje in partido.viajes:
+        if viaje.email_conductor:
+            correos_afectados.add(viaje.email_conductor)
+            
+    if correos_afectados:
+        print(f"\n[ALERTA INTERNA] Enviando correos automáticos de cancelación de viaje a: {list(correos_afectados)}")
+
     db.delete(partido)
     db.commit()
     return {"ok": True, "mensaje": f"Partido con ID {partido_id} eliminado con éxito."}

@@ -4,7 +4,7 @@ Este archivo actúa como el mapa de ruta definitivo del proyecto para asegurar l
 
 ## ⚙️ 1. ESTADO DEL BACKEND (FastAPI + PostgreSQL)
 
-### 🟢 Módulo de Usuarios y Autenticación (¡LISTO!)
+### 🟢 Módulo de socios y Autenticación (¡LISTO!)
 - [x] Modelo de base de datos `Usuario` en `models.py`.
 - [x] Rutas de registro y login con hashing seguro de contraseñas.
 - [x] Emisión de tokens JWT para controlar las sesiones de socios.
