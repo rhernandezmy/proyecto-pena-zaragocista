@@ -1,89 +1,97 @@
 -- SCRIPT DE CREACIÓN DE LA BASE DE DATOS - PEÑA PRESENTES POR EL ESCUDO
--- Coherente con los modelos SQLAlchemy del backend
 
-DROP TABLE IF EXISTS reservas_viajes CASCADE;
-DROP TABLE IF EXISTS viajes_compartidos CASCADE;
+DROP TABLE IF EXISTS reservas CASCADE;
+DROP TABLE IF EXISTS viajes CASCADE;
+DROP TABLE IF EXISTS partidos CASCADE;
+DROP TABLE IF EXISTS rivales_maestros CASCADE;
 DROP TABLE IF EXISTS vehiculos CASCADE;
 DROP TABLE IF EXISTS cuotas CASCADE;
 DROP TABLE IF EXISTS socios CASCADE;
 DROP TABLE IF EXISTS patrocinadores CASCADE;
 
--- ========================================================
--- TABLA: SOCIOS (Antes 'socios')
--- ========================================================
+-- 1. SOCIOS
 CREATE TABLE socios (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     apellidos VARCHAR(150) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
-    hashed_password VARCHAR(255) NOT NULL,
-    fecha_alta DATE DEFAULT CURRENT_DATE,
-    es_administrador BOOLEAN DEFAULT FALSE
+    password_hash VARCHAR(255) NOT NULL,
+    rol VARCHAR(20) DEFAULT 'Socio',
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    activo BOOLEAN DEFAULT TRUE
 );
 CREATE INDEX idx_socios_email ON socios (email);
 
--- ========================================================
--- TABLA: CUOTAS
--- ========================================================
+-- 2. CUOTAS
 CREATE TABLE cuotas (
     id SERIAL PRIMARY KEY,
-    socio_id INT NOT NULL,
-    ejercicio_fiscal INT DEFAULT 2026,
-    importe NUMERIC(10, 2) DEFAULT 120.00,
-    estado VARCHAR(20) DEFAULT 'PENDIENTE',
-    fecha_limite DATE NOT NULL,
-    stripe_payment_intent_id VARCHAR(100),
-    CONSTRAINT fk_cuotas_socio FOREIGN KEY (socio_id) 
-        REFERENCES socios(id) ON DELETE CASCADE
+    usuario_id INT NOT NULL REFERENCES socios(id) ON DELETE RESTRICT,
+    ano_ejercicio INT DEFAULT 2026,
+    estado_pago VARCHAR(20) DEFAULT 'Pendiente',
+    stripe_intent_id VARCHAR(100),
+    fecha_pago TIMESTAMP,
+    CONSTRAINT fk_cuotas_socio FOREIGN KEY (usuario_id) REFERENCES socios(id)
 );
 
--- ========================================================
--- TABLA: VEHÍCULOS
--- ========================================================
+-- 3. VEHÍCULOS
 CREATE TABLE vehiculos (
     id SERIAL PRIMARY KEY,
-    socio_id INT NOT NULL,
+    usuario_id INT NOT NULL REFERENCES socios(id) ON DELETE CASCADE,
     marca VARCHAR(50) NOT NULL,
     modelo VARCHAR(50) NOT NULL,
-    plazas_totales INT NOT NULL,
-    CONSTRAINT fk_vehiculos_socio FOREIGN KEY (socio_id) 
-        REFERENCES socios(id) ON DELETE CASCADE
+    plazas_totales INT NOT NULL
 );
 
--- ========================================================
--- TABLA: VIAJES COMPARTIDOS
--- ========================================================
-CREATE TABLE viajes_compartidos (
+-- 4. RIVALES MAESTROS
+CREATE TABLE rivales_maestros (
     id SERIAL PRIMARY KEY,
-    vehiculo_id INT NOT NULL,
-    origen VARCHAR(100) DEFAULT 'Zaragoza',
+    nombre_equipo VARCHAR(100) UNIQUE NOT NULL,
+    estadio VARCHAR(100) NOT NULL,
+    latitud DOUBLE PRECISION NOT NULL,
+    longitud DOUBLE PRECISION NOT NULL
+);
+
+-- 5. PARTIDOS
+CREATE TABLE partidos (
+    id SERIAL PRIMARY KEY,
+    rival VARCHAR(100) NOT NULL,
+    fecha TIMESTAMP NOT NULL,
+    lugar VARCHAR(100) DEFAULT 'La Romareda',
+    estado VARCHAR(20) DEFAULT 'Programado',
+    latitud DOUBLE PRECISION,
+    longitud DOUBLE PRECISION,
+    rival_maestro_id INT REFERENCES rivales_maestros(id) ON DELETE SET NULL
+);
+
+-- 6. VIAJES
+CREATE TABLE viajes (
+    id SERIAL PRIMARY KEY,
     destino VARCHAR(100) NOT NULL,
-    fecha_salida TIMESTAMP NOT NULL,
+    email_conductor VARCHAR(100) DEFAULT 'presentesxelescudo@gmail.com',
+    partido_id INT NOT NULL REFERENCES partidos(id) ON DELETE CASCADE,
+    tipo_transporte VARCHAR(30) DEFAULT 'Coche',
+    plazas_totales INT NOT NULL,
     plazas_disponibles INT NOT NULL,
-    CONSTRAINT fk_viajes_vehiculo FOREIGN KEY (vehiculo_id)
-        REFERENCES vehiculos(id) ON DELETE CASCADE
+    precio FLOAT DEFAULT 0.0,
+    detalles_precio VARCHAR(255),
+    hace_noche BOOLEAN DEFAULT FALSE,
+    latitud DOUBLE PRECISION,
+    longitud DOUBLE PRECISION
 );
 
--- ========================================================
--- TABLA: RESERVAS VIAJES
--- ========================================================
-CREATE TABLE reservas_viajes (
+-- 7. RESERVAS
+CREATE TABLE reservas (
     id SERIAL PRIMARY KEY,
-    socio_id INT NOT NULL,
-    viaje_id INT NOT NULL,
-    plazas_reservadas INT DEFAULT 1,
-    fecha_reserva TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_reserva_socio FOREIGN KEY (socio_id) REFERENCES socios(id) ON DELETE CASCADE,
-    CONSTRAINT fk_reserva_viaje FOREIGN KEY (viaje_id) REFERENCES viajes_compartidos(id) ON DELETE CASCADE
+    viaje_id INT NOT NULL REFERENCES viajes(id) ON DELETE CASCADE,
+    nombre_socio VARCHAR(150) NOT NULL,
+    asientos_reservados INT DEFAULT 1
 );
 
--- ========================================================
--- TABLA: PATROCINADORES
--- ========================================================
+-- 8. PATROCINADORES
 CREATE TABLE patrocinadores (
     id SERIAL PRIMARY KEY,
-    nombre_comercial VARCHAR(150) NOT NULL,
-    sector VARCHAR(50) DEFAULT 'Bar',
+    nombre VARCHAR(150) NOT NULL,
+    tipo_negocio VARCHAR(50) DEFAULT 'Bar',
     logo_url VARCHAR(255),
-    contribucion NUMERIC(10, 2) DEFAULT 0.0
+    contribucion FLOAT DEFAULT 0.0
 );
