@@ -1,37 +1,42 @@
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("DOM cargado. Buscando contenedor...");
     const contenedorViajes = document.getElementById("lista-viajes");
+    
+    if (!contenedorViajes) {
+        console.error("¡ERROR! No encuentro el elemento con id 'lista-viajes' en el HTML.");
+        return;
+    }
 
-    // Función para obtener viajes desde el backend
     async function cargarViajes() {
+        console.log("Iniciando fetch a la API...");
         try {
-            // Asegúrate de que el puerto coincida con tu uvicorn (generalmente 8000)
             const response = await fetch("http://localhost:8000/viajes");
-            if (!response.ok) throw new Error("Error al conectar con la API");
+            console.log("Estado de la respuesta:", response.status);
             
             const viajes = await response.json();
+            console.log("Viajes recibidos:", viajes);
 
-            // Limpiamos el contenedor
             contenedorViajes.innerHTML = "";
-
-            // Renderizamos cada viaje
             viajes.forEach(viaje => {
+                console.log("Renderizando destino:", viaje.destino); // Para confirmar qué datos llegan
+                
                 const card = `
                     <div class="col-md-4 mb-3">
-                        <div class="card">
+                        <div class="card shadow">
                             <div class="card-body">
                                 <h5 class="card-title">Destino: ${viaje.destino}</h5>
                                 <p class="card-text">Precio: ${viaje.precio}€</p>
                                 <p class="card-text">Plazas: ${viaje.plazas_disponibles}/${viaje.plazas_totales}</p>
-                                <button class="btn btn-primary">Reservar</button>
+                                <button class="btn btn-primary w-100">Reservar</button>
                             </div>
                         </div>
                     </div>
                 `;
-                contenedorViajes.innerHTML += card;
+                contenedorViajes.insertAdjacentHTML('beforeend', card);
             });
         } catch (error) {
-            console.error("Error:", error);
-            contenedorViajes.innerHTML = `<p class="text-danger">No se pudieron cargar los viajes. Asegúrate de que el backend está encendido.</p>`;
+            console.error("DEBUG CRÍTICO:", error);
+            contenedorViajes.innerHTML = `<p>Error al conectar con la API.</p>`;
         }
     }
 
