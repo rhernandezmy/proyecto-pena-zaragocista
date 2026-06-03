@@ -1,18 +1,22 @@
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from database import get_db
-import database
+from database import get_db, engine
 import models
-
 from routers import partidos, viajes, reservas, patrocinadores, rivales, cuotas
 
-# Creamos las tablas en la base de datos (si no existen)
-models.Base.metadata.create_all(bind=database.engine)
+models.Base.metadata.create_all(bind=engine)
 
-# Inicializamos la aplicación
 app = FastAPI(title="Peña Zaragocista API", version="2.0")
 
-# Conectamos las rutas modulares a la aplicación principal
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(partidos.router)
 app.include_router(viajes.router)
 app.include_router(reservas.router)
@@ -20,12 +24,10 @@ app.include_router(patrocinadores.router)
 app.include_router(rivales.router)
 app.include_router(cuotas.router)
 
-# Ruta base de bienvenida
 @app.get("/", tags=["General"])
 def read_root():
-    return {"message": "¡Hola, Roberto! El backend modular de la Peña Zaragocista está funcionando a nivel experto."}
+    return {"message": "¡Hola, Roberto! Backend en marcha."}
 
-# Ruta temporal para socios (la dejamos aquí de momento)
 @app.get("/socios", tags=["General"])
 def obtener_socios(db: Session = Depends(get_db)):
     return db.query(models.Usuario).all()
