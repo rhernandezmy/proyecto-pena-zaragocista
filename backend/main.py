@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import get_db, engine
 import models
-from routers import partidos, viajes, reservas, patrocinadores, rivales, cuotas
+# Importamos el nuevo router
+from routers import partidos, viajes, reservas, patrocinadores, rivales, cuotas, noticias
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -17,12 +18,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Incluimos los routers existentes y el nuevo
 app.include_router(partidos.router)
 app.include_router(viajes.router)
 app.include_router(reservas.router)
 app.include_router(patrocinadores.router)
 app.include_router(rivales.router)
 app.include_router(cuotas.router)
+app.include_router(noticias.router) # <--- Nueva línea
 
 @app.get("/", tags=["General"])
 def read_root():
