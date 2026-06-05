@@ -19,14 +19,13 @@ const headerHTML = `
     <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom py-3">
         <div class="container">
             <a class="navbar-brand" href="index.html">
-                <img src="logo.png" alt="Logo" style="height: 50px;">
+                <img src="assets/logo.png" alt="Logo Peña" style="height: 100px;">
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <div class="navbar-nav ms-auto align-items-center">
-                    <a class="nav-link" href="index.html">Inicio</a>
                     <a class="nav-link" href="noticias.html">Noticias</a>
                     <a class="nav-link" href="partidos.html">Partidos</a>
                     <a class="nav-link" href="pena.html">La Peña</a>

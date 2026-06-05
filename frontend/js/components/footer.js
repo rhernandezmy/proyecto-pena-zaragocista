@@ -1,15 +1,22 @@
 const footerHTML = `
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
 <footer class="bg-light py-5 mt-5 border-top">
     <div class="container">
         <div class="row">
             <div class="col-md-4">
-                <img src="logo.png" alt="Logo" style="max-width: 120px;" class="mb-3">
+                <img src="assets/logo.png" alt="Logo Peña" style="height: 50px;">
                 <p class="text-muted">Síguenos en Redes Sociales</p>
                 <div class="d-flex gap-2">
-                    <a href="#" class="btn btn-outline-dark btn-sm rounded-circle">f</a>
-                    <a href="#" class="btn btn-outline-dark btn-sm rounded-circle">ig</a>
-                    <a href="#" class="btn btn-outline-dark btn-sm rounded-circle">tw</a>
-                    <a href="#" class="btn btn-outline-dark btn-sm rounded-circle">tk</a>
+                    <a href="https://www.facebook.com/share/1AqBw3hvb2/" target="_blank" class="btn btn-outline-dark btn-sm rounded-circle" style="width: 32px; height: 32px; padding: 5px;">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="https://www.instagram.com/pz_presentes/" target="_blank" class="btn btn-outline-dark btn-sm rounded-circle" style="width: 32px; height: 32px; padding: 5px;">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://twitter.com/PZgzPresentesxE" target="_blank" class="btn btn-outline-dark btn-sm rounded-circle" style="width: 32px; height: 32px; padding: 5px;">
+                        <i class="fab fa-x-twitter"></i>
+                    </a>
                 </div>
             </div>
 

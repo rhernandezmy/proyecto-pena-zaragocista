@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from database import get_db, engine
 import models
 # Importamos el nuevo router
-from routers import partidos, viajes, reservas, patrocinadores, rivales, cuotas, noticias
+from routers import auth, partidos, viajes, reservas, patrocinadores, rivales, cuotas, noticias
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -25,7 +25,8 @@ app.include_router(reservas.router)
 app.include_router(patrocinadores.router)
 app.include_router(rivales.router)
 app.include_router(cuotas.router)
-app.include_router(noticias.router) # <--- Nueva línea
+app.include_router(noticias.router)
+app.include_router(auth.router)
 
 @app.get("/", tags=["General"])
 def read_root():
