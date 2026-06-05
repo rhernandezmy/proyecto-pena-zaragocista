@@ -48,8 +48,10 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    // Guardamos el nombre en el navegador para el header.js
+                    
+                    // Guardamos nombre y email en el navegador para el sistema de sesiones
                     localStorage.setItem("socio_nombre", data.nombre);
+                    localStorage.setItem("socio_email", email); 
                     
                     alert("¡Bienvenido, " + data.nombre + "!");
                     window.location.href = "index.html"; 
