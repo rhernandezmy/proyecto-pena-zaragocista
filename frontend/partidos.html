@@ -18,7 +18,8 @@
 
         <h2 class="mt-5 mb-4 text-primary">Partidos de España (Mundial 2026)</h2>
         <div id="lista-partidos-espana" class="row g-4">
-            </div>
+            <p>Cargando partidos...</p>
+        </div>
     </main>
 
     <div id="footer-placeholder"></div>
@@ -26,24 +27,49 @@
     <script src="js/components/header.js"></script>
     <script src="js/components/footer.js"></script>
     <script>
-        const partidosEspaña = [
-            { rival: "Alemania", fecha: "12 Junio", hora: "20:00" },
-            { rival: "Japón", fecha: "16 Junio", hora: "17:00" },
-            { rival: "Costa Rica", fecha: "20 Junio", hora: "21:00" }
-        ];
+        document.addEventListener("DOMContentLoaded", async () => {
+            const contenedor = document.getElementById('lista-partidos-espana');
+            
+            try {
+                // Llamada a nuestro backend (FastAPI)
+                const response = await fetch("http://localhost:8000/mundial/partidos-espana");
+                
+                if (!response.ok) throw new Error("Error al obtener los datos");
+                
+                const data = await response.json();
+                const partidos = data.partidos;
 
-        const contenedor = document.getElementById('lista-partidos-espana');
-        partidosEspaña.forEach(p => {
-            contenedor.innerHTML += `
-                <div class="col-md-4">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">España vs ${p.rival}</h5>
-                            <p class="card-text">Fecha: ${p.fecha} <br> Hora: ${p.hora}</p>
+                contenedor.innerHTML = ""; // Limpiamos el mensaje de "Cargando..."
+
+                if (partidos.length === 0) {
+                    contenedor.innerHTML = "<p>No hay partidos programados actualmente.</p>";
+                    return;
+                }
+
+                partidos.forEach(p => {
+                    // Formatear la fecha que viene de la API
+                    const fecha = new Date(p.utcDate).toLocaleDateString();
+                    const hora = new Date(p.utcDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const rival = p.homeTeam.name === "Spain" ? p.awayTeam.name : p.homeTeam.name;
+
+                    contenedor.innerHTML += `
+                        <div class="col-md-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title">España vs ${rival}</h5>
+                                    <p class="card-text">
+                                        <strong>Fecha:</strong> ${fecha} <br> 
+                                        <strong>Hora:</strong> ${hora}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            `;
+                    `;
+                });
+            } catch (error) {
+                console.error("Error:", error);
+                contenedor.innerHTML = `<div class="alert alert-danger">Error al cargar los partidos del Mundial.</div>`;
+            }
         });
     </script>
 </body>
