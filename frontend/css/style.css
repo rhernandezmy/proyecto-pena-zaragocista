@@ -1,0 +1,92 @@
+/* --- 1. VARIABLES CORPORATIVAS --- */
+:root {
+    --azul-zaragoza: #0033A0;
+    --oro-zaragoza: #FFD700;
+    --blanco: #ffffff;
+    --gris-fondo: #f8f9fa;
+    --gris-texto: #343a40;
+}
+
+/* --- 2. ESTILOS GENERALES --- */
+body {
+    background-color: var(--gris-fondo);
+    color: var(--gris-texto);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- 3. HEADER (Componente) --- */
+/* Forzamos el fondo azul y bordes */
+#header-placeholder .navbar {
+    background-color: var(--azul-zaragoza) !important;
+    border-bottom: 4px solid var(--oro-zaragoza) !important;
+    padding: 1rem 0;
+}
+
+/* Enlaces y textos blancos */
+#header-placeholder .nav-link, 
+#header-placeholder .navbar-brand {
+    color: var(--blanco) !important;
+    font-weight: 500;
+}
+
+/* Ajuste específico para el mensaje "Hola Roberto" */
+#header-placeholder .text-muted {
+    color: var(--blanco) !important;
+}
+
+#header-placeholder .text-muted strong {
+    color: var(--oro-zaragoza) !important; /* Nombre en amarillo */
+}
+
+/* Botón Logout */
+#btn-logout {
+    background-color: transparent;
+    border: 1px solid var(--blanco);
+    color: var(--blanco) !important;
+    transition: 0.3s;
+}
+
+#btn-logout:hover {
+    background-color: var(--blanco);
+    color: var(--azul-zaragoza) !important;
+}
+
+/* --- 4. TARJETAS (Cards) --- */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card-header {
+    background-color: var(--azul-zaragoza);
+    color: var(--blanco);
+    border-radius: 12px 12px 0 0 !important;
+}
+
+/* --- 5. BOTONES Y UTILIDADES --- */
+.btn-primary {
+    background-color: var(--azul-zaragoza);
+    border: none;
+}
+
+.btn-primary:hover {
+    background-color: #002270;
+}
+
+/* --- 6. FOOTER --- */
+footer {
+    background-color: var(--gris-texto);
+    color: var(--blanco);
+    padding: 2rem 0;
+    margin-top: auto; /* Empuja el footer al final de la página */
+    text-align: center;
+}
