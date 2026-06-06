@@ -11,12 +11,7 @@ def obtener_patrocinadores(db: Session = Depends(get_db)):
 
 @router.post("")
 def crear_patrocinador(patrocinador: schemas.PatrocinadorCrear, db: Session = Depends(get_db)):
-    nuevo_patro = models.Patrocinador(
-        nombre=patrocinador.nombre,
-        tipo_negocio=patrocinador.tipo_negocio,
-        logo_url=patrocinador.logo_url,
-        contribucion=patrocinador.contribucion
-    )
+    nuevo_patro = models.Patrocinador(**patrocinador.model_dump())
     db.add(nuevo_patro)
     db.commit()
     db.refresh(nuevo_patro)

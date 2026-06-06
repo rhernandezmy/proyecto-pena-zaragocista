@@ -16,6 +16,7 @@ class Usuario(Base):
 
     cuotas = relationship("Cuota", back_populates="usuario")
     vehiculos = relationship("Vehiculo", back_populates="usuario", cascade="all, delete-orphan")
+    reservas = relationship("Reserva", back_populates="usuario") # Añadido para completar la relación
 
 class Cuota(Base):
     __tablename__ = "cuotas"
@@ -79,9 +80,11 @@ class Reserva(Base):
     __tablename__ = "reservas"
     id = Column(Integer, primary_key=True, index=True)
     viaje_id = Column(Integer, ForeignKey("viajes.id", ondelete="CASCADE"), nullable=False)
-    nombre_socio = Column(String(150), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("socios.id", ondelete="CASCADE"), nullable=False)
     asientos_reservados = Column(Integer, default=1)
+    
     viaje = relationship("Viaje", back_populates="reservas")
+    usuario = relationship("Usuario", back_populates="reservas")
 
 class Patrocinador(Base):
     __tablename__ = "patrocinadores"

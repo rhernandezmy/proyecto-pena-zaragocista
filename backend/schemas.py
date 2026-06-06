@@ -1,23 +1,22 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
+from datetime import datetime
 
-# 1. FORMULARIO PARA PARTIDOS
 class PartidoCrear(BaseModel):
     rival: str
-    fecha: str
+    fecha: datetime
     lugar: str
-    rival_maestro_id: Optional[int] = None  # Para conectar con un rival maestro si se desea
-    latitud: Optional[float] = None  # Opcional si no sabemos la coordenada exacta al momento
-    longitud: Optional[float] = None # Opcional si no sabemos la coordenada exacta al momento
+    rival_maestro_id: Optional[int] = None
+    latitud: Optional[float] = None
+    longitud: Optional[float] = None
 
     class Config:
         from_attributes = True
 
-# 2. FORMULARIO PARA VIAJES
 class ViajeCrear(BaseModel):
     partido_id: int
     destino: str
-    email_conductor: str
+    email_conductor: EmailStr
     tipo_transporte: str = "Coche"
     plazas_totales: int
     plazas_disponibles: int
@@ -28,16 +27,14 @@ class ViajeCrear(BaseModel):
     class Config:
         from_attributes = True
 
-# 3. FORMULARIO PARA RESERVAS
 class ReservaCrear(BaseModel):
     viaje_id: int
-    nombre_socio: str
+    usuario_id: int  # Ahora usamos ID en lugar de nombre_socio
     asientos_reservados: int
 
     class Config:
         from_attributes = True
 
-# 4. FORMULARIO PARA PATROCINADORES
 class PatrocinadorCrear(BaseModel):
     nombre: str
     tipo_negocio: str = "Bar"
@@ -47,7 +44,6 @@ class PatrocinadorCrear(BaseModel):
     class Config:
         from_attributes = True
 
-# 5. FORMULARIO PARA RIVALES MAESTROS
 class RivalMaestroCrear(BaseModel):
     nombre_equipo: str
     estadio: str
@@ -57,7 +53,6 @@ class RivalMaestroCrear(BaseModel):
     class Config:
         from_attributes = True
 
-# 6. FORMULARIO PARA LA SIMULACIÓN DE PAGOS DE CUOTAS (Stripe)
 class CuotaPagoCrear(BaseModel):
     usuario_id: int
     ano_ejercicio: int

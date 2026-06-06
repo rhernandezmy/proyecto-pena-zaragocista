@@ -1,21 +1,33 @@
 from database import SessionLocal
 from models import Usuario
+from passlib.context import CryptContext
+from sqlalchemy.exc import IntegrityError
 
-# Abrimos la conexión con la base de datos
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 db = SessionLocal()
 
-# Creamos un socio de prueba
-nuevo_socio = Usuario(
-    nombre="Roberto",
-    apellidos="Zaragocista",
-    email="rhernandezmy@fpvirtualaragon.es",
-    password_hash="1234", 
-    rol="Socio"
-)
+try:
+    password_plana = "1234"
+    hashed_password = pwd_context.hash(password_plana)
 
-# Guardamos el cambio
-db.add(nuevo_socio)
-db.commit()
-db.refresh(nuevo_socio)
+    nuevo_socio = Usuario(
+        nombre="Roberto",
+        apellidos="Zaragocista",
+        email="rhernandezmy@fpvirtualaragon.es",
+        password_hash=hashed_password, 
+        rol="Socio"
+    )
 
-print(f"✅ Socio creado con éxito: {nuevo_socio.nombre} {nuevo_socio.apellidos}")
+    db.add(nuevo_socio)
+    db.commit()
+    db.refresh(nuevo_socio)
+    print(f"✅ Socio creado con éxito: {nuevo_socio.nombre}")
+
+except IntegrityError:
+    db.rollback()
+    print("⚠️ El socio ya existe en la base de datos.")
+except Exception as e:
+    db.rollback()
+    print(f"❌ Error inesperado: {e}")
+finally:
+    db.close()
