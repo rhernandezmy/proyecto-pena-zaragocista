@@ -1,24 +1,24 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, EmailStr
-from passlib.context import CryptContext
+import bcrypt
 import models, database
+from pydantic import BaseModel, EmailStr
 
-router = APIRouter(prefix="/login", tags=["Autenticación"])
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+router = APIRouter() # Sin prefix aquí
 
 class LoginSchema(BaseModel):
     email: EmailStr
     password: str
 
-@router.post("")
+@router.post("/login") # La ruta se define aquí
 def login(login_data: LoginSchema, db: Session = Depends(database.get_db)):
+    print("¡Ha llegado la petición al servidor!") # Si sale esto en la consola, ya funciona
     socio = db.query(models.Usuario).filter(models.Usuario.email == login_data.email).first()
     
-    if not socio or not pwd_context.verify(login_data.password, socio.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
-            detail="Correo o contraseña incorrectos"
-        )
+    if not socio:
+        raise HTTPException(status_code=401, detail="Correo incorrecto")
+
+    if not bcrypt.checkpw(login_data.password.encode('utf-8'), socio.password_hash.encode('utf-8')):
+        raise HTTPException(status_code=401, detail="Contraseña incorrecta")
     
-    return {"nombre": socio.nombre, "rol": socio.rol}
+    return {"nombre": socio.nombre, "rol": socio.rol, "id": socio.id}

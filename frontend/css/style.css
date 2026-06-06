@@ -3,90 +3,66 @@
     --azul-zaragoza: #0033A0;
     --oro-zaragoza: #FFD700;
     --blanco: #ffffff;
-    --gris-fondo: #f8f9fa;
-    --gris-texto: #343a40;
+    --gris-fondo: #f4f6f9;
+    --gris-texto: #212529;
 }
 
-/* --- 2. ESTILOS GENERALES --- */
+/* --- 2. ESTRUCTURA BASE --- */
+* { box-sizing: border-box; }
+
 body {
     background-color: var(--gris-fondo);
     color: var(--gris-texto);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    margin: 0;
 }
 
-/* --- 3. HEADER (Componente) --- */
-/* Forzamos el fondo azul y bordes */
+main {
+    flex: 1;
+    padding-bottom: 3rem;
+}
+
+/* --- 3. HEADER & NAVBAR --- */
 #header-placeholder .navbar {
-    background-color: var(--azul-zaragoza) !important;
-    border-bottom: 4px solid var(--oro-zaragoza) !important;
+    background-color: var(--blanco) !important;
+    border-bottom: 5px solid var(--azul-zaragoza) !important;
     padding: 1rem 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-/* Enlaces y textos blancos */
-#header-placeholder .nav-link, 
-#header-placeholder .navbar-brand {
-    color: var(--blanco) !important;
+/* Mejora de contraste para el usuario logado */
+#header-placeholder .text-muted {
+    color: #495057 !important;
     font-weight: 500;
 }
 
-/* Ajuste específico para el mensaje "Hola Roberto" */
-#header-placeholder .text-muted {
-    color: var(--blanco) !important;
-}
-
 #header-placeholder .text-muted strong {
-    color: var(--oro-zaragoza) !important; /* Nombre en amarillo */
-}
-
-/* Botón Logout */
-#btn-logout {
-    background-color: transparent;
-    border: 1px solid var(--blanco);
-    color: var(--blanco) !important;
-    transition: 0.3s;
-}
-
-#btn-logout:hover {
-    background-color: var(--blanco);
     color: var(--azul-zaragoza) !important;
 }
 
-/* --- 4. TARJETAS (Cards) --- */
+/* --- 4. CARTELERA Y TARJETAS --- */
 .card {
     border: none;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    transition: transform 0.2s;
+    border-radius: 15px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
 }
 
-.card:hover {
-    transform: translateY(-5px);
-}
+.card:hover { transform: translateY(-5px); }
 
-.card-header {
-    background-color: var(--azul-zaragoza);
-    color: var(--blanco);
-    border-radius: 12px 12px 0 0 !important;
-}
-
-/* --- 5. BOTONES Y UTILIDADES --- */
-.btn-primary {
-    background-color: var(--azul-zaragoza);
-    border: none;
-}
-
-.btn-primary:hover {
-    background-color: #002270;
-}
-
-/* --- 6. FOOTER --- */
+/* --- 5. FOOTER Y REDES --- */
 footer {
-    background-color: var(--gris-texto);
-    color: var(--blanco);
+    background-color: var(--blanco);
+    border-top: 1px solid #dee2e6;
     padding: 2rem 0;
-    margin-top: auto; /* Empuja el footer al final de la página */
     text-align: center;
+}
+
+.footer-sociales a {
+    color: var(--azul-zaragoza);
+    font-size: 1.5rem;
+    transition: 0.3s;
 }

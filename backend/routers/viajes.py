@@ -5,7 +5,9 @@ from database import get_db
 
 router = APIRouter(prefix="/viajes", tags=["Viajes"])
 
-@router.get("")
+# Al poner estos dos decoradores, evitamos el error 404 por la barra al final
+@router.get("", response_model=list[schemas.ViajeCrear])
+@router.get("/")
 def obtener_viajes(db: Session = Depends(get_db)):
     return db.query(models.Viaje).all()
 

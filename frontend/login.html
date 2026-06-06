@@ -33,35 +33,40 @@
     </div>
 
     <script>
-        document.getElementById("login-form").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
+        document.addEventListener("DOMContentLoaded", () => {
+            const loginForm = document.getElementById("login-form");
 
-            try {
-                const response = await fetch("http://localhost:8000/login", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ email, password })
-                });
+            loginForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                
+                const email = document.getElementById("email").value;
+                const password = document.getElementById("password").value;
 
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    // Guardamos nombre y email en el navegador para el sistema de sesiones
-                    localStorage.setItem("socio_nombre", data.nombre);
-                    localStorage.setItem("socio_email", email); 
-                    
-                    alert("¡Bienvenido, " + data.nombre + "!");
-                    window.location.href = "index.html"; 
-                } else {
-                    alert("Error: Correo o contraseña incorrectos.");
+                try {
+                    // URL ajustada a /auth/login porque en main.py usas prefix="/auth"
+                    const response = await fetch("http://localhost:8000/auth/login", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email, password })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        localStorage.setItem("socio_nombre", data.nombre);
+                        localStorage.setItem("socio_email", email);
+                        localStorage.setItem("socio_id", data.id);
+                        
+                        alert("¡Bienvenido, " + data.nombre + "!");
+                        window.location.href = "index.html"; 
+                    } else {
+                        alert("Error: Correo o contraseña incorrectos.");
+                    }
+                } catch (error) {
+                    console.error("Error completo:", error);
+                    alert("No se pudo conectar con el servidor. Asegúrate de que FastAPI esté corriendo.");
                 }
-            } catch (error) {
-                console.error("Error:", error);
-                alert("No se pudo conectar con el servidor.");
-            }
+            });
         });
     </script>
 </body>

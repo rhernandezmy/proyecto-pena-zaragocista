@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine
 import models
-from routers import (auth, partidos, viajes, reservas, 
+from routers import (auth, panel, partidos, viajes, reservas, 
                      patrocinadores, rivales, cuotas, noticias, mundial, usuarios)
 
 # Inicialización de tablas
@@ -28,8 +28,9 @@ app.include_router(rivales.router, prefix="/rivales", tags=["Rivales"])
 app.include_router(cuotas.router, prefix="/cuotas", tags=["Cuotas"])
 app.include_router(noticias.router, prefix="/noticias", tags=["Noticias"])
 app.include_router(mundial.router, prefix="/mundial", tags=["Mundial"])
-# Corregido: Se ha añadido un prefijo coherente para los usuarios
 app.include_router(usuarios.router, prefix="/usuarios", tags=["General"])
+app.include_router(panel.router, prefix="/panel", tags=["Panel"])
+app.include_router(auth.router, prefix="/auth", tags=["Autenticación"])
 
 @app.get("/health", tags=["Sistema"])
 def health_check():
