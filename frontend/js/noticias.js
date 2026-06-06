@@ -5,25 +5,23 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(response => response.json())
         .then(data => {
             contenedor.innerHTML = '';
+            const listaNoticias = data.noticias;
             
-            if (!data || data.length === 0) {
+            if (!listaNoticias || listaNoticias.length === 0) {
                 contenedor.innerHTML = '<p class="text-center">No hay noticias recientes.</p>';
                 return;
             }
 
-            data.forEach(noticia => {
-                // Asegúrate de que tu backend esté enviando el campo 'link'
-                // Si no, añádelo en el backend primero (te pongo cómo abajo)
-                const link = noticia.link || '#'; 
-
+            listaNoticias.forEach(n => {
                 contenedor.innerHTML += `
                     <div class="col-md-6 mb-4">
-                        <div class="card h-100">
+                        <div class="card h-100 shadow-sm">
                             <div class="card-body">
-                                <h5 class="card-title">${noticia.titulo}</h5>
-                                <h6 class="card-subtitle mb-2 text-muted">${noticia.fecha}</h6>
-                                <p class="card-text">${noticia.resumen}</p>
-                                <a href="${link}" target="_blank" class="btn btn-primary">Leer más</a>
+                                <span class="badge bg-primary mb-2">${n.fuente}</span>
+                                <h5 class="card-title">${n.titulo}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted" style="font-size: 0.8rem;">${n.fecha}</h6>
+                                <p class="card-text small">${n.resumen}</p>
+                                <a href="${n.link}" target="_blank" class="btn btn-outline-primary btn-sm">Leer más</a>
                             </div>
                         </div>
                     </div>
