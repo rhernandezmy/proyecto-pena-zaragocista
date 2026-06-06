@@ -33,14 +33,14 @@ main {
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-/* Mejora de contraste para el usuario logado */
-#header-placeholder .text-muted {
-    color: #495057 !important;
-    font-weight: 500;
+/* Efecto hover en los enlaces del menú */
+.navbar-nav .nav-link {
+    transition: transform 0.2s, opacity 0.2s;
 }
 
-#header-placeholder .text-muted strong {
-    color: var(--azul-zaragoza) !important;
+.navbar-nav .nav-link:hover {
+    transform: translateY(-2px);
+    opacity: 0.7;
 }
 
 /* --- 4. CARTELERA Y TARJETAS --- */

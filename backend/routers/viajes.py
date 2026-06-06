@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 import models, schemas
 from database import get_db
 
-router = APIRouter(prefix="/viajes", tags=["Viajes"])
+router = APIRouter()
 
 # Al poner estos dos decoradores, evitamos el error 404 por la barra al final
 @router.get("", response_model=list[schemas.ViajeCrear])
