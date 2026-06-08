@@ -1,41 +1,69 @@
-// app.js - Versión mejorada de depuración
-async function cargarViajes() {
-    try {
-        const response = await fetch("http://localhost:8000/viajes");
-        
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
+// --- FUNCIONES DE RENDERIZADO (ADMIN) ---
 
-        const viajes = await response.json();
-        console.log("Datos recibidos:", viajes); // Veremos qué llega aquí
-
-        const contenedorViajes = document.getElementById("lista-viajes");
-        contenedorViajes.innerHTML = "";
-
-        if (viajes.length === 0) {
-            contenedorViajes.innerHTML = "<p class='text-center'>No hay viajes programados.</p>";
-            return;
-        }
-
-        viajes.forEach(viaje => {
-            const card = `
-                <div class="col-md-4 mb-3">
-                    <div class="card shadow">
-                        <div class="card-body">
-                            <h5 class="card-title">Destino: ${viaje.destino}</h5>
-                            <p class="card-text">Precio: ${viaje.precio}€</p>
-                            <p class="card-text">Plazas: ${viaje.plazas_disponibles}/${viaje.plazas_totales}</p>
-                            <button class="btn btn-primary w-100">Reservar</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contenedorViajes.insertAdjacentHTML('beforeend', card);
-        });
-    } catch (error) {
-        console.error("DEBUG CRÍTICO:", error);
-        document.getElementById("lista-viajes").innerHTML = 
-            `<div class="alert alert-danger">Error: ${error.message}. Verifica que el backend esté activo.</div>`;
+function renderizarSocios(socios) {
+    const tbody = document.querySelector("#socios-pane tbody");
+    if (!tbody) return;
+    
+    // Si llegan socios del servidor, inyectamos los reales. 
+    // Si no, dejamos los de ejemplo del HTML.
+    if (socios && socios.length > 0) {
+        tbody.innerHTML = socios.map(s => `
+            <tr>
+                <td class="fw-bold">#${s.id}</td>
+                <td>${s.nombre_completo}</td>
+                <td>${s.email}</td>
+                <td>${s.telefono || 'N/A'}</td>
+                <td><span class="badge ${s.estado_cuota === 'Pagada' ? 'bg-success' : 'bg-warning'}">${s.estado_cuota}</span></td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-user-slash"></i></button>
+                </td>
+            </tr>
+        `).join('');
     }
 }
+
+function renderizarReservasLocal(reservas) {
+    const tbody = document.querySelector("#local-pane tbody");
+    if (!tbody) return;
+
+    if (reservas && reservas.length > 0) {
+        tbody.innerHTML = reservas.map(r => `
+            <tr>
+                <td class="fw-bold">Socio #${r.usuario_id}</td>
+                <td>${r.fecha_solicitada || 'N/A'}</td>
+                <td>${r.motivo_evento}</td>
+                <td><span class="badge bg-warning">${r.estado_solicitud}</span></td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-success text-white fw-bold me-1"><i class="fas fa-thumbs-up me-1"></i></button>
+                    <button class="btn btn-sm btn-danger fw-bold"><i class="fas fa-thumbs-down me-1"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+}
+
+// --- LÓGICA DE CARGA ---
+
+async function inicializarAdmin() {
+    try {
+        const response = await fetch("http://localhost:8000/panel/admin/global-data");
+        if (!response.ok) return; // Si falla, dejamos el HTML intacto
+        
+        const data = await response.json();
+        console.log("Datos recibidos:", data);
+
+        // Renderizamos solo si hay datos reales
+        renderizarSocios(data.socios);
+        renderizarReservasLocal(data.reservas_local);
+
+    } catch (error) {
+        console.error("Error en carga dinámica:", error);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (window.location.pathname.includes("admin.html")) {
+        inicializarAdmin();
+    }
+});

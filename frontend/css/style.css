@@ -11,7 +11,18 @@
 * { box-sizing: border-box; }
 
 body {
-    background-color: var(--gris-fondo);
+    /* Combinamos un filtro blanco semitransparente (85%) y la imagen de fondo */
+    background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url('../assets/romareda.jpg'); 
+    
+    /* Nota: He usado 'Andorra-Real_Zaragoza_previa.webp' que sé que la tienes en assets, 
+       si descargas otra específica del estadio, cambia el nombre aquí a 'romareda-bg.jpg' */
+
+    background-attachment: fixed;    /* El fondo se queda quieto al hacer scroll */
+    background-position: center;     /* Centra la foto */
+    background-repeat: no-repeat;    /* Evita que se duplique */
+    background-size: cover;          /* Cubre toda la pantalla */
+    background-color: var(--gris-fondo); /* Respaldo por si acaso */
+    
     color: var(--gris-texto);
     font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     min-height: 100vh;
@@ -65,4 +76,22 @@ footer {
     color: var(--azul-zaragoza);
     font-size: 1.5rem;
     transition: 0.3s;
+}
+
+/* --- 6. SECCIÓN GALERÍA INTERACTIVA --- */
+.gallery-card img {
+    transition: transform 0.4s ease;
+    cursor: zoom-in; /* Cursor de lupa para invitar al clic */
+}
+
+.gallery-card:hover img {
+    transform: scale(1.05); /* Zoom suave a la foto */
+}
+
+.gallery-card {
+    transition: box-shadow 0.3s ease;
+}
+
+.gallery-card:hover {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
 }

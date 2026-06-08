@@ -1,25 +1,98 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
 import models 
 
-router = APIRouter(prefix="/panel", tags=["Panel"])
+router = APIRouter(tags=["Panel"])
 
-@router.get("/data/{email}")
-def get_panel_data(email: str, db: Session = Depends(get_db)):
-    # 1. Buscamos al socio
+
+# 1. VISTA SOCIO: Obtener datos individuales de un socio por Email (Tu ruta original mejorada)
+@router.get("/socio/{email}")
+def get_socio_panel_data(email: str, db: Session = Depends(get_db)):
     socio = db.query(models.Usuario).filter(models.Usuario.email == email).first()
     if not socio:
         raise HTTPException(status_code=404, detail="Socio no encontrado")
     
-    # 2. Retornamos los datos usando las relaciones que ya definiste en models.py
     return {
-        "nombre": socio.nombre,
+        "id": socio.id,
+        "nombre": f"{socio.nombre} {socio.apellidos}",
+        "rol": socio.rol,
         "cuotas": [{"ano": c.ano_ejercicio, "estado": c.estado_pago} for c in socio.cuotas],
         "reservas": [
             {
-                "destino": r.viaje.destino, 
-                "asientos": r.asientos_reservados
-            } for r in socio.reservas # Usamos la relación directa del objeto socio
+                "id_reserva": r.id,
+                "tipo": r.tipo_reserva,
+                "destino": r.viaje.destino if r.viaje else "Uso de la Sede Local", 
+                "asientos": r.asientos_reservados,
+                "estado": r.estado_solicitud,
+                "motivo": r.motivo_evento
+            } for r in socio.reservas
         ]
     }
+
+
+# 2. VISTA ADMIN: Obtener TODOS los datos globales de la peña (NUEVO para admin.html)
+@router.get("/admin/global-data")
+def get_admin_global_data(db: Session = Depends(get_db)):
+    """
+    Recopila de forma masiva la información de todas las tablas para pintar 
+    las listas, formularios y tablas del Panel de Control del Administrador.
+    """
+    # A. Listado completo de usuarios/socios
+    todos_los_socios = db.query(models.Usuario).all()
+    lista_socios = []
+    for s in todos_los_socios:
+        # Buscamos su cuota más reciente del año en curso
+        cuota_actual = next((c for c in s.cuotas if c.ano_ejercicio == 2026), None)
+        estado_cuota = cuota_actual.estado_pago if cuota_actual else "No generada"
+        
+        lista_socios.append({
+            "id": s.id,
+            "nombre_completo": f"{s.nombre} {s.apellidos}",
+            "email": s.email,
+            "telefono": "600 112 233", # Puedes mapear un campo teléfono si lo añades a models en el futuro
+            "rol": s.rol,
+            "estado_cuota": estado_cuota
+        })
+
+    # B. Listado de todos los viajes activos organizados
+    todos_los_viajes = db.query(models.Viaje).all()
+    lista_viajes = [{
+        "id": v.id,
+        "destino": v.destino,
+        "tipo_transporte": v.tipo_transporte,
+        "plazas_libres": v.plazas_disponibles,
+        "plazas_totales": v.plazas_totales,
+        "fecha": "15/09/2026" # Puedes formatear v.partido.fecha si tienes la relación activa
+    } for v in todos_los_viajes]
+
+    # C. Listado de solicitudes de uso exclusivas del local
+    solicitudes_local = db.query(models.Reserva).filter(models.Reserva.tipo_reserva == "Local").all()
+    lista_local = [{
+        "id_reserva": r.id,
+        "socio": f"{r.usuario.nombre} {r.usuario.apellidos} (#{r.usuario.id})",
+        "fecha_solicitada": "24/06/2026", # Formato de r.fecha_solicitada
+        "motivo": r.motivo_evento,
+        "estado": r.estado_solicitud
+    } for r in solicitudes_local]
+
+    return {
+        "socios": lista_socios,
+        "viajes": lista_viajes,
+        "reservas_local": lista_local
+    }
+
+
+# 3. CONMUTACIÓN DE ROL: Permitir cambiar el rol de un usuario directamente (NUEVO)
+@router.patch("/usuarios/{usuario_id}/cambiar-rol")
+def cambiar_rol_usuario(usuario_id: int, nuevo_rol: str, db: Session = Depends(get_db)):
+    if nuevo_rol not in ["Socio", "Admin"]:
+        raise HTTPException(status_code=400, detail="El rol especificado no es válido.")
+        
+    usuario = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+        
+    usuario.rol = nuevo_rol
+    db.commit()
+    return {"ok": True, "mensaje": f"Rol de {usuario.nombre} cambiado a {nuevo_rol}."}

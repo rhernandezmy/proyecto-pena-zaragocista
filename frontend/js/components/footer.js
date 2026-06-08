@@ -4,7 +4,7 @@ const footerHTML = `
 <footer class="bg-light py-5 mt-5 border-top">
     <div class="container">
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-4 text-center d-flex flex-column align-items-center">
                 <img src="assets/logo.png" alt="Logo Peña" style="height: 50px;">
                 <p class="text-muted">Síguenos en Redes Sociales</p>
                 <div class="d-flex gap-2">

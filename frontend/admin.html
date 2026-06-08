@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Peña Zaragocista</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-light">
+
+    <div id="header-placeholder"></div>
+
+    <main class="py-5">
+        <div class="container">
+            
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom gap-3">
+                <div>
+                    <h1 class="fw-bold text-dark mb-1">🛠️ Panel de Control</h1>
+                    <p class="text-muted mb-0">Gestión global de la peña, socios, desplazamientos y reservas.</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="socio.html" class="btn btn-outline-secondary fw-bold shadow-sm">
+                        <i class="fas fa-user-tag me-2"></i> Vista Socio
+                    </a>
+                    <span class="badge bg-danger px-3 py-2 fs-6 shadow-sm">Rol: Administrador</span>
+                </div>
+            </div>
+
+            <ul class="nav nav-tabs nav-fill mb-4 shadow-sm rounded bg-white p-1" id="adminTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold py-3" id="socios-tab" data-bs-toggle="tab" data-bs-target="#socios-pane" type="button" role="tab" aria-controls="socios-pane" aria-selected="true">
+                        <i class="fas fa-users me-2 text-primary"></i> Control de Socios
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold py-3" id="viajes-tab" data-bs-toggle="tab" data-bs-target="#viajes-pane" type="button" role="tab" aria-controls="viajes-pane" aria-selected="false">
+                        <i class="fas fa-bus me-2 text-success"></i> Viajes y Coches
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold py-3" id="local-tab" data-bs-toggle="tab" data-bs-target="#local-pane" type="button" role="tab" aria-controls="local-pane" aria-selected="false">
+                        <i class="fas fa-home me-2 text-warning"></i> Reservas del Local
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold py-3" id="galeria-tab" data-bs-toggle="tab" data-bs-target="#galeria-pane" type="button" role="tab" aria-controls="galeria-pane" aria-selected="false">
+                        <i class="fas fa-images me-2 text-info"></i> Gestión Galería
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold py-3" id="partners-tab" data-bs-toggle="tab" data-bs-target="#partners-pane" type="button" role="tab" aria-controls="partners-pane" aria-selected="false">
+                        <i class="fas fa-handshake me-2 text-secondary"></i> Partners
+                    </button>
+                </li>               
+            </ul>
+
+            <div class="tab-content" id="adminTabsContent">
+                
+                <div class="tab-pane fade show active" id="socios-pane" role="tabpanel" aria-labelledby="socios-tab" tabindex="0">
+                    <div class="card border-0 shadow-sm p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0">👥 Listado de Usuarios Registrados</h5>
+                            <button class="btn btn-sm btn-outline-primary"><i class="fas fa-download me-1"></i> Exportar CSV</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nº Socio</th>
+                                        <th>Nombre</th>
+                                        <th>Email</th>
+                                        <th>Teléfono</th>
+                                        <th>Estado Cuota</th>
+                                        <th class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-bold">#001</td>
+                                        <td>Roberto García</td>
+                                        <td>roberto@email.com</td>
+                                        <td>600 112 233</td>
+                                        <td><span class="badge bg-success">✅ Pagada 2026</span></td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-outline-secondary me-1" title="Editar"><i class="fas fa-edit"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Dar de baja"><i class="fas fa-user-slash"></i></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">#002</td>
+                                        <td>Ionut Popescu</td>
+                                        <td>ionut@email.com</td>
+                                        <td>611 223 344</td>
+                                        <td><span class="badge bg-warning text-dark">⚠️ Pendiente</span></td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-success text-white me-1" title="Marcar como pagado"><i class="fas fa-check"></i></button>
+                                            <button class="btn btn-sm btn-outline-secondary me-1" title="Editar"><i class="fas fa-edit"></i></button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Dar de baja"><i class="fas fa-user-slash"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="viajes-pane" role="tabpanel" aria-labelledby="viajes-tab" tabindex="0">
+                    <div class="row g-4">
+                        <div class="col-12 col-md-4">
+                            <div class="card border-0 shadow-sm p-4">
+                                <h5 class="fw-bold mb-3">📅 Organizar Nuevo Viaje</h5>
+                                <form id="form-nuevo-viaje">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Destino / Partido</label>
+                                        <input type="text" class="form-control" placeholder="Ej: Andorra CF vs Real Zaragoza" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Fecha del Desplazamiento</label>
+                                        <input type="date" class="form-control" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Tipo de Transporte</label>
+                                        <select class="form-select">
+                                            <option>🚌 Autobús de la Peña</option>
+                                            <option>🚗 Coches Particulares compartidos</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Plazas Totales Disponibles</label>
+                                        <input type="number" class="form-control" value="55" min="1">
+                                    </div>
+                                    <button type="submit" class="btn btn-success w-100 fw-bold">Publicar Viaje On Tour</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <div class="card border-0 shadow-sm p-4">
+                                <h5 class="fw-bold mb-3">🗺️ Viajes Activos y Logística</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Destino</th>
+                                                <th>Fecha</th>
+                                                <th>Tipo</th>
+                                                <th>Plazas Libres</th>
+                                                <th class="text-center">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="fw-bold">FC Andorra</td>
+                                                <td>15/09/2026</td>
+                                                <td>🚗 Coches</td>
+                                                <td><span class="badge bg-primary">12 libres</span></td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-eye"></i></button>
+                                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="local-pane" role="tabpanel" aria-labelledby="local-tab" tabindex="0">
+                    <div class="card border-0 shadow-sm p-4">
+                        <h5 class="fw-bold mb-3">📅 Solicitudes de Reserva del Local</h5>
+                        <p class="text-muted small">Aquí aparecen los socios que han solicitado usar la sede para eventos o partidos.</p>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Socio</th>
+                                        <th>Fecha Solicitada</th>
+                                        <th>Motivo / Evento</th>
+                                        <th>Estado</th>
+                                        <th class="text-center">Resolución</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="fw-bold">Roberto García (#001)</td>
+                                        <td>24/06/2026</td>
+                                        <td>Ver Partido fuera (Castellón vs Real Zaragoza)</td>
+                                        <td><span class="badge bg-warning text-dark">⏳ Pendiente de revisión</span></td>
+                                        <td class="text-center">
+                                            <button class="btn btn-sm btn-success me-1 text-white fw-bold"><i class="fas fa-thumbs-up me-1"></i> Aprobar</button>
+                                            <button class="btn btn-sm btn-danger fw-bold"><i class="fas fa-thumbs-down me-1"></i>"></i> Rechazar</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="galeria-pane" role="tabpanel" aria-labelledby="galeria-tab" tabindex="0">
+                    <div class="row g-4">
+                        <div class="col-12 col-md-4">
+                            <div class="card border-0 shadow-sm p-4">
+                                <h5 class="fw-bold mb-3">📸 Subir Nueva Imagen</h5>
+                                <form id="form-nueva-foto" enctype="multipart/form-data">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Seleccionar Imagen</label>
+                                        <input type="file" class="form-control" accept="image/*" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Título / Evento</label>
+                                        <input type="text" class="form-control" placeholder="Ej: Viaje a Burgos" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Pie de Foto</label>
+                                        <input type="text" class="form-control" placeholder="Ej: #Presentes con el equipo" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-info text-white w-100 fw-bold">Publicar Foto</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <div class="card border-0 shadow-sm p-4">
+                                <h5 class="fw-bold mb-3">🖼️ Fotos en la Web</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Miniatura</th>
+                                                <th>Título</th>
+                                                <th>Pie de Foto</th>
+                                                <th class="text-center">Acción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><div class="bg-secondary rounded text-white text-center p-2 small" style="width: 50px;">IMG</div></td>
+                                                <td class="fw-bold">Viaje Andorra</td>
+                                                <td>#PresentesPorElEscudo en Andorra</td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="partners-pane" role="tabpanel" aria-labelledby="partners-tab" tabindex="0">
+                    <div class="row g-4">
+                        <div class="col-12 col-md-4">
+                            <div class="card border-0 shadow-sm p-4">
+                                <h5 class="fw-bold mb-3">🤝 Añadir Partner</h5>
+                                <form id="form-nuevo-partner">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Categoría / Sector</label>
+                                        <input type="text" class="form-control" placeholder="Ej: Abogada Oficial, Bar..." required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Nombre Comercial (con icono)</label>
+                                        <input type="text" class="form-control" placeholder="Ej: 👩‍⚖️ Eva Galán" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-secondary w-100 fw-bold">Vincular Partner</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <div class="card border-0 shadow-sm p-4">
+                                <h5 class="fw-bold mb-3">📋 Sponsors Vigentes</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Categoría</th>
+                                                <th>Nombre comercial</th>
+                                                <th class="text-center">Acción</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td><span class="badge bg-light text-dark border">Abogada Oficial</span></td>
+                                                <td class="fw-bold small">👩‍⚖️ Eva Galán</td>
+                                                <td class="text-center"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-user-minus"></i></button></td>
+                                            </tr>
+                                            <tr>
+                                                <td><span class="badge bg-light text-dark border">Bar Oficial</span></td>
+                                                <td class="fw-bold small">🎵 Bar La Nota</td>
+                                                <td class="text-center"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-user-minus"></i></button></td>
+                                            </tr>
+                                            <tr>
+                                                <td><span class="badge bg-light text-dark border">Logística</span></td>
+                                                <td class="fw-bold small">🚗 Coches para todos</td>
+                                                <td class="text-center"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-user-minus"></i></button></td>
+                                            </tr>
+                                            <tr>
+                                                <td><span class="badge bg-light text-dark border">Merchandising</span></td>
+                                                <td class="fw-bold small">👕 Camisetas Zaragoza</td>
+                                                <td class="text-center"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-user-minus"></i></button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/components/header.js"></script>
+    <script src="js/components/footer.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

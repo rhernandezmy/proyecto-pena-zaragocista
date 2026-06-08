@@ -12,20 +12,161 @@
     <div id="header-placeholder"></div>
 
     <main class="py-5">
-        <div class="container">
-            <div class="alert alert-info border-0 shadow-sm mb-5 text-center" role="alert">
-                <h4 class="alert-heading">📅 Actualidad Real Zaragoza</h4>
-                <p class="mb-0">Actualmente no hay partidos programados del Real Zaragoza. ¡Volveremos con más fuerza la próxima temporada!</p>
-            </div>
+        <div class="container-fluid px-lg-5"> 
+            <div class="row">
+                
+                <aside class="col-12 col-lg-2 d-none d-lg-block">
+                    
+                    <div class="card p-3 border-0 shadow-sm mb-4 position-sticky" style="top: 20px;">
+                        <h6 class="fw-bold text-center text-uppercase style-color" style="color: #0033A0;">📊 Clasificación Liga 2026-2027</h6>
+                        <ol class="list-group list-group-numbered list-group-flush small">
+                            <li class="list-group-item d-flex justify-content-between align-items-center fw-bold bg-light">
+                                Real Zaragoza <span class="badge bg-primary rounded-pill">0</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center text-muted">
+                                Teruel CF <span class="badge bg-secondary rounded-pill">0</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center text-muted">
+                                SD Huesca <span class="badge bg-secondary rounded-pill">0</span>
+                            </li>
+                        </ol>
+                        <div class="text-center mt-3">
+                            <a href="clasificacion.html" class="btn btn-sm btn-link p-0 text-decoration-none">Ver completa →</a>
+                        </div>
+                    </div>
 
-            <div class="text-center mb-4">
-                <h2 class="mb-3">🏆 ¡Todos con La Roja en el Mundial 2026!</h2>
-                <a href="partidos.html" class="btn btn-outline-primary btn-lg">Ver partidos</a>
-            </div>
-            <div id="contenedor-mundial" class="row g-4 justify-content-center"></div>
+                    <div class="card p-3 border-0 shadow-sm position-sticky" style="top: 240px; text-align: center; background-color: #f8f9fa;">
+                        <h6 class="fw-bold text-uppercase style-color" style="color: #0033A0;">🏠 Nuestro Local</h6>
+                        
+                        <div class="text-start small mt-2">
+                            <p class="text-muted mb-2 text-center">¿Quieres celebrar tu evento o reservar el local para un partido?</p>
+                            
+                            <div class="p-2 border rounded bg-white mb-2 text-center">
+                                <small class="text-muted d-block">Disponibilidad:</small>
+                                <span class="fw-bold text-success small">📅 Comprobar Fechas</span>
+                            </div>
+                            
+                            <div class="text-center mt-3">
+                                <a href="reservas.html" class="btn btn-sm btn-outline-primary w-100 fw-bold">
+                                    🚀 Reservar Espacio
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
 
-            <h2 class="mt-5 mb-4">Cartelera de Viajes</h2>
-            <div id="lista-viajes" class="row g-4"></div>
+                <div class="col-12 col-lg-8">
+                    
+                    <div class="alert alert-info border-0 shadow-sm mb-5 text-center" role="alert">
+                        <h4 class="alert-heading">📅 Actualidad Real Zaragoza</h4>
+                        <p class="mb-0">Actualmente no hay partidos programados del Real Zaragoza. ¡Volveremos con más fuerza la próxima temporada!</p>
+                    </div>
+
+                    <div class="text-center mb-4">
+                        <h2 class="mb-3">🏆 ¡Todos con La Roja en el Mundial 2026!</h2>
+                        <a href="partidos.html" class="btn btn-outline-primary btn-lg">Ver partidos</a>
+                    </div>
+                    <div id="contenedor-mundial" class="row g-4 justify-content-center"></div>
+                    
+                    <section class="my-5">
+                        <div class="text-center mb-4">
+                            <h2 class="fw-bold text-uppercase" style="letter-spacing: 1px;">
+                                Presentes On Tour
+                            </h2>
+                            <p class="text-muted">Capturas de nuestra pasión en los estadios y desplazamientos con la peña</p>
+                            <hr class="mx-auto" style="width: 60px; height: 3px; background-color: #0d6efd; border: none; opacity: 1;">
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-12 col-md-4">
+                                <div class="card h-100 border-0 shadow-sm overflow-hidden gallery-card">
+                                    <img src="assets/viaje_andorra.webp" class="card-img-top img-fluid" alt="Desplazamiento Andorra" style="object-fit: cover; height: 280px;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
+                                    <div class="card-body bg-light text-center py-2">
+                                        <small class="text-muted fw-bold">#PresentesPorElEscudo en Andorra</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <div class="card h-100 border-0 shadow-sm overflow-hidden gallery-card">
+                                    <img src="assets/carnaval_presentes.webp" class="card-img-top img-fluid" alt="Recibimiento al Real Zaragoza" style="object-fit: cover; height: 280px;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
+                                    <div class="card-body bg-light text-center py-2">
+                                        <small class="text-muted fw-bold">Carnaval de los Presentes</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <div class="card h-100 border-0 shadow-sm overflow-hidden gallery-card">
+                                    <img src="assets/Siempre_presentes.webp" class="card-img-top img-fluid" alt="Grada Romareda" style="object-fit: cover; height: 280px;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
+                                    <div class="card-body bg-light text-center py-2">
+                                        <small class="text-muted fw-bold">Siempre Presentes viajando por toda España</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-5">
+                            <a href="galeria.html" class="btn btn-primary btn-lg shadow-sm px-4">
+                                📸 Ver Galería Completa
+                            </a>
+                        </div>
+                    </section>
+                </div>
+
+                <aside class="col-12 col-lg-2 d-none d-lg-block">
+    
+                    <div class="card p-3 border-0 shadow-sm mb-4 position-sticky" style="top: 20px; text-align: center; background-color: #f8f9fa;">
+                        <h6 class="fw-bold text-uppercase style-color" style="color: #0033A0;">👤 Área Privada</h6>
+                        
+                        <div id="socio-panel-info" class="text-start small mt-2">
+                            <div class="p-2 border rounded bg-white mb-2">
+                                <small class="text-muted d-block">Estado de Cuota:</small>
+                                <span class="badge bg-success">✅ Pagada 2026</span>
+                            </div>
+                            <div class="p-2 border rounded bg-white mb-2">
+                                <small class="text-muted d-block">Tus Reservas:</small>
+                                <span class="fw-bold text-secondary text-truncate d-block">🚗 Coches para todos</span>
+                            </div>
+                            <div class="text-center mt-3">
+                                <a href="socio.html" class="btn btn-sm btn-primary w-100 fw-bold">
+                                    Gestionar mi Perfil
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card p-3 border-0 shadow-sm position-sticky" style="top: 260px; text-align: center;">
+                        <h6 class="fw-bold text-uppercase style-color" style="color: #0033A0;">🤝 Partners</h6>
+                        <div class="d-flex flex-column gap-3 align-items-center">
+                            
+                            <div class="p-2 border rounded bg-light w-100">
+                                <small class="text-muted d-block mb-1">Abogada Oficial</small>
+                                <span class="fw-bold text-secondary small">👩‍⚖️ Eva Galán</span>
+                            </div>
+                            
+                            <div class="p-2 border rounded bg-light w-100">
+                                <small class="text-muted d-block mb-1">Bar Oficial</small>
+                                <span class="fw-bold text-secondary small">🎵 Bar La Nota</span>
+                            </div>
+                            
+                            <div class="p-2 border rounded bg-light w-100">
+                                <small class="text-muted d-block mb-1">Logística</small>
+                                <span class="fw-bold text-secondary small">🚗 Coches para todos</span>
+                            </div>
+                            
+                            <div class="p-2 border rounded bg-light w-100">
+                                <small class="text-muted d-block mb-1">Merchandising</small>
+                                <span class="fw-bold text-secondary small">👕 Camisetas Zaragoza</span>
+                            </div>
+                            
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <a href="partners.html" class="btn btn-sm btn-link p-0 text-decoration-none fw-bold" style="color: #0033A0;">Ver completa →</a>
+                        </div>
+                    </div>
+                </aside>
+
+            </div>
         </div>
     </main>
 
@@ -35,5 +176,27 @@
     <script src="js/components/header.js"></script>
     <script src="js/components/footer.js"></script>
     <script src="js/app.js"></script>
+
+    <script>
+        function enmascararImagen(elemento) {
+            const rutaImagen = elemento.getAttribute('src');
+            const imagenModal = document.getElementById('modalImage');
+            if (imagenModal) {
+                imagenModal.setAttribute('src', rutaImagen);
+            }
+        }
+    </script>
+
+    <div class="modal fade" id="galleryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-transparent border-0">
+                <div class="modal-body p-0 position-relative text-center">
+                    <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <img src="" id="modalImage" class="img-fluid rounded shadow-lg" alt="Imagen ampliada" style="max-height: 85vh; object-fit: contain;">
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
