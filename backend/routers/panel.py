@@ -31,26 +31,31 @@ def get_socio_panel_data(email: str, db: Session = Depends(get_db)):
     }
 
 
-# 2. VISTA ADMIN: Obtener TODOS los datos globales de la peña (NUEVO para admin.html)
+# 2. VISTA ADMIN: Obtener TODOS los datos globales de la peña (Optimizado y Real)
 @router.get("/admin/global-data")
 def get_admin_global_data(db: Session = Depends(get_db)):
     """
     Recopila de forma masiva la información de todas las tablas para pintar 
     las listas, formularios y tablas del Panel de Control del Administrador.
     """
-    # A. Listado completo de usuarios/socios
+    # A. Listado completo de usuarios/socios cruzado con sus cuotas
     todos_los_socios = db.query(models.Usuario).all()
     lista_socios = []
     for s in todos_los_socios:
-        # Buscamos su cuota más reciente del año en curso
+        # Buscamos de forma dinámica si tiene cuota en el año actual (2026)
         cuota_actual = next((c for c in s.cuotas if c.ano_ejercicio == 2026), None)
-        estado_cuota = cuota_actual.estado_pago if cuota_actual else "No generada"
+        
+        # Si existe cuota en la BD, saca su estado real. Si no existe (como los nuevos), es "Pendiente"
+        estado_cuota = cuota_actual.estado_pago if cuota_actual else "Pendiente"
+        
+        # Mapeamos el teléfono si existe la columna en el modelo, o un valor limpio de cortesía
+        telefono_real = getattr(s, 'telefono', "Sin teléfono") if getattr(s, 'telefono', None) else "N/A"
         
         lista_socios.append({
             "id": s.id,
             "nombre_completo": f"{s.nombre} {s.apellidos}",
             "email": s.email,
-            "telefono": "600 112 233", # Puedes mapear un campo teléfono si lo añades a models en el futuro
+            "telefono": telefono_real,
             "rol": s.rol,
             "estado_cuota": estado_cuota
         })
@@ -63,7 +68,7 @@ def get_admin_global_data(db: Session = Depends(get_db)):
         "tipo_transporte": v.tipo_transporte,
         "plazas_libres": v.plazas_disponibles,
         "plazas_totales": v.plazas_totales,
-        "fecha": "15/09/2026" # Puedes formatear v.partido.fecha si tienes la relación activa
+        "fecha": "15/09/2026"
     } for v in todos_los_viajes]
 
     # C. Listado de solicitudes de uso exclusivas del local
@@ -71,7 +76,7 @@ def get_admin_global_data(db: Session = Depends(get_db)):
     lista_local = [{
         "id_reserva": r.id,
         "socio": f"{r.usuario.nombre} {r.usuario.apellidos} (#{r.usuario.id})",
-        "fecha_solicitada": "24/06/2026", # Formato de r.fecha_solicitada
+        "fecha_solicitada": "24/06/2026",
         "motivo": r.motivo_evento,
         "estado": r.estado_solicitud
     } for r in solicitudes_local]
@@ -81,7 +86,6 @@ def get_admin_global_data(db: Session = Depends(get_db)):
         "viajes": lista_viajes,
         "reservas_local": lista_local
     }
-
 
 # 3. CONMUTACIÓN DE ROL: Permitir cambiar el rol de un usuario directamente (NUEVO)
 @router.patch("/usuarios/{usuario_id}/cambiar-rol")

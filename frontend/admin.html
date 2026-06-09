@@ -62,7 +62,12 @@
                     <div class="card border-0 shadow-sm p-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5 class="fw-bold mb-0">👥 Listado de Usuarios Registrados</h5>
-                            <button class="btn btn-sm btn-outline-primary"><i class="fas fa-download me-1"></i> Exportar CSV</button>
+                            <div>
+                                <button class="btn btn-sm btn-success me-2" data-bs-toggle="modal" data-bs-target="#modalNuevoSocio">
+                                    <i class="fas fa-user-plus me-1"></i> Nuevo Socio
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary"><i class="fas fa-download me-1"></i> Exportar CSV</button>
+                            </div>
                         </div>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
@@ -314,6 +319,48 @@
             </div>
         </div>
     </main>
+    <div class="modal fade" id="modalNuevoSocio" tabindex="-1" aria-labelledby="modalNuevoSocioLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold" id="modalNuevoSocioLabel">➕ Alta de Socio</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="form-alta-socio">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="admin-nuevo-nombre" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="admin-nuevo-nombre" placeholder="Ej. Javier" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="admin-nuevo-apellidos" class="form-label">Apellidos</label>
+                            <input type="text" class="form-control" id="admin-nuevo-apellidos" placeholder="Ej. Martínez" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Correo Electrónico</label>
+                            <input type="email" id="admin-nuevo-email" class="form-control" placeholder="Ej: javier@email.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Teléfono</label>
+                            <input type="text" id="admin-nuevo-telefono" class="form-control" placeholder="Ej: 611223344">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Estado de la Cuota</label>
+                            <select id="admin-nuevo-cuota" class="form-select">
+                                <option value="Pendiente">⚠️ Pendiente de Pago</option>
+                                <option value="Pagada">✅ Pagada 2026</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary fw-bold">Guardar Socio en Base de Datos</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <div id="footer-placeholder"></div>
 
