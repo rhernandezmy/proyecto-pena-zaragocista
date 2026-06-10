@@ -27,10 +27,10 @@ const headerHTML = `
             <div class="collapse navbar-collapse" id="navbarNav">
                 <div class="navbar-nav ms-auto align-items-center">
                     <a class="nav-link fw-bold" href="index.html" style="color: #0033A0;">🏠 Inicio</a>
-                    
                     <a class="nav-link fw-bold" href="noticias.html" style="color: #0033A0;">📰 Noticias</a>
                     <a class="nav-link fw-bold" href="partidos.html" style="color: #0033A0;">⚽ Partidos</a>
                     <a class="nav-link fw-bold" href="pena.html" style="color: #0033A0;">🦁 La Peña</a>
+                    <a class="nav-link fw-bold" href="partners.html" style="color: #0033A0;">🤝 Partners</a>
                     ${menuViajesHTML}
                     <div class="ms-lg-3">${botonAuthHTML}</div>
                 </div>

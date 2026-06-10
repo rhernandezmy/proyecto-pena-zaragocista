@@ -40,13 +40,15 @@
     <script src="components/footer.js"></script>
 
     <script>
-        // 1. Verificación de seguridad
+        // 1. Verificación de seguridad flexible (Permite la entrada tanto a Socios como a Admins)
         const socioNombre = localStorage.getItem("socio_nombre");
-        const socioEmail = localStorage.getItem("socio_email"); // Asegúrate de guardar esto en login.html
+        const socioEmail = localStorage.getItem("socio_email");
 
-        if (!socioNombre) {
+        // Solo echamos al usuario si no hay datos de sesión en absoluto
+        if (!socioNombre || !socioEmail) {
             window.location.href = "login.html";
         } else {
+            // Si tiene datos válidos (sea Admin o Socio), le damos la bienvenida y cargamos el panel
             document.getElementById("nombre-socio").innerText = socioNombre;
             cargarDatosPanel();
         }
@@ -54,25 +56,25 @@
         // 2. Carga dinámica de datos desde el backend
         async function cargarDatosPanel() {
             try {
-                // Llamada al endpoint que crearemos en panel.py
                 const response = await fetch(`http://localhost:8000/panel-data/${socioEmail}`);
                 const data = await response.json();
 
                 // Rellenar Viajes
                 const containerViajes = document.getElementById("lista-viajes");
-                containerViajes.innerHTML = data.reservas.length > 0 
+                containerViajes.innerHTML = data.reservas && data.reservas.length > 0 
                     ? data.reservas.map(r => `<li class="list-group-item">Destino: <strong>${r.destino}</strong> - ${r.asientos} asiento(s)</li>`).join("")
                     : '<li class="list-group-item text-muted">No tienes viajes reservados actualmente.</li>';
 
                 // Rellenar Cuotas
                 const containerCuotas = document.getElementById("lista-cuotas");
-                containerCuotas.innerHTML = data.cuotas.length > 0
+                containerCuotas.innerHTML = data.cuotas && data.cuotas.length > 0
                     ? data.cuotas.map(c => `<li class="list-group-item">Año ${c.ano}: <span class="badge bg-${c.estado === 'Pagada' ? 'success' : 'warning'}">${c.estado}</span></li>`).join("")
                     : '<li class="list-group-item text-muted">No hay registros de cuotas.</li>';
 
             } catch (error) {
                 console.error("Error al cargar datos:", error);
                 document.getElementById("lista-viajes").innerHTML = '<li class="list-group-item text-danger">Error al conectar con el servidor.</li>';
+                document.getElementById("lista-cuotas").innerHTML = '<li class="list-group-item text-danger">Error al conectar con el servidor.</li>';
             }
         }
     </script>

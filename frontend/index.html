@@ -16,7 +16,6 @@
             <div class="row">
                 
                 <aside class="col-12 col-lg-2 d-none d-lg-block">
-                    
                     <div class="card p-3 border-0 shadow-sm mb-4 position-sticky" style="top: 20px;">
                         <h6 class="fw-bold text-center text-uppercase style-color" style="color: #0033A0;">📊 Clasificación Liga 2026-2027</h6>
                         <ol class="list-group list-group-numbered list-group-flush small">
@@ -37,15 +36,12 @@
 
                     <div class="card p-3 border-0 shadow-sm position-sticky" style="top: 240px; text-align: center; background-color: #f8f9fa;">
                         <h6 class="fw-bold text-uppercase style-color" style="color: #0033A0;">🏠 Nuestro Local</h6>
-                        
                         <div class="text-start small mt-2">
                             <p class="text-muted mb-2 text-center">¿Quieres celebrar tu evento o reservar el local para un partido?</p>
-                            
                             <div class="p-2 border rounded bg-white mb-2 text-center">
                                 <small class="text-muted d-block">Disponibilidad:</small>
                                 <span class="fw-bold text-success small">📅 Comprobar Fechas</span>
                             </div>
-                            
                             <div class="text-center mt-3">
                                 <a href="reservas.html" class="btn btn-sm btn-outline-primary w-100 fw-bold">
                                     🚀 Reservar Espacio
@@ -56,7 +52,6 @@
                 </aside>
 
                 <div class="col-12 col-lg-8">
-                    
                     <div class="alert alert-info border-0 shadow-sm mb-5 text-center" role="alert">
                         <h4 class="alert-heading">📅 Actualidad Real Zaragoza</h4>
                         <p class="mb-0">Actualmente no hay partidos programados del Real Zaragoza. ¡Volveremos con más fuerza la próxima temporada!</p>
@@ -70,9 +65,17 @@
                     
                     <section class="my-5">
                         <div class="text-center mb-4">
-                            <h2 class="fw-bold text-uppercase" style="letter-spacing: 1px;">
-                                Presentes On Tour
-                            </h2>
+                            <h2 class="fw-bold text-uppercase" style="letter-spacing: 1px;">📰 Últimas Noticias</h2>
+                            <p class="text-muted">Mantente al día de la actualidad de nuestra Peña y del Real Zaragoza</p>
+                            <hr class="mx-auto" style="width: 60px; height: 3px; background-color: #0d6efd; border: none; opacity: 1;">
+                            <a href="noticias.html" class="btn btn-outline-primary btn-lg">Ver noticias</a>
+                        </div>
+                        <div id="contenedor-noticias" class="row g-4 justify-content-center"></div>
+                    </section>
+
+                    <section class="my-5">
+                        <div class="text-center mb-4">
+                            <h2 class="fw-bold text-uppercase" style="letter-spacing: 1px;">Presentes On Tour</h2>
                             <p class="text-muted">Capturas de nuestra pasión en los estadios y desplazamientos con la peña</p>
                             <hr class="mx-auto" style="width: 60px; height: 3px; background-color: #0d6efd; border: none; opacity: 1;">
                         </div>
@@ -105,9 +108,7 @@
                         </div>
 
                         <div class="text-center mt-5">
-                            <a href="galeria.html" class="btn btn-primary btn-lg shadow-sm px-4">
-                                📸 Ver Galería Completa
-                            </a>
+                            <a href="galeria.html" class="btn btn-primary btn-lg shadow-sm px-4">📸 Ver Galería Completa</a>
                         </div>
                     </section>
                 </div>
@@ -117,7 +118,15 @@
                     <div class="card p-3 border-0 shadow-sm mb-4 position-sticky" style="top: 20px; text-align: center; background-color: #f8f9fa;">
                         <h6 class="fw-bold text-uppercase style-color" style="color: #0033A0;">👤 Área Privada</h6>
                         
-                        <div id="socio-panel-info" class="text-start small mt-2">
+                        <div id="panel-anonimo" class="mt-3">
+                            <p class="text-muted small">Accede a tus ventajas como socio registrado de la peña.</p>
+                            <a href="login.html" class="btn btn-sm btn-outline-primary w-100 fw-bold">🔑 Iniciar Sesión</a>
+                        </div>
+
+                        <div id="socio-panel-info" class="text-start small mt-2 d-none">
+                            <div class="text-center mb-2">
+                                <span class="fw-bold" id="nombre-bienvenida">Socio</span>
+                            </div>
                             <div class="p-2 border rounded bg-white mb-2">
                                 <small class="text-muted d-block">Estado de Cuota:</small>
                                 <span class="badge bg-success">✅ Pagada 2026</span>
@@ -126,10 +135,13 @@
                                 <small class="text-muted d-block">Tus Reservas:</small>
                                 <span class="fw-bold text-secondary text-truncate d-block">🚗 Coches para todos</span>
                             </div>
-                            <div class="text-center mt-3">
-                                <a href="socio.html" class="btn btn-sm btn-primary w-100 fw-bold">
-                                    Gestionar mi Perfil
-                                </a>
+                            
+                            <div class="text-center mt-3 d-flex flex-column gap-2">
+                                <a href="socio.html" class="btn btn-sm btn-primary w-100 fw-bold">Gestionar mi Perfil</a>
+                                
+                                <a href="panel.html" id="btn-cambiar-rol" class="btn btn-sm btn-warning w-100 fw-bold d-none">⚙️ Panel de Control</a>
+                                
+                                <button id="btn-cerrar-sesion" class="btn btn-sm btn-link text-danger text-decoration-none">Cerrar Sesión</button>
                             </div>
                         </div>
                     </div>
@@ -137,29 +149,23 @@
                     <div class="card p-3 border-0 shadow-sm position-sticky" style="top: 260px; text-align: center;">
                         <h6 class="fw-bold text-uppercase style-color" style="color: #0033A0;">🤝 Partners</h6>
                         <div class="d-flex flex-column gap-3 align-items-center">
-                            
                             <div class="p-2 border rounded bg-light w-100">
                                 <small class="text-muted d-block mb-1">Abogada Oficial</small>
                                 <span class="fw-bold text-secondary small">👩‍⚖️ Eva Galán</span>
                             </div>
-                            
                             <div class="p-2 border rounded bg-light w-100">
                                 <small class="text-muted d-block mb-1">Bar Oficial</small>
                                 <span class="fw-bold text-secondary small">🎵 Bar La Nota</span>
                             </div>
-                            
                             <div class="p-2 border rounded bg-light w-100">
                                 <small class="text-muted d-block mb-1">Logística</small>
                                 <span class="fw-bold text-secondary small">🚗 Coches para todos</span>
                             </div>
-                            
                             <div class="p-2 border rounded bg-light w-100">
                                 <small class="text-muted d-block mb-1">Merchandising</small>
                                 <span class="fw-bold text-secondary small">👕 Camisetas Zaragoza</span>
                             </div>
-                            
                         </div>
-
                         <div class="text-center mt-3">
                             <a href="partners.html" class="btn btn-sm btn-link p-0 text-decoration-none fw-bold" style="color: #0033A0;">Ver completa →</a>
                         </div>
@@ -170,6 +176,59 @@
         </div>
     </main>
 
+    <div class="modal fade" id="modalAvisoLegal" tabindex="-1" aria-labelledby="avisoLegalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="avisoLegalLabel">⚖️ Aviso Legal</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-dark" style="text-align: justify;">
+                    <h6><strong>1. Datos Identificativos</strong></h6>
+                    <p>En cumplimiento con el deber de información recogido en artículo 10 de la Ley 34/2002, de 11 de julio...</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Entendido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalPrivacidad" tabindex="-1" aria-labelledby="privacidadLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="privacidadLabel">🛡️ Política de Privacidad y Protección de Datos (RGPD)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-dark" style="text-align: justify;">
+                    <h6><strong>Responsable del Tratamiento</strong></h6>
+                    <p>La Peña Zaragocista, conforme al Reglamento General de Protección de Datos (RGPD)...</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Aceptar y Continuar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalCookies" tabindex="-1" aria-labelledby="cookiesLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="cookiesLabel">🍪 Política de Cookies</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-dark" style="text-align: justify;">
+                    <p>Este sitio web utiliza cookies técnicas esenciales para su correcto funcionamiento y seguridad.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendido y Aceptar Cookies</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="footer-placeholder"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -178,6 +237,47 @@
     <script src="js/app.js"></script>
 
     <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const panelAnonimo = document.getElementById("panel-anonimo");
+            const socioPanelInfo = document.getElementById("socio-panel-info");
+            const nombreBienvenida = document.getElementById("nombre-bienvenida");
+            const btnCambiarRol = document.getElementById("btn-cambiar-rol");
+            const btnCerrarSesion = document.getElementById("btn-cerrar-sesion");
+
+            const socioId = localStorage.getItem("socio_id");
+            const socioNombre = localStorage.getItem("socio_nombre");
+            const socioRol = localStorage.getItem("socio_rol"); 
+
+            if (socioId && socioNombre) {
+                // Hay sesión iniciada: Mostramos el panel de datos
+                panelAnonimo.classList.add("d-none");
+                socioPanelInfo.classList.remove("d-none");
+                nombreBienvenida.textContent = `¡Hola, ${socioNombre}!`;
+
+                // 🎯 CONTROL DEL BOTÓN DE ADMIN: Aquí está la reparación
+                if (socioRol === "Admin") {
+                    btnCambiarRol.classList.remove("d-none"); // Muestra el botón amarillo
+                    btnCambiarRol.setAttribute("href", "panel.html"); // <-- FORZAMOS QUE VAYA A TU ARCHIVO REAL
+                } else {
+                    btnCambiarRol.classList.add("d-none");    // Lo oculta si es socio normal
+                }
+            } else {
+                if (panelAnonimo) {
+                    panelAnonimo.classList.remove('d-none');
+                    panelAnonimo.classList.add("d-block");
+                }
+                if (socioPanelInfo) socioPanelInfo.classList.add("d-none");
+            }
+
+            if (btnCerrarSesion) {
+                btnCerrarSesion.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    localStorage.clear();
+                    window.location.reload();
+                });
+            }
+        });
+
         function enmascararImagen(elemento) {
             const rutaImagen = elemento.getAttribute('src');
             const imagenModal = document.getElementById('modalImage');

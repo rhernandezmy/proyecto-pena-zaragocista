@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import engine
+from database import SQLALCHEMY_DATABASE_URL, engine
 import models
-from routers import (auth, panel, partidos, viajes, reservas, 
+from routers import (auth, contacto, panel, partidos, viajes, reservas, 
                      patrocinadores, rivales, cuotas, noticias, mundial, usuarios)
 
 # Inicialización de tablas
@@ -30,6 +30,7 @@ app.include_router(noticias.router, prefix="/noticias", tags=["Noticias"])
 app.include_router(usuarios.router, prefix="/usuarios", tags=["Usuarios y Socios"])
 app.include_router(panel.router, prefix="/panel", tags=["Panel"])
 app.include_router(mundial.router, prefix="/mundial", tags=["Mundial"])
+app.include_router(contacto.router, prefix="/contacto", tags=["Contacto"])
 
 @app.get("/health", tags=["Sistema"])
 def health_check():

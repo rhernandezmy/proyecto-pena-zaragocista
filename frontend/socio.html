@@ -18,13 +18,13 @@
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom gap-3">
                 <div>
                     <h1 class="fw-bold text-dark mb-1">👤 Mi Área Privada</h1>
-                    <p class="text-muted mb-0">Bienvenido, Roberto. Gestiona tu perfil, cuotas y reservas de la peña.</p>
+                    <p class="text-muted mb-0" id="mensaje-bienvenida">Gestiona tu perfil, cuotas y reservas de la peña.</p>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <a href="admin.html" class="btn btn-warning fw-bold text-dark shadow-sm">
+                    <a href="admin.html" id="btn-rol-admin" class="btn btn-warning fw-bold text-dark shadow-sm d-none">
                         <i class="fas fa-tools me-2"></i> Cambiar a Rol Admin
                     </a>
-                    <span class="badge bg-primary px-3 py-2 fs-6 shadow-sm">Nº Socio: #001</span>
+                    <span class="badge bg-primary px-3 py-2 fs-6 shadow-sm" id="badge-num-socio">Socio</span>
                 </div>
             </div>
 
@@ -55,20 +55,20 @@
                             <div class="row g-3">
                                 <div class="col-12 col-md-6">
                                     <label class="form-label small fw-bold">Nombre Completo</label>
-                                    <input type="text" class="form-control" value="Roberto García" required>
+                                    <input type="text" id="perfil-nombre" class="form-control" required>
                                 </div>
                                 <div class="col-12 col-md-6">
                                     <label class="form-label small fw-bold">Correo Electrónico</label>
-                                    <input type="email" class="form-control" value="roberto@email.com" disabled>
+                                    <input type="email" id="perfil-email" class="form-control" disabled>
                                     <small class="text-muted">El email no se puede modificar, contacta con administración.</small>
                                 </div>
                                 <div class="col-12 col-md-6">
                                     <label class="form-label small fw-bold">Teléfono de Contacto</label>
-                                    <input type="tel" class="form-control" value="600 112 233" required>
+                                    <input type="tel" id="perfil-telefono" class="form-control" required>
                                 </div>
                                 <div class="col-12 col-md-6">
                                     <label class="form-label small fw-bold">Dirección / Localidad</label>
-                                    <input type="text" class="form-control" value="Zaragoza (Centro)" required>
+                                    <input type="text" id="perfil-direccion" class="form-control" required>
                                 </div>
                             </div>
                             <div class="text-end mt-4">
@@ -164,5 +164,89 @@
     <script src="js/components/header.js"></script>
     <script src="js/components/footer.js"></script>
     <script src="js/app.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // 1. Diagnóstico temporal: Veremos en pantalla qué lee exactamente el navegador
+            alert("El rol que detecta el navegador es: " + localStorage.getItem("socio_rol"));
+
+            // 2. Obtener datos guardados en el login
+            const socioId = localStorage.getItem("socio_id");
+            const socioNombre = localStorage.getItem("socio_nombre");
+            const socioEmail = localStorage.getItem("socio_email");
+            const socioRol = localStorage.getItem("socio_rol");
+
+            // Redirección de seguridad: si no está logueado no puede estar aquí
+            if (!socioId || !socioNombre) {
+                alert("Acceso restringido. Por favor, inicia sesión.");
+                window.location.href = "login.html";
+                return;
+            }
+
+            // 3. Elementos de la interfaz
+            const mensajeBienvenida = document.getElementById("mensaje-bienvenida");
+            const badgeNumSocio = document.getElementById("badge-num-socio");
+            const btnRolAdmin = document.getElementById("btn-rol-admin");
+
+            const inputNombre = document.getElementById("perfil-nombre");
+            const inputEmail = document.getElementById("perfil-email");
+            const inputTelefono = document.getElementById("perfil-telefono");
+            const inputDireccion = document.getElementById("perfil-direccion");
+            const formPerfil = document.getElementById("form-perfil-socio");
+
+            // 4. Pintar textos dinámicos de bienvenida
+            mensajeBienvenida.textContent = `Bienvenido/a, ${socioNombre}. Gestiona tu perfil, cuotas y reservas de la peña.`;
+            badgeNumSocio.textContent = `Nº Socio: #${socioId}`;
+
+            // 5. CONTROL DE ROL EXCLUSIVO: ¿Es Administrador real?
+            if (socioRol === "Admin") {
+                btnRolAdmin.classList.remove("d-none"); // Muestra el botón únicamente al Admin
+            } else {
+                btnRolAdmin.classList.add("d-none");    // Lo oculta para los socios normales
+            }
+
+            // 6. Cargar datos del socio en los inputs del formulario
+            inputNombre.value = socioNombre;
+            inputEmail.value = socioEmail;
+            inputTelefono.value = localStorage.getItem("socio_telefono") || "";
+            inputDireccion.value = localStorage.getItem("socio_direccion") || "";
+
+            // 7. Manejo del envío para guardar cambios en el perfil
+            formPerfil.addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                const datosActualizados = {
+                    nombre: inputNombre.value,
+                    telefono: inputTelefono.value,
+                    direccion: inputDireccion.value
+                };
+
+                try {
+                    const response = await fetch(`http://localhost:8000/usuarios/${socioId}`, {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-Usuario-Id": socioId
+                        },
+                        body: JSON.stringify(datosActualizados)
+                    });
+
+                    if (response.ok) {
+                        localStorage.setItem("socio_nombre", inputNombre.value);
+                        localStorage.setItem("socio_telefono", inputTelefono.value);
+                        localStorage.setItem("socio_direccion", inputDireccion.value);
+                        
+                        alert("¡Cambios guardados con éxito!");
+                        window.location.reload();
+                    } else {
+                        alert("Error al actualizar los datos en el servidor.");
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                    alert("No se pudo establecer conexión con el servidor.");
+                }
+            });
+        });
+    </script>
 </body>
 </html>

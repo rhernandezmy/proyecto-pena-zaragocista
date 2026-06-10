@@ -4,9 +4,9 @@ const footerHTML = `
 <footer class="bg-light py-5 mt-5 border-top">
     <div class="container">
         <div class="row">
-            <div class="col-md-4 text-center d-flex flex-column align-items-center">
-                <img src="assets/logo.png" alt="Logo Peña" style="height: 50px;">
-                <p class="text-muted">Síguenos en Redes Sociales</p>
+            <div class="col-md-4 text-center d-flex flex-column align-items-center mb-4 mb-md-0">
+                <img src="assets/logo.png" alt="Logo Peña" style="height: 50px;" class="mb-2">
+                <p class="text-muted small mb-2">Síguenos en Redes Sociales</p>
                 <div class="d-flex gap-2">
                     <a href="https://www.facebook.com/share/1AqBw3hvb2/" target="_blank" class="btn btn-outline-dark btn-sm rounded-circle" style="width: 32px; height: 32px; padding: 5px;">
                         <i class="fab fa-facebook-f"></i>
@@ -20,32 +20,42 @@ const footerHTML = `
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <h5 class="mb-3">Menú</h5>
-                <ul class="list-unstyled">
-                    <li><a href="index.html" class="text-decoration-none text-dark">Inicio</a></li>
-                    <li><a href="partidos.html" class="text-decoration-none text-dark">Partidos</a></li>
-                    <li><a href="noticias.html" class="text-decoration-none text-dark">Noticias</a></li>
-                    <li><a href="pena.html" class="text-decoration-none text-dark">La Peña</a></li>
-                    <li><a href="clasificacion.html" class="text-decoration-none text-dark">Clasificación</a></li>
-                    <li><a href="partners.html" class="text-decoration-none text-dark">Partners</a></li>
+            <div class="col-md-4 mb-4 mb-md-0">
+                <h5 class="mb-3 fw-bold small text-uppercase" style="color: #0033A0;">Menú</h5>
+                <ul class="list-unstyled shm-list small">
+                    <li class="mb-1"><a href="index.html" class="text-decoration-none text-muted">🏠 Inicio</a></li>
+                    <li class="mb-1"><a href="partidos.html" class="text-decoration-none text-muted">⚽ Partidos</a></li>
+                    <li class="mb-1"><a href="noticias.html" class="text-decoration-none text-muted">📰 Noticias</a></li>
+                    <li class="mb-1"><a href="pena.html" class="text-decoration-none text-muted">🦁 La Peña</a></li>
+                    <li class="mb-1"><a href="clasificacion.html" class="text-decoration-none text-muted">📊 Clasificación</a></li>
+                    <li class="mb-1"><a href="partners.html" class="text-decoration-none text-muted">🤝 Partners</a></li>
                 </ul>
             </div>
 
             <div class="col-md-4">
-                <h5 class="mb-3">Ayuda</h5>
-                <ul class="list-unstyled">
-                    <li><a href="#" class="text-decoration-none text-dark">Aviso Legal</a></li>
-                    <li><a href="#" class="text-decoration-none text-dark">Política de Cookies</a></li>
-                    <li><a href="#" class="text-decoration-none text-dark">Política de Privacidad</a></li>
+                <h5 class="mb-3 fw-bold small text-uppercase" style="color: #0033A0;">Ayuda y Legal</h5>
+                <ul class="list-unstyled small">
+                    <li class="mb-1"><a href="#" data-bs-toggle="modal" data-bs-target="#modalAvisoLegal" class="text-decoration-none text-muted">⚖️ Aviso Legal</a></li>
+                    <li class="mb-1"><a href="#" data-bs-toggle="modal" data-bs-target="#modalCookies" class="text-decoration-none text-muted">🍪 Política de Cookies</a></li>
+                    <li class="mb-1"><a href="#" data-bs-toggle="modal" data-bs-target="#modalPrivacidad" class="text-decoration-none text-muted">🛡️ Política de Privacidad (RGPD)</a></li>
                 </ul>
             </div>
         </div>
-        <div class="text-center mt-4">
-            <p class="text-muted">&copy; 2026 Peña Zaragocista</p>
+        
+        <hr class="my-4 text-muted opacity-25">
+        
+        <div class="text-center">
+            <p class="text-muted small mb-0">&copy; 2026 Peña Zaragocista Oficial. Todos los derechos reservados.</p>
+            <p class="mt-1 small">
+                <a href="#" data-bs-toggle="modal" data-bs-target="#modalAvisoLegal" class="text-decoration-none mx-2 text-secondary">Aviso Legal</a> | 
+                <a href="#" data-bs-toggle="modal" data-bs-target="#modalPrivacidad" class="text-decoration-none mx-2 text-secondary">Privacidad</a> | 
+                <a href="#" data-bs-toggle="modal" data-bs-target="#modalCookies" class="text-decoration-none mx-2 text-secondary">Cookies</a>
+            </p>
         </div>
     </div>
 </footer>
 `;
 
-document.getElementById('footer-placeholder').innerHTML = footerHTML;
+if (document.getElementById('footer-placeholder')) {
+    document.getElementById('footer-placeholder').innerHTML = footerHTML;
+}

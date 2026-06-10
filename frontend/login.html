@@ -39,11 +39,12 @@
             loginForm.addEventListener("submit", async (e) => {
                 e.preventDefault();
                 
-                const email = document.getElementById("email").value;
-                const password = document.getElementById("password").value;
+                const emailRaw = document.getElementById("email").value;
+                const email = emailRaw.trim().toLowerCase(); 
+                const passwordRaw = document.getElementById("password").value;
+                const password = passwordRaw.trim(); 
 
                 try {
-                    // URL ajustada a /auth/login porque en main.py usas prefix="/auth"
                     const response = await fetch("http://localhost:8000/auth/login", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -53,18 +54,24 @@
                     if (response.ok) {
                         const data = await response.json();
                         
-                        localStorage.setItem("socio_nombre", data.nombre);
-                        localStorage.setItem("socio_email", email);
+                        localStorage.clear();
+
+                        // Tus variables de siempre
                         localStorage.setItem("socio_id", data.id);
-                        
+                        localStorage.setItem("socio_nombre", data.nombre);
+                        localStorage.setItem("socio_rol", data.rol); 
+                        localStorage.setItem("socio_email", data.email || email); 
+
                         alert("¡Bienvenido, " + data.nombre + "!");
-                        window.location.href = "index.html"; 
+                        
+                        // Volvemos a tu redirección original a socio.html
+                        window.location.href = "socio.html"; 
                     } else {
                         alert("Error: Correo o contraseña incorrectos.");
                     }
                 } catch (error) {
                     console.error("Error completo:", error);
-                    alert("No se pudo conectar con el servidor. Asegúrate de que FastAPI esté corriendo.");
+                    alert("No se pudo conectar con el servidor.");
                 }
             });
         });
