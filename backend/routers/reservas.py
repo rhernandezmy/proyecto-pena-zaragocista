@@ -7,15 +7,36 @@ from database import get_db
 router = APIRouter(prefix="", tags=["Reservas"])
 
 # =========================================================================
-# 1. OBTENER TODAS LAS RESERVAS
+# 1. OBTENER TODAS LAS RESERVAS (Vitamina para el Admin)
 # =========================================================================
 @router.get("")
 def obtener_reservas(db: Session = Depends(get_db)):
-    return db.query(models.Reserva).all()
+    """
+    Retorna todas las reservas del sistema mapeando los datos de los socios
+    para evitar que el frontend falle al intentar leer objetos nulos.
+    """
+    reservas = db.query(models.Reserva).all()
+    resultado = []
+    
+    for r in reservas:
+        resultado.append({
+            "id": r.id,
+            "viaje_id": r.viaje_id,
+            "usuario_id": r.usuario_id,
+            # Evitamos que rompa el JS si el usuario por algún motivo no existe
+            "socio_nombre": f"{r.usuario.nombre} {r.usuario.apellidos}" if r.usuario else "Socio Desconocido",
+            "socio_email": r.usuario.email if r.usuario else "Sin Email",
+            "asientos_reservados": r.asientos_reservados,
+            "tipo_reserva": r.tipo_reserva,
+            "motivo_evento": r.motivo_evento if r.motivo_evento else "Sin motivo especificado",
+            "estado_solicitud": r.estado_solicitud,
+            "fecha_solicitada": r.fecha_solicitada.isoformat() if r.fecha_solicitada else None
+        })
+    return resultado
 
 
 # =========================================================================
-# 2. CREAR NUEVA RESERVA (Adaptado para Viajes y Local)
+# 2. CREAR NUEVA RESERVA (Adaptado para Viajes y Local - Lógica Intacta)
 # =========================================================================
 @router.post("")
 def crear_reserva(reserva: schemas.ReservaCrear, db: Session = Depends(get_db)):
@@ -35,10 +56,8 @@ def crear_reserva(reserva: schemas.ReservaCrear, db: Session = Depends(get_db)):
         
         # 🚗 LÓGICA DE COCHE COMPARTIDO: Si el socio OFRECE su coche
         if reserva.motivo_evento and "Ofrece" in reserva.motivo_evento:
-            # Extraemos el número de plazas del texto (ej: "Ofrece vehículo con 4 plazas." -> extrae el 4)
             try:
                 palabras = reserva.motivo_evento.split()
-                # Buscamos la posición de la palabra "plazas" y miramos el número anterior
                 idx = palabras.index("plazas.") if "plazas." in palabras else palabras.index("plazas")
                 plazas_ofrecidas = int(palabras[idx - 1])
             except (ValueError, IndexError):
@@ -87,7 +106,7 @@ def obtener_viajeros_por_viaje(viaje_id: int, db: Session = Depends(get_db)):
 
 
 # =========================================================================
-# 4. RESOLVER RESERVA DEL LOCAL
+# 4. RESOLVER RESERVA DEL LOCAL (Mantenido con tu arquitectura PATCH)
 # =========================================================================
 @router.patch("/{reserva_id}/resolucion")
 def resolver_reserva_local(reserva_id: int, estado: str, db: Session = Depends(get_db)):

@@ -66,7 +66,7 @@
                                 <button class="btn btn-sm btn-success me-2" data-bs-toggle="modal" data-bs-target="#modalNuevoSocio">
                                     <i class="fas fa-user-plus me-1"></i> Nuevo Socio
                                 </button>
-                                <button class="btn btn-sm btn-outline-primary"><i class="fas fa-download me-1"></i> Exportar CSV</button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="exportarSociosCSV()"><i class="fas fa-download me-1"></i> Exportar CSV</button>
                             </div>
                         </div>
                         <div class="table-responsive">
@@ -81,28 +81,10 @@
                                         <th class="text-center">Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="tabla-socios-admin">
                                     <tr>
-                                        <td class="fw-bold">#001</td>
-                                        <td>Roberto García</td>
-                                        <td>roberto@email.com</td>
-                                        <td>600 112 233</td>
-                                        <td><span class="badge bg-success">✅ Pagada 2026</span></td>
-                                        <td class="text-center">
-                                            <button class="btn btn-sm btn-outline-secondary me-1" title="Editar"><i class="fas fa-edit"></i></button>
-                                            <button class="btn btn-sm btn-outline-danger" title="Dar de baja"><i class="fas fa-user-slash"></i></button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="fw-bold">#002</td>
-                                        <td>Ionut Popescu</td>
-                                        <td>ionut@email.com</td>
-                                        <td>611 223 344</td>
-                                        <td><span class="badge bg-warning text-dark">⚠️ Pendiente</span></td>
-                                        <td class="text-center">
-                                            <button class="btn btn-sm btn-success text-white me-1" title="Marcar como pagado"><i class="fas fa-check"></i></button>
-                                            <button class="btn btn-sm btn-outline-secondary me-1" title="Editar"><i class="fas fa-edit"></i></button>
-                                            <button class="btn btn-sm btn-outline-danger" title="Dar de baja"><i class="fas fa-user-slash"></i></button>
+                                        <td colspan="6" class="text-center text-muted py-3">
+                                            <i class="fas fa-spinner fa-spin me-2"></i>Cargando socios...
                                         </td>
                                     </tr>
                                 </tbody>
@@ -156,7 +138,7 @@
                                                 <th>Plazas Libres</th>
                                                 <th class="text-center">Acciones</th>
                                             </tr>
-                                        </thead>
+                                        </table>
                                         <tbody id="tabla-viajes-admin">
                                             <tr>
                                                 <td colspan="6" class="text-center text-muted py-3">
@@ -186,16 +168,9 @@
                                         <th class="text-center">Resolución</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="tabla-reservas-admin">
                                     <tr>
-                                        <td class="fw-bold">Roberto García (#001)</td>
-                                        <td>24/06/2026</td>
-                                        <td>Ver Partido fuera (Castellón vs Real Zaragoza)</td>
-                                        <td><span class="badge bg-warning text-dark">⏳ Pendiente de revisión</span></td>
-                                        <td class="text-center">
-                                            <button class="btn btn-sm btn-success me-1 text-white fw-bold"><i class="fas fa-thumbs-up me-1"></i> Aprobar</button>
-                                            <button class="btn btn-sm btn-danger fw-bold"><i class="fas fa-thumbs-down me-1"></i> Rechazar</button>
-                                        </td>
+                                        <td colspan="5" class="text-center text-muted py-3">Cargando solicitudes...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -211,15 +186,15 @@
                                 <form id="form-nueva-foto" enctype="multipart/form-data">
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">Seleccionar Imagen</label>
-                                        <input type="file" class="form-control" accept="image/*" required>
+                                        <input type="file" id="foto-archivo" class="form-control" accept="image/*" required>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">Título / Evento</label>
-                                        <input type="text" class="form-control" placeholder="Ej: Viaje a Burgos" required>
+                                        <input type="text" id="foto-titulo" class="form-control" placeholder="Ej: Viaje a Burgos" required>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">Pie de Foto</label>
-                                        <input type="text" class="form-control" placeholder="Ej: #Presentes con el equipo" required>
+                                        <input type="text" id="foto-pie" class="form-control" placeholder="Ej: #Presentes con el equipo" required>
                                     </div>
                                     <button type="submit" class="btn btn-info text-white w-100 fw-bold">Publicar Foto</button>
                                 </form>
@@ -238,14 +213,9 @@
                                                 <th class="text-center">Acción</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody id="tabla-galeria-admin">
                                             <tr>
-                                                <td><div class="bg-secondary rounded text-white text-center p-2 small" style="width: 50px;">IMG</div></td>
-                                                <td class="fw-bold">Viaje Andorra</td>
-                                                <td>#PresentesPorElEscudo en Andorra</td>
-                                                <td class="text-center">
-                                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
-                                                </td>
+                                                <td colspan="4" class="text-center text-muted py-3">Cargando imágenes de la galería...</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -263,11 +233,11 @@
                                 <form id="form-nuevo-partner">
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">Categoría / Sector</label>
-                                        <input type="text" class="form-control" placeholder="Ej: Abogada Oficial, Bar..." required>
+                                        <input type="text" id="partner-categoria" class="form-control" placeholder="Ej: Abogada Oficial, Bar..." required>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">Nombre Comercial (con icono)</label>
-                                        <input type="text" class="form-control" placeholder="Ej: 👩‍⚖️ Eva Galán" required>
+                                        <input type="text" id="partner-nombre" class="form-control" placeholder="Ej: 👩‍⚖️ Eva Galán" required>
                                     </div>
                                     <button type="submit" class="btn btn-secondary w-100 fw-bold">Vincular Partner</button>
                                 </form>
@@ -285,26 +255,9 @@
                                                 <th class="text-center">Acción</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody id="tabla-partners-admin">
                                             <tr>
-                                                <td><span class="badge bg-light text-dark border">Abogada Oficial</span></td>
-                                                <td class="fw-bold small">👩‍⚖️ Eva Galán</td>
-                                                <td class="text-center"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-user-minus"></i></button></td>
-                                            </tr>
-                                            <tr>
-                                                <td><span class="badge bg-light text-dark border">Bar Oficial</span></td>
-                                                <td class="fw-bold small">🎵 Bar La Nota</td>
-                                                <td class="text-center"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-user-minus"></i></button></td>
-                                            </tr>
-                                            <tr>
-                                                <td><span class="badge bg-light text-dark border">Logística</span></td>
-                                                <td class="fw-bold small">🚗 Coches para todos</td>
-                                                <td class="text-center"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-user-minus"></i></button></td>
-                                            </tr>
-                                            <tr>
-                                                <td><span class="badge bg-light text-dark border">Merchandising</span></td>
-                                                <td class="fw-bold small">👕 Camisetas Zaragoza</td>
-                                                <td class="text-center"><button class="btn btn-sm btn-outline-danger"><i class="fas fa-user-minus"></i></button></td>
+                                                <td colspan="3" class="text-center text-muted py-3">Cargando sponsors...</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -373,16 +326,112 @@
         const BACKEND_URL = "http://127.0.0.1:8000";
 
         document.addEventListener("DOMContentLoaded", () => {
+            // Inicializar datos globales
+            obtenerSociosAPI();
             obtenerPartidosAPI();
             obtenerViajesAPI();
+            obtenerReservasAPI();
+            obtenerGaleriaAPI();
+            obtenerPartnersAPI();
+
+            // Listeners de formularios
+            document.getElementById("form-alta-socio").addEventListener("submit", enviarNuevoSocio);
             document.getElementById("form-nuevo-viaje").addEventListener("submit", enviarNuevoViaje);
+            document.getElementById("form-nueva-foto").addEventListener("submit", enviarNuevaFoto);
+            document.getElementById("form-nuevo-partner").addEventListener("submit", enviarNuevoPartner);
         });
 
+        // ==========================================
+        // 1. CONTROL DE SOCIOS
+        // ==========================================
+        async function obtenerSociosAPI() {
+            const tbody = document.getElementById("tabla-socios-admin");
+            try {
+                const res = await fetch(`${BACKEND_URL}/socios`);
+                if (!res.ok) throw new Error();
+                const socios = await res.json();
+                
+                if(socios.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay socios registrados.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = "";
+                socios.forEach(socio => {
+                    const badge = socio.cuota === "Pagada" ? '<span class="badge bg-success">✅ Pagada 2026</span>' : '<span class="badge bg-warning text-dark">⚠️ Pendiente</span>';
+                    const fila = `
+                        <tr>
+                            <td class="fw-bold">#${String(socio.id).padStart(3, '0')}</td>
+                            <td>${socio.nombre} ${socio.apellidos || ''}</td>
+                            <td>${socio.email}</td>
+                            <td>${socio.telefono || '-'}</td>
+                            <td>${badge}</td>
+                            <td class="text-center">
+                                ${socio.cuota !== "Pagada" ? `<button class="btn btn-sm btn-success text-white me-1" onclick="actualizarCuotaSocio(${socio.id}, 'Pagada')" title="Marcar como pagado"><i class="fas fa-check"></i></button>` : ''}
+                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarSocio(${socio.id})" title="Dar de baja"><i class="fas fa-user-slash"></i></button>
+                            </td>
+                        </tr>`;
+                    tbody.insertAdjacentHTML("beforeend", fila);
+                });
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar el listado de socios.</td></tr>';
+            }
+        }
+
+        async function enviarNuevoSocio(e) {
+            e.preventDefault();
+            const payload = {
+                nombre: document.getElementById("admin-nuevo-nombre").value,
+                apellidos: document.getElementById("admin-nuevo-apellidos").value,
+                email: document.getElementById("admin-nuevo-email").value,
+                telefono: document.getElementById("admin-nuevo-telefono").value,
+                cuota: document.getElementById("admin-nuevo-cuota").value
+            };
+            try {
+                const res = await fetch(`${BACKEND_URL}/socios`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                if(res.ok) {
+                    alert("¡Socio dado de alta correctamente!");
+                    document.getElementById("form-alta-socio").reset();
+                    bootstrap.Modal.getInstance(document.getElementById("modalNuevoSocio")).hide();
+                    obtenerSociosAPI();
+                } else { alert("Error al registrar el socio."); }
+            } catch (err) { console.error(err); }
+        }
+
+        async function actualizarCuotaSocio(id, nuevoEstado) {
+            try {
+                const res = await fetch(`${BACKEND_URL}/socios/${id}/cuota`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ cuota: nuevoEstado })
+                });
+                if (res.ok) obtenerSociosAPI();
+            } catch(err) { console.error(err); }
+        }
+
+        async function eliminarSocio(id) {
+            if (!confirm("¿Dar de baja definitivamente a este socio?")) return;
+            try {
+                const res = await fetch(`${BACKEND_URL}/socios/${id}`, { method: "DELETE" });
+                if(res.ok) obtenerSociosAPI();
+            } catch(err) { console.error(err); }
+        }
+
+        function exportarSociosCSV() {
+            window.open(`${BACKEND_URL}/socios/exportar/csv`, '_blank');
+        }
+
+        // ==========================================
+        // 2. GESTIÓN DE VIAJES
+        // ==========================================
         async function obtenerPartidosAPI() {
             const selectPartido = document.getElementById("viaje-partido-select");
             try {
                 const res = await fetch(`${BACKEND_URL}/partidos`);
-                if (!res.ok) throw new Error("Error obteniendo partidos");
+                if (!res.ok) throw new Error();
                 const partidos = await res.json();
                 
                 selectPartido.innerHTML = '<option value="">-- Selecciona un Partido --</option>';
@@ -393,8 +442,39 @@
                     selectPartido.appendChild(opt);
                 });
             } catch (err) {
-                console.error(err);
                 selectPartido.innerHTML = '<option value="">Error al cargar partidos del servidor</option>';
+            }
+        }
+
+        async function obtenerViajesAPI() {
+            const tablaCuerpo = document.querySelectorAll("#tabla-viajes-admin")[0]; 
+            try {
+                const res = await fetch(`${BACKEND_URL}/viajes`);
+                if (!res.ok) throw new Error();
+                const viajes = await res.json();
+
+                if (viajes.length === 0) {
+                    tablaCuerpo.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">No hay ningún viaje programado.</td></tr>';
+                    return;
+                }
+
+                tablaCuerpo.innerHTML = "";
+                viajes.forEach(viaje => {
+                    const fila = `
+                        <tr>
+                            <td class="fw-bold">#${viaje.id}</td>
+                            <td>${viaje.destino}</td>
+                            <td>${viaje.fecha || 'Disponible'}</td>
+                            <td>${viaje.tipo_transporte}</td>
+                            <td><span class="badge bg-success">${viaje.plazas_disponibles} / ${viaje.plazas_totales}</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarViajePorId(${viaje.id})" title="Eliminar viaje"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>`;
+                    tablaCuerpo.insertAdjacentHTML("beforeend", fila);
+                });
+            } catch (err) {
+                tablaCuerpo.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-3">Error de comunicación con PostgreSQL.</td></tr>';
             }
         }
 
@@ -407,14 +487,12 @@
             const fechaInput = document.getElementById("viaje-fecha").value;
             const tipoTransporte = document.getElementById("viaje-transporte").value;
 
-            if (!partidoId) {
-                alert("Por favor, selecciona un partido.");
-                return;
-            }
+            if (!partidoId) { alert("Por favor, selecciona un partido."); return; }
 
             const payloadViaje = {
                 partido_id: partidoId,
                 destino: selectPartido.options[selectPartido.selectedIndex].text,
+                fecha: fechaInput, 
                 email_conductor: "admin@peniazaragocista.com", 
                 tipo_transporte: tipoTransporte,
                 plazas_totales: plazasTotales,
@@ -430,7 +508,6 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payloadViaje)
                 });
-
                 const data = await res.json();
 
                 if (res.status === 200 || res.status === 201) {
@@ -438,61 +515,154 @@
                     document.getElementById("form-nuevo-viaje").reset();
                     obtenerViajesAPI();
                 } else {
-                    alert(`Error (${res.status}): ${data.detail || "Esquema inválido"}`);
+                    alert(`Error: ${data.detail || "Esquema inválido"}`);
                 }
-            } catch (err) {
-                console.error(err);
-                alert("Error de conexión con el backend.");
-            }
-        }
-
-        async function obtenerViajesAPI() {
-            const tablaCuerpo = document.getElementById("tabla-viajes-admin");
-            try {
-                const res = await fetch(`${BACKEND_URL}/viajes`);
-                if (!res.ok) throw new Error("Error obteniendo viajes");
-                const viajes = await res.json();
-
-                if (viajes.length === 0) {
-                    tablaCuerpo.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">No hay ningún viaje programado en el sistema.</td></tr>';
-                    return;
-                }
-
-                tablaCuerpo.innerHTML = "";
-                viajes.forEach(viaje => {
-                    const fila = `
-                        <tr>
-                            <td class="fw-bold">#${viaje.partido_id}</td>
-                            <td>${viaje.destino}</td>
-                            <td>Disponible</td>
-                            <td>${viaje.tipo_transporte}</td>
-                            <td><span class="badge bg-success">${viaje.plazas_disponibles} / ${viaje.plazas_totales}</span></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarViajePorId(${viaje.partido_id})" title="Eliminar viaje"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    `;
-                    tablaCuerpo.insertAdjacentHTML("beforeend", fila);
-                });
-            } catch (err) {
-                console.error(err);
-                tablaCuerpo.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-3">Error de comunicación con PostgreSQL.</td></tr>';
-            }
+            } catch (err) { alert("Error de conexión con el backend."); }
         }
 
         async function eliminarViajePorId(id) {
             if (!confirm(`¿Estás seguro de que quieres eliminar el viaje ID #${id}?`)) return;
             try {
                 const res = await fetch(`${BACKEND_URL}/viajes/${id}`, { method: "DELETE" });
-                if (res.ok) {
-                    obtenerViajesAPI();
-                } else {
-                    alert("No se pudo eliminar el viaje seleccionado.");
+                if (res.ok) { obtenerViajesAPI(); } 
+                else { alert("No se pudo eliminar el viaje."); }
+            } catch (err) { alert("Error al intentar conectar con el backend."); }
+        }
+
+        // ==========================================
+        // 3. RESERVAS DEL LOCAL
+        // ==========================================
+        async function obtenerReservasAPI() {
+            const tbody = document.getElementById("tabla-reservas-admin");
+            try {
+                const res = await fetch(`${BACKEND_URL}/reservas`);
+                if(!res.ok) throw new Error();
+                const reservas = await res.json();
+                
+                if(reservas.length === 0){
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No hay solicitudes pendientes.</td></tr>';
+                    return;
                 }
-            } catch (err) {
-                console.error(err);
-                alert("Error al intentar conectar con el backend.");
-            }
+                tbody.innerHTML = "";
+                reservas.forEach(reserva => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="fw-bold">${reserva.socio_nombre}</td>
+                            <td>${reserva.fecha}</td>
+                            <td>${reserva.motivo}</td>
+                            <td><span class="badge bg-warning text-dark">${reserva.estado}</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-success me-1 text-white" onclick="resolverReserva(${reserva.id}, 'Aprobada')"><i class="fas fa-thumbs-up"></i></button>
+                                <button class="btn btn-sm btn-danger" onclick="resolverReserva(${reserva.id}, 'Rechazada')"><i class="fas fa-thumbs-down"></i></button>
+                            </td>
+                        </tr>`;
+                });
+            } catch(e) { tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Simulación sin backend de reservas activos.</td></tr>'; }
+        }
+
+        async function resolverReserva(id, estado) {
+            try {
+                await fetch(`${BACKEND_URL}/reservas/${id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ estado: estado })
+                });
+                obtenerReservasAPI();
+            } catch (e) { console.error(e); }
+        }
+
+        // ==========================================
+        // 4. GESTIÓN DE GALERÍA
+        // ==========================================
+        async function obtenerGaleriaAPI() {
+            const tbody = document.getElementById("tabla-galeria-admin");
+            try {
+                const res = await fetch(`${BACKEND_URL}/galeria`);
+                const imagenes = await res.json();
+                tbody.innerHTML = "";
+                imagenes.forEach(img => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><img src="${BACKEND_URL}${img.ruta}" class="rounded" style="width: 50px; height: auto;"></td>
+                            <td class="fw-bold">${img.titulo}</td>
+                            <td>${img.pie}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarImagen(${img.id})"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>`;
+                });
+            } catch(e) { tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No se pudieron sincronizar las fotos.</td></tr>'; }
+        }
+
+        async function enviarNuevaFoto(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append("file", document.getElementById("foto-archivo").files[0]);
+            formData.append("titulo", document.getElementById("foto-titulo").value);
+            formData.append("pie", document.getElementById("foto-pie").value);
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/galeria`, { method: "POST", body: formData });
+                if(res.ok) {
+                    alert("Foto publicada.");
+                    document.getElementById("form-nueva-foto").reset();
+                    obtenerGaleriaAPI();
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function eliminarImagen(id) {
+            if(!confirm("¿Eliminar imagen?")) return;
+            try {
+                await fetch(`${BACKEND_URL}/galeria/${id}`, { method: "DELETE" });
+                obtenerGaleriaAPI();
+            } catch (e) { console.error(e); }
+        }
+
+        // ==========================================
+        // 5. GESTIÓN DE PARTNERS
+        // ==========================================
+        async function obtenerPartnersAPI() {
+            const tbody = document.getElementById("tabla-partners-admin");
+            try {
+                const res = await fetch(`${BACKEND_URL}/partners`);
+                const partners = await res.json();
+                tbody.innerHTML = "";
+                partners.forEach(p => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><span class="badge bg-light text-dark border">${p.categoria}</span></td>
+                            <td class="fw-bold small">${p.nombre}</td>
+                            <td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="eliminarPartner(${p.id})"><i class="fas fa-user-minus"></i></button></td>
+                        </tr>`;
+                });
+            } catch(e) { tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Usa partners predefinidos en mock local.</td></tr>'; }
+        }
+
+        async function enviarNuevoPartner(e) {
+            e.preventDefault();
+            const payload = {
+                categoria: document.getElementById("partner-categoria").value,
+                nombre: document.getElementById("partner-nombre").value
+            };
+            try {
+                const res = await fetch(`${BACKEND_URL}/partners`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                if(res.ok) {
+                    document.getElementById("form-nuevo-partner").reset();
+                    obtenerPartnersAPI();
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function eliminarPartner(id) {
+            try {
+                await fetch(`${BACKEND_URL}/partners/${id}`, { method: "DELETE" });
+                obtenerPartnersAPI();
+            } catch(e) { console.error(e); }
         }
     </script>
 </body>
