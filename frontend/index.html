@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Peña Zaragocista - Portal Oficial</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -39,12 +40,9 @@
                         <div class="text-start small mt-2">
                             <p class="text-muted mb-2 text-center">¿Quieres celebrar tu evento o reservar el local para un partido?</p>
                             <div class="p-2 border rounded bg-white mb-2 text-center">
-                                <small class="text-muted d-block">Disponibilidad:</small>
-                                <span class="fw-bold text-success small">📅 Comprobar Fechas</span>
-                            </div>
-                            <div class="text-center mt-3">
-                                <a href="reservas.html" class="btn btn-sm btn-outline-primary w-100 fw-bold">
-                                    🚀 Reservar Espacio
+                                <a href="reservas.html" class="list-group-item list-group-item-action py-3 lh-tight">
+                                    <small class="text-muted d-block">Disponibilidad:</small>
+                                    <span class="fw-bold text-success small">📅 Comprobar Fechas</span>
                                 </a>
                             </div>
                         </div>
@@ -53,13 +51,13 @@
 
                 <div class="col-12 col-lg-8">
                     <div class="alert alert-info border-0 shadow-sm mb-5 text-center" role="alert">
-                        <h4 class="alert-heading">📅 Actualidad Real Zaragoza</h4>
+                        <h4 class="alert-heading">📅 Partidos de nuestro  Real Zaragoza <span style="color: #004a99; margin-left: 10px;">❤</span><span style="color: #ffffff; -webkit-text-stroke: 1px #004a99;">❤</span></h4>
                         <p class="mb-0">Actualmente no hay partidos programados del Real Zaragoza. ¡Volveremos con más fuerza la próxima temporada!</p>
                     </div>
 
                     <div class="text-center mb-4">
                         <h2 class="mb-3">🏆 ¡Todos con La Roja en el Mundial 2026!</h2>
-                        <a href="partidos.html" class="btn btn-outline-primary btn-lg">Ver partidos</a>
+                        <a href="partidos.html" class="btn btn-primary btn-lg shadow-sm px-4">Ver partidos</a>
                     </div>
                     <div id="contenedor-mundial" class="row g-4 justify-content-center"></div>
                     
@@ -68,7 +66,7 @@
                             <h2 class="fw-bold text-uppercase" style="letter-spacing: 1px;">📰 Últimas Noticias</h2>
                             <p class="text-muted">Mantente al día de la actualidad de nuestra Peña y del Real Zaragoza</p>
                             <hr class="mx-auto" style="width: 60px; height: 3px; background-color: #0d6efd; border: none; opacity: 1;">
-                            <a href="noticias.html" class="btn btn-outline-primary btn-lg">Ver noticias</a>
+                            <a href="noticias.html" class="btn btn-primary btn-lg shadow-sm px-4">Ver noticias</a>
                         </div>
                         <div id="contenedor-noticias" class="row g-4 justify-content-center"></div>
                     </section>
@@ -110,6 +108,13 @@
                         <div class="text-center mt-5">
                             <a href="galeria.html" class="btn btn-primary btn-lg shadow-sm px-4">📸 Ver Galería Completa</a>
                         </div>
+                        <div class="text-center mt-5">
+                            <h3 class="fw-bold">¿Quieres unirte al sentimiento?</h3>
+                            <p>Prepárate para vivir experiencias y kilómetros de carretera con nosotros.</p>
+                            <a href="contacto.html" class="btn btn-primary btn-lg shadow-sm px-4">
+                                <i class="fas fa-arrow-right me-2"></i> ¡Únete!
+                            </a>
+                        </div>
                     </section>
                 </div>
 
@@ -133,7 +138,7 @@
                             </div>
                             <div class="p-2 border rounded bg-white mb-2">
                                 <small class="text-muted d-block">Tus Reservas:</small>
-                                <span class="fw-bold text-secondary text-truncate d-block">🚗 Coches para todos</span>
+                                <span class="fw-bold text-secondary text-truncate d-block">🚗 Coches en el area privada</span>
                             </div>
                             
                             <div class="text-center mt-3 d-flex flex-column gap-2">
@@ -249,17 +254,16 @@
             const socioRol = localStorage.getItem("socio_rol"); 
 
             if (socioId && socioNombre) {
-                // Hay sesión iniciada: Mostramos el panel de datos
                 panelAnonimo.classList.add("d-none");
                 socioPanelInfo.classList.remove("d-none");
                 nombreBienvenida.textContent = `¡Hola, ${socioNombre}!`;
 
-                // 🎯 CONTROL DEL BOTÓN DE ADMIN: Aquí está la reparación
-                if (socioRol === "Admin") {
-                    btnCambiarRol.classList.remove("d-none"); // Muestra el botón amarillo
-                    btnCambiarRol.setAttribute("href", "panel.html"); // <-- FORZAMOS QUE VAYA A TU ARCHIVO REAL
+                // PUNTO 3: REPARACIÓN ROBUSTA DEL FILTRO DE SEGURIDAD DEL BOTÓN ADMIN
+                if (socioRol === "Admin" || socioRol === "admin") {
+                    btnCambiarRol.classList.remove("d-none"); 
+                    btnCambiarRol.setAttribute("href", "panel.html"); 
                 } else {
-                    btnCambiarRol.classList.add("d-none");    // Lo oculta si es socio normal
+                    btnCambiarRol.classList.add("d-none"); // Se asegura de ocultarlo a los socios normales
                 }
             } else {
                 if (panelAnonimo) {

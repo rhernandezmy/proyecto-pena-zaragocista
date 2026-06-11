@@ -123,6 +123,32 @@
                 </div>
 
                 <div class="tab-pane fade" id="mis-reservas-pane" role="tabpanel" aria-labelledby="mis-reservas-tab" tabindex="0">
+                    
+                    <div class="card border-0 shadow-sm p-4 mb-4 bg-white">
+                        <h5 class="fw-bold text-dark mb-2"><i class="fas fa-car text-info me-2"></i> ¿Vas a viajar en tu coche? Ofrécelo a la peña</h5>
+                        <p class="text-muted small">Registra tu coche para que la administración sepa que dispones de plazas libres para el próximo desplazamiento.</p>
+                        
+                        <form id="form-ofrecer-coche" class="row g-2 align-items-end">
+                            <div class="col-12 col-md-5">
+                                <label class="form-label small fw-bold">ID del Viaje Destino</label>
+                                <input type="number" id="coche-viaje-id" class="form-control" placeholder="Ej: 1" required>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <label class="form-label small fw-bold">Plazas Libres Ofrecidas</label>
+                                <select id="coche-plazas" class="form-select">
+                                    <option value="4 plazas">4 plazas libres</option>
+                                    <option value="5 plazas">5 plazas libres</option>
+                                    <option value="7 plazas">7 plazas libres</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <button type="submit" class="btn btn-info text-dark fw-bold w-100">
+                                    <i class="fas fa-plus-circle me-1"></i> Registrar Vehículo
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
                     <div class="card border-0 shadow-sm p-4">
                         <h5 class="fw-bold mb-3"><i class="fas fa-route me-2 text-secondary"></i> Tus solicitudes y plazas activas</h5>
                         <div class="table-responsive">
@@ -133,25 +159,18 @@
                                         <th>Detalle / Evento</th>
                                         <th>Fecha</th>
                                         <th>Estado</th>
+                                        <th class="text-center">Acción</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="tabla-mis-solicitudes">
                                     <tr>
-                                        <td><span class="badge bg-info text-dark">🚗 Logística</span></td>
-                                        <td class="fw-bold">Viaje Andorra (Coche Compartido - Asignado)</td>
-                                        <td>15/09/2026</td>
-                                        <td><span class="badge bg-success">✅ Confirmado</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td><span class="badge bg-warning text-dark">🏠 Sede Social</span></td>
-                                        <td class="fw-bold">Reserva de Local (Ver partido contra el Castellón)</td>
-                                        <td>24/06/2026</td>
-                                        <td><span class="badge bg-warning text-dark">⏳ Pendiente de aprobación</span></td>
+                                        <td colspan="5" class="text-center text-muted py-3">Cargando solicitudes desde el servidor...</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
+
                 </div>
 
             </div>
@@ -164,26 +183,21 @@
     <script src="js/components/header.js"></script>
     <script src="js/components/footer.js"></script>
     <script src="js/app.js"></script>
+    <script src="js/socio-panel.js"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // 1. Diagnóstico temporal: Veremos en pantalla qué lee exactamente el navegador
-            alert("El rol que detecta el navegador es: " + localStorage.getItem("socio_rol"));
-
-            // 2. Obtener datos guardados en el login
             const socioId = localStorage.getItem("socio_id");
             const socioNombre = localStorage.getItem("socio_nombre");
             const socioEmail = localStorage.getItem("socio_email");
             const socioRol = localStorage.getItem("socio_rol");
 
-            // Redirección de seguridad: si no está logueado no puede estar aquí
             if (!socioId || !socioNombre) {
                 alert("Acceso restringido. Por favor, inicia sesión.");
                 window.location.href = "login.html";
                 return;
             }
 
-            // 3. Elementos de la interfaz
             const mensajeBienvenida = document.getElementById("mensaje-bienvenida");
             const badgeNumSocio = document.getElementById("badge-num-socio");
             const btnRolAdmin = document.getElementById("btn-rol-admin");
@@ -193,28 +207,63 @@
             const inputTelefono = document.getElementById("perfil-telefono");
             const inputDireccion = document.getElementById("perfil-direccion");
             const formPerfil = document.getElementById("form-perfil-socio");
+            const formCoche = document.getElementById("form-ofrecer-coche");
 
-            // 4. Pintar textos dinámicos de bienvenida
             mensajeBienvenida.textContent = `Bienvenido/a, ${socioNombre}. Gestiona tu perfil, cuotas y reservas de la peña.`;
             badgeNumSocio.textContent = `Nº Socio: #${socioId}`;
 
-            // 5. CONTROL DE ROL EXCLUSIVO: ¿Es Administrador real?
-            if (socioRol === "Admin") {
-                btnRolAdmin.classList.remove("d-none"); // Muestra el botón únicamente al Admin
+            if (socioRol === "Admin" || socioRol === "admin") {
+                btnRolAdmin.classList.remove("d-none");
             } else {
-                btnRolAdmin.classList.add("d-none");    // Lo oculta para los socios normales
+                btnRolAdmin.classList.add("d-none");
             }
 
-            // 6. Cargar datos del socio en los inputs del formulario
             inputNombre.value = socioNombre;
             inputEmail.value = socioEmail;
             inputTelefono.value = localStorage.getItem("socio_telefono") || "";
             inputDireccion.value = localStorage.getItem("socio_direccion") || "";
 
-            // 7. Manejo del envío para guardar cambios en el perfil
+            if (typeof cargarSolicitudesDesdeBackend === "function") {
+                cargarSolicitudesDesdeBackend({ id: parseInt(socioId), nombre: socioNombre });
+            }
+
+            // Sincronización limpia por Intervalo
+            const comprobarYAgregarLocal = setInterval(() => {
+                const tablaSolicitudes = document.getElementById("tabla-mis-solicitudes");
+                
+                if (tablaSolicitudes) {
+                    if (!tablaSolicitudes.innerText.includes("Cargando solicitudes desde el servidor")) {
+                        clearInterval(comprobarYAgregarLocal);
+                        
+                        let reservasLocal = JSON.parse(localStorage.getItem(`reservas_socio_${socioId}`)) || [];
+                        
+                        if (reservasLocal.length > 0) {
+                            if (tablaSolicitudes.innerText.includes("No tienes solicitudes") || (tablaSolicitudes.rows.length === 1 && tablaSolicitudes.rows[0].cells[0].colSpan === 5)) {
+                                tablaSolicitudes.innerHTML = "";
+                            }
+
+                            reservasLocal.forEach((reserva, index) => {
+                                const fila = document.createElement("tr");
+                                fila.innerHTML = `
+                                    <td><span class="badge bg-warning text-dark"><i class="fas fa-home me-1"></i> ${reserva.tipo}</span></td>
+                                    <td class="fw-bold text-secondary">${reserva.detalle}</td>
+                                    <td>${reserva.fecha}</td>
+                                    <td><span class="badge bg-secondary p-2"><i class="fas fa-spinner fa-spin me-1"></i> ${reserva.estado}</span></td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-danger" onclick="eliminarReservaLocalSimulada(${index})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                `;
+                                tablaSolicitudes.appendChild(fila);
+                            });
+                        }
+                    }
+                }
+            }, 100);
+
             formPerfil.addEventListener("submit", async (e) => {
                 e.preventDefault();
-
                 const datosActualizados = {
                     nombre: inputNombre.value,
                     telefono: inputTelefono.value,
@@ -235,18 +284,39 @@
                         localStorage.setItem("socio_nombre", inputNombre.value);
                         localStorage.setItem("socio_telefono", inputTelefono.value);
                         localStorage.setItem("socio_direccion", inputDireccion.value);
-                        
                         alert("¡Cambios guardados con éxito!");
                         window.location.reload();
                     } else {
-                        alert("Error al actualizar los datos en el servidor.");
+                        alert("Error al actualizar los datos.");
                     }
                 } catch (error) {
                     console.error("Error:", error);
-                    alert("No se pudo establecer conexión con el servidor.");
+                    alert("Fallo de conexión con el servidor backend.");
                 }
             });
+
+            if (formCoche) {
+                formCoche.addEventListener("submit", async (e) => {
+                    e.preventDefault();
+                    const viajeId = document.getElementById("coche-viaje-id").value;
+                    const plazas = document.getElementById("coche-plazas").value;
+
+                    if (typeof ofrecerCocheSocio === "function") {
+                        await ofrecerCocheSocio(viajeId, plazas);
+                    }
+                });
+            }
         });
+
+        function eliminarReservaLocalSimulada(index) {
+            if (confirm("¿Seguro que deseas cancelar esta solicitud de reserva del local?")) {
+                const socioId = localStorage.getItem("socio_id");
+                let reservasLocal = JSON.parse(localStorage.getItem(`reservas_socio_${socioId}`)) || [];
+                reservasLocal.splice(index, 1);
+                localStorage.setItem(`reservas_socio_${socioId}`, JSON.stringify(reservasLocal));
+                window.location.reload();
+            }
+        }
     </script>
 </body>
 </html>

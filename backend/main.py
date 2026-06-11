@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from database import SQLALCHEMY_DATABASE_URL, engine
 import models
 from routers import (auth, contacto, panel, partidos, viajes, reservas, 
@@ -10,6 +11,7 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Peña Zaragocista API", version="2.0")
 
+# Middleware de CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,6 +19,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Manejador de errores global para mayor estabilidad
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"message": "Error interno del servidor", "detalles": str(exc)},
+    )
 
 # Registro de routers
 app.include_router(auth.router, prefix="/auth", tags=["Autenticación"])

@@ -80,7 +80,7 @@ class Patrocinador(PatrocinadorCrear):
 
 
 # =========================================================================
-# 📸 GALERÍA DE FOTOS (NUEVO)
+# 📸 GALERÍA DE FOTOS
 # =========================================================================
 class FotoGaleriaCrear(BaseModel):
     titulo: str

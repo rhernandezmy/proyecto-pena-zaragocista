@@ -279,3 +279,64 @@ document.addEventListener("submit", async (e) => {
         }
     }
 });
+
+// --- LÓGICA PARA EL PANEL DE ADMINISTRADOR ---
+document.addEventListener("DOMContentLoaded", () => {
+    const formViaje = document.getElementById("form-nuevo-viaje");
+    
+    if (formViaje) {
+        // Escuchar el envío del formulario de nuevo viaje
+        formViaje.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const destino = formViaje.querySelector('input[type="text"]').value;
+            const fecha = formViaje.querySelector('input[type="date"]').value;
+            const tipo = formViaje.querySelector('select').value;
+            const plazas = formViaje.querySelector('input[type="number"]').value;
+
+            crearViaje(destino, fecha, tipo, plazas);
+            formViaje.reset();
+            renderizarViajesAdmin(); // Recargar la tabla
+            alert("🚀 Viaje publicado con éxito en la web.");
+        });
+
+        // Carga inicial de la tabla del administrador
+        renderizarViajesAdmin();
+    }
+});
+
+function renderizarViajesAdmin() {
+    const tablaAdmin = document.querySelector("#viajes-pane tbody");
+    if (!tablaAdmin) return;
+
+    const viajes = obtenerViajes();
+    tablaAdmin.innerHTML = ""; // Limpiar filas estáticas
+
+    viajes.forEach(viaje => {
+        // Calcular plazas libres si es autobús
+        const ocupadas = viaje.suscritos.length;
+        const libres = viaje.plazasTotales - ocupadas;
+        const badgeTransporte = viaje.tipo.includes("Autobús") ? '🚌 Autobús' : '🚗 Coches';
+
+        const fila = document.createElement("tr");
+        fila.innerHTML = `
+            <td class="fw-bold">${viaje.destino}</td>
+            <td>${viaje.fecha}</td>
+            <td>${badgeTransporte}</td>
+            <td><span class="badge bg-primary">${libres} libres</span></td>
+            <td class="text-center">
+                <button class="btn btn-sm btn-outline-danger" onclick="btnEliminarViaje('${viaje.id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tablaAdmin.appendChild(fila);
+    });
+}
+
+// Función que se ejecuta al hacer clic en la papelera
+function btnEliminarViaje(id) {
+    if (confirm("⚠️ ¿Seguro que quieres cancelar y eliminar este desplazamiento?")) {
+        eliminarViaje(id);
+        renderizarViajesAdmin();
+    }
+}

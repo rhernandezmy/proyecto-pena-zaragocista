@@ -47,3 +47,25 @@ async def obtener_partidos():
                 status_code=500, 
                 detail=f"Error inesperado al obtener los partidos: {str(e)}"
             )
+        
+@router.get("/clasificacion-mundial")
+async def obtener_clasificacion():
+    # La ID de la competición WC (World Cup) es WC
+    url = "https://api.football-data.org/v4/competitions/WC/standings"
+    headers = {'X-Auth-Token': API_TOKEN}
+    
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        try:
+            response = await client.get(url, headers=headers)
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=response.status_code, detail="Error al obtener clasificación")
+            
+            data = response.json()
+            
+            # La API devuelve una lista de 'standings'. 
+            # Cada entrada es un grupo (A, B, C, D, E, F, G, H)
+            return {"clasificacion": data.get('standings', [])}
+            
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))

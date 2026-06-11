@@ -53,7 +53,7 @@
                     <button class="nav-link fw-bold py-3" id="partners-tab" data-bs-toggle="tab" data-bs-target="#partners-pane" type="button" role="tab" aria-controls="partners-pane" aria-selected="false">
                         <i class="fas fa-handshake me-2 text-secondary"></i> Partners
                     </button>
-                </li>               
+                </li>                    
             </ul>
 
             <div class="tab-content" id="adminTabsContent">
@@ -118,23 +118,25 @@
                                 <h5 class="fw-bold mb-3">📅 Organizar Nuevo Viaje</h5>
                                 <form id="form-nuevo-viaje">
                                     <div class="mb-3">
-                                        <label class="form-label small fw-bold">Destino / Partido</label>
-                                        <input type="text" class="form-control" placeholder="Ej: Andorra CF vs Real Zaragoza" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label small fw-bold">Fecha del Desplazamiento</label>
-                                        <input type="date" class="form-control" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label small fw-bold">Tipo de Transporte</label>
-                                        <select class="form-select">
-                                            <option>🚌 Autobús de la Peña</option>
-                                            <option>🚗 Coches Particulares compartidos</option>
+                                        <label for="viaje-partido-select" class="form-label small fw-bold">Asociar a Partido / Destino</label>
+                                        <select id="viaje-partido-select" name="partido_id" class="form-select" required>
+                                            <option value="">Cargando partidos desde FastAPI...</option>
                                         </select>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label small fw-bold">Plazas Totales Disponibles</label>
-                                        <input type="number" class="form-control" value="55" min="1">
+                                        <label for="viaje-fecha" class="form-label small fw-bold">Fecha del Desplazamiento</label>
+                                        <input type="date" id="viaje-fecha" name="fecha" class="form-control" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="viaje-transporte" class="form-label small fw-bold">Tipo de Transporte</label>
+                                        <select id="viaje-transporte" name="tipo_transporte" class="form-select">
+                                            <option value="Autobús">🚌 Autobús de la Peña</option>
+                                            <option value="Coche">🚗 Coches Particulares compartidos</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="viaje-plazas" class="form-label small fw-bold">Plazas Totales Disponibles</label>
+                                        <input type="number" id="viaje-plazas" name="plazas_totales" class="form-control" value="55" min="1" required>
                                     </div>
                                     <button type="submit" class="btn btn-success w-100 fw-bold">Publicar Viaje On Tour</button>
                                 </form>
@@ -147,6 +149,7 @@
                                     <table class="table table-hover align-middle">
                                         <thead class="table-light">
                                             <tr>
+                                                <th style="width: 80px;">ID Viaje</th>
                                                 <th>Destino</th>
                                                 <th>Fecha</th>
                                                 <th>Tipo</th>
@@ -154,15 +157,10 @@
                                                 <th class="text-center">Acciones</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody id="tabla-viajes-admin">
                                             <tr>
-                                                <td class="fw-bold">FC Andorra</td>
-                                                <td>15/09/2026</td>
-                                                <td>🚗 Coches</td>
-                                                <td><span class="badge bg-primary">12 libres</span></td>
-                                                <td class="text-center">
-                                                    <button class="btn btn-sm btn-outline-secondary me-1"><i class="fas fa-eye"></i></button>
-                                                    <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                                                <td colspan="6" class="text-center text-muted py-3">
+                                                    <i class="fas fa-spinner fa-spin me-2"></i>Sincronizando con PostgreSQL...
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -367,6 +365,135 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/components/header.js"></script>
     <script src="js/components/footer.js"></script>
+    <script src="js/logistica.js"></script>
+    <script src="js/admin-socios.js"></script>
     <script src="js/app.js"></script>
+
+    <script>
+        const BACKEND_URL = "http://127.0.0.1:8000";
+
+        document.addEventListener("DOMContentLoaded", () => {
+            obtenerPartidosAPI();
+            obtenerViajesAPI();
+            document.getElementById("form-nuevo-viaje").addEventListener("submit", enviarNuevoViaje);
+        });
+
+        async function obtenerPartidosAPI() {
+            const selectPartido = document.getElementById("viaje-partido-select");
+            try {
+                const res = await fetch(`${BACKEND_URL}/partidos`);
+                if (!res.ok) throw new Error("Error obteniendo partidos");
+                const partidos = await res.json();
+                
+                selectPartido.innerHTML = '<option value="">-- Selecciona un Partido --</option>';
+                partidos.forEach(partido => {
+                    const opt = document.createElement("option");
+                    opt.value = partido.id; 
+                    opt.textContent = `${partido.rival} - ${partido.lugar}`;
+                    selectPartido.appendChild(opt);
+                });
+            } catch (err) {
+                console.error(err);
+                selectPartido.innerHTML = '<option value="">Error al cargar partidos del servidor</option>';
+            }
+        }
+
+        async function enviarNuevoViaje(e) {
+            e.preventDefault();
+            
+            const selectPartido = document.getElementById("viaje-partido-select");
+            const partidoId = parseInt(selectPartido.value);
+            const plazasTotales = parseInt(document.getElementById("viaje-plazas").value);
+            const fechaInput = document.getElementById("viaje-fecha").value;
+            const tipoTransporte = document.getElementById("viaje-transporte").value;
+
+            if (!partidoId) {
+                alert("Por favor, selecciona un partido.");
+                return;
+            }
+
+            const payloadViaje = {
+                partido_id: partidoId,
+                destino: selectPartido.options[selectPartido.selectedIndex].text,
+                email_conductor: "admin@peniazaragocista.com", 
+                tipo_transporte: tipoTransporte,
+                plazas_totales: plazasTotales,
+                plazas_disponibles: plazasTotales, 
+                precio: 0.0,
+                detalles_precio: "Organizado por la junta",
+                hace_noche: false
+            };
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/viajes`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payloadViaje)
+                });
+
+                const data = await res.json();
+
+                if (res.status === 200 || res.status === 201) {
+                    alert("¡Viaje publicado con éxito!");
+                    document.getElementById("form-nuevo-viaje").reset();
+                    obtenerViajesAPI();
+                } else {
+                    alert(`Error (${res.status}): ${data.detail || "Esquema inválido"}`);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error de conexión con el backend.");
+            }
+        }
+
+        async function obtenerViajesAPI() {
+            const tablaCuerpo = document.getElementById("tabla-viajes-admin");
+            try {
+                const res = await fetch(`${BACKEND_URL}/viajes`);
+                if (!res.ok) throw new Error("Error obteniendo viajes");
+                const viajes = await res.json();
+
+                if (viajes.length === 0) {
+                    tablaCuerpo.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">No hay ningún viaje programado en el sistema.</td></tr>';
+                    return;
+                }
+
+                tablaCuerpo.innerHTML = "";
+                viajes.forEach(viaje => {
+                    const fila = `
+                        <tr>
+                            <td class="fw-bold">#${viaje.partido_id}</td>
+                            <td>${viaje.destino}</td>
+                            <td>Disponible</td>
+                            <td>${viaje.tipo_transporte}</td>
+                            <td><span class="badge bg-success">${viaje.plazas_disponibles} / ${viaje.plazas_totales}</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarViajePorId(${viaje.partido_id})" title="Eliminar viaje"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                    tablaCuerpo.insertAdjacentHTML("beforeend", fila);
+                });
+            } catch (err) {
+                console.error(err);
+                tablaCuerpo.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-3">Error de comunicación con PostgreSQL.</td></tr>';
+            }
+        }
+
+        async function eliminarViajePorId(id) {
+            if (!confirm(`¿Estás seguro de que quieres eliminar el viaje ID #${id}?`)) return;
+            try {
+                const res = await fetch(`${BACKEND_URL}/viajes/${id}`, { method: "DELETE" });
+                if (res.ok) {
+                    obtenerViajesAPI();
+                } else {
+                    alert("No se pudo eliminar el viaje seleccionado.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error al intentar conectar con el backend.");
+            }
+        }
+    </script>
 </body>
 </html>
