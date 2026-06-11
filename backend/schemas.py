@@ -107,3 +107,44 @@ class CuotaPagoCrear(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# =========================================================================
+# 👥 NUEVOS SCHEMAS: GESTIÓN DE SOCIOS Y USUARIOS WEB (Para el Admin)
+# =========================================================================
+
+# --- Esquemas Pestaña 1: Ficha del Socio Físico ---
+class SocioPenaBase(BaseModel):
+    numero_socio: Optional[int] = None
+    nombre: str
+    apellidos: str
+    dni: Optional[str] = None
+    telefono: Optional[str] = None
+    activo: Optional[bool] = True
+
+class SocioPenaCreate(SocioPenaBase):
+    pass
+
+class SocioPenaResponse(SocioPenaBase):
+    id: int
+    fecha_alta: datetime
+
+    class Config:
+        from_attributes = True
+
+# --- Esquemas Pestaña 2: Cuentas de la Web ---
+class UsuarioWebResponse(BaseModel):
+    id: int
+    email: EmailStr
+    rol: str
+    activo: bool
+    fecha_registro: datetime
+    socio_pena_id: Optional[int] = None
+    # Si está vinculado, incluye la información de su ficha física de socio
+    socio_interno: Optional[SocioPenaResponse] = None
+
+    class Config:
+        from_attributes = True
+
+class VincularSocioRequest(BaseModel):
+    socio_pena_id: Optional[int] = None  # ID de la ficha a vincular (o None para desvincular)

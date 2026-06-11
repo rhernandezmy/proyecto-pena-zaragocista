@@ -3,28 +3,57 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database import Base
 
-class Usuario(Base):
-    __tablename__ = "socios"
+# =====================================================================
+# 1. GESTIÓN DE SOCIOS (Pestaña 1 del Admin)
+# =====================================================================
+class SocioPena(Base):
+    __tablename__ = "socios_pena"
+    
     id = Column(Integer, primary_key=True, index=True)
+    numero_socio = Column(Integer, unique=True, nullable=True)
     nombre = Column(String(100), nullable=False)
     apellidos = Column(String(150), nullable=False)
+    dni = Column(String(20), unique=True, nullable=True)
+    telefono = Column(String(20), nullable=True)
+    activo = Column(Boolean, default=True)
+    fecha_alta = Column(DateTime, server_default=func.now())
+
+    # Relación inversa: Permite saber si este socio físico tiene una cuenta de acceso web
+    usuario_web = relationship("Usuario", back_populates="socio_interno", uselist=False)
+
+
+# =====================================================================
+# 2. CUENTAS DE ACCESO WEB (Pestaña 2 del Admin y Autenticación)
+# =====================================================================
+class Usuario(Base):
+    __tablename__ = "usuarios_web"  # <--- Cambiado de "socios" a "usuarios_web"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    # Quitamos nombre y apellidos de aquí porque se consultarán a través de socio_interno si está vinculado
     email = Column(String(150), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    # Por defecto "Socio", pero permitirá "Admin" para la conmutación de roles
     rol = Column(String(20), default="Socio")
     fecha_registro = Column(DateTime, server_default=func.now())
     activo = Column(Boolean, default=True)
 
+    # El puente de conexión con la ficha física del socio (puede ser NULL)
+    socio_pena_id = Column(Integer, ForeignKey("socios_pena.id", ondelete="SET NULL"), nullable=True)
+
+    # Relaciones
+    socio_interno = relationship("SocioPena", back_populates="usuario_web")
     cuotas = relationship("Cuota", back_populates="usuario")
     vehiculos = relationship("Vehiculo", back_populates="usuario", cascade="all, delete-orphan")
     reservas = relationship("Reserva", back_populates="usuario")
 
 
+# =====================================================================
+# 3. CUOTAS Y VEHÍCULOS (Apuntando a usuarios_web)
+# =====================================================================
 class Cuota(Base):
     __tablename__ = "cuotas"
     id = Column(Integer, primary_key=True, index=True)
-    usuario_id = Column(Integer, ForeignKey("socios.id", ondelete="RESTRICT"), nullable=False)
-    ano_ejercicio = Column(Integer, nullable=False, default=2026) # Sincronizado a la temporada actual
+    usuario_id = Column(Integer, ForeignKey("usuarios_web.id", ondelete="RESTRICT"), nullable=False)
+    ano_ejercicio = Column(Integer, nullable=False, default=2026)
     estado_pago = Column(String(20), default="Pendiente")
     stripe_intent_id = Column(String(100), nullable=True)
     fecha_pago = Column(DateTime, nullable=True)
@@ -35,7 +64,7 @@ class Cuota(Base):
 class Vehiculo(Base):
     __tablename__ = "vehiculos"
     id = Column(Integer, primary_key=True, index=True)
-    usuario_id = Column(Integer, ForeignKey("socios.id", ondelete="CASCADE"), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios_web.id", ondelete="CASCADE"), nullable=False)
     marca = Column(String(50), nullable=False)
     modelo = Column(String(50), nullable=False)
     plazas_totales = Column(Integer, nullable=False)
@@ -43,6 +72,9 @@ class Vehiculo(Base):
     usuario = relationship("Usuario", back_populates="vehiculos")
 
 
+# =====================================================================
+# 4. INFRAESTRUCTURA DE PARTIDOS Y VIAJES (Sin cambios estructurales)
+# =====================================================================
 class RivalMaestro(Base):
     __tablename__ = "rivales_maestros"
     id = Column(Integer, primary_key=True, index=True)
@@ -75,7 +107,7 @@ class Viaje(Base):
     destino = Column(String(100), nullable=False)
     email_conductor = Column(String(100), nullable=False, default="presentesxelescudo@gmail.com")
     partido_id = Column(Integer, ForeignKey("partidos.id", ondelete="CASCADE"), nullable=False)
-    tipo_transporte = Column(String(30), default="Coche") # "Autobús" o "Coche"
+    tipo_transporte = Column(String(30), default="Coche")
     plazas_totales = Column(Integer, nullable=False)
     plazas_disponibles = Column(Integer, nullable=False)
     precio = Column(Float, default=0.0)
@@ -91,36 +123,36 @@ class Viaje(Base):
 class Reserva(Base):
     __tablename__ = "reservas"
     id = Column(Integer, primary_key=True, index=True)
-    # Cambiado a nullable=True porque una reserva puede ser del Local (sin viaje)
     viaje_id = Column(Integer, ForeignKey("viajes.id", ondelete="CASCADE"), nullable=True)
-    usuario_id = Column(Integer, ForeignKey("socios.id", ondelete="CASCADE"), nullable=False)
+    usuario_id = Column(Integer, ForeignKey("usuarios_web.id", ondelete="CASCADE"), nullable=False)
     asientos_reservados = Column(Integer, default=1)
     
-    # NUEVOS CAMPOS: Para gestionar las reservas del Local de la peña
-    tipo_reserva = Column(String(20), default="Viaje") # "Viaje" o "Local"
-    motivo_evento = Column(String(255), nullable=True) # Ej: "Ver partido contra Castellón"
-    estado_solicitud = Column(String(20), default="Pendiente") # "Pendiente", "Aprobada", "Rechazada"
+    tipo_reserva = Column(String(20), default="Viaje")
+    motivo_evento = Column(String(255), nullable=True)
+    estado_solicitud = Column(String(20), default="Pendiente")
     fecha_solicitada = Column(DateTime, server_default=func.now())
     
     viaje = relationship("Viaje", back_populates="reservas")
     usuario = relationship("Usuario", back_populates="reservas")
 
 
+# =====================================================================
+# 5. COMPLEMENTOS (Patrocinadores y Galería)
+# =====================================================================
 class Patrocinador(Base):
     __tablename__ = "patrocinadores"
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(150), nullable=False)
-    tipo_negocio = Column(String(50), default="Bar") # Sector
+    tipo_negocio = Column(String(50), default="Bar")
     logo_url = Column(String(255), nullable=True)
-    enlace_web = Column(String(255), nullable=True) # NUEVO: Para redirigir al pulsar en el sponsor
+    enlace_web = Column(String(255), nullable=True)
     contribucion = Column(Float, default=0.0)
 
 
-# NUEVA TABLA: Para la galería de fotos "Presentes On Tour"
 class FotoGaleria(Base):
     __tablename__ = "galeria_fotos"
     id = Column(Integer, primary_key=True, index=True)
-    imagen_url = Column(String(255), nullable=False) # Ruta de almacenamiento del archivo
-    titulo = Column(String(100), nullable=False)     # Destino / Partido
-    pie_foto = Column(String(255), nullable=True)    # Hashtag o comentario breve
+    imagen_url = Column(String(255), nullable=False)
+    titulo = Column(String(100), nullable=False)
+    pie_foto = Column(String(255), nullable=True)
     fecha_subida = Column(DateTime, server_default=func.now())

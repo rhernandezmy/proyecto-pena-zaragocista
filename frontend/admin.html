@@ -60,35 +60,83 @@
                 
                 <div class="tab-pane fade show active" id="socios-pane" role="tabpanel" aria-labelledby="socios-tab" tabindex="0">
                     <div class="card border-0 shadow-sm p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold mb-0">👥 Listado de Usuarios Registrados</h5>
-                            <div>
-                                <button class="btn btn-sm btn-success me-2" data-bs-toggle="modal" data-bs-target="#modalNuevoSocio">
-                                    <i class="fas fa-user-plus me-1"></i> Nuevo Socio
+                        
+                        <ul class="nav nav-pills mb-4 border-bottom pb-2" id="subTabsSocios" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active fw-bold me-2" id="libro-socios-tab" data-bs-toggle="pill" data-bs-target="#libro-socios-pane" type="button" role="tab" aria-controls="libro-socios-pane" aria-selected="true">
+                                    <i class="fas fa-book-open me-2"></i>1. Libro Oficial de Socios
                                 </button>
-                                <button class="btn btn-sm btn-outline-primary" onclick="exportarSociosCSV()"><i class="fas fa-download me-1"></i> Exportar CSV</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link fw-bold" id="cuentas-web-tab" data-bs-toggle="pill" data-bs-target="#cuentas-web-pane" type="button" role="tab" aria-controls="cuentas-web-pane" aria-selected="false" onclick="obtenerUsuariosWebAPI()">
+                                    <i class="fas fa-globe me-2"></i>2. Cuentas de Usuario Web
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="subTabsSociosContent">
+                            
+                            <div class="tab-pane fade show active" id="libro-socios-pane" role="tabpanel" aria-labelledby="libro-socios-tab" tabindex="0">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="fw-bold mb-0 text-primary">📖 Socios Físicos de la Peña</h5>
+                                    <div>
+                                        <button class="btn btn-sm btn-success me-2" data-bs-toggle="modal" data-bs-target="#modalNuevoSocio">
+                                            <i class="fas fa-user-plus me-1"></i> Nuevo Socio
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="exportarSociosCSV()"><i class="fas fa-download me-1"></i> Exportar CSV</button>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Nº Socio</th>
+                                                <th>Nombre completo</th>
+                                                <th>Email</th>
+                                                <th>Teléfono</th>
+                                                <th>Estado Cuota</th>
+                                                <th class="text-center">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabla-socios-admin">
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted py-3">
+                                                    <i class="fas fa-spinner fa-spin me-2"></i>Cargando libro de socios...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Nº Socio</th>
-                                        <th>Nombre</th>
-                                        <th>Email</th>
-                                        <th>Teléfono</th>
-                                        <th>Estado Cuota</th>
-                                        <th class="text-center">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabla-socios-admin">
-                                    <tr>
-                                        <td colspan="6" class="text-center text-muted py-3">
-                                            <i class="fas fa-spinner fa-spin me-2"></i>Cargando socios...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+
+                            <div class="tab-pane fade" id="cuentas-web-pane" role="tabpanel" aria-labelledby="cuentas-web-tab" tabindex="0">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5 class="fw-bold mb-0 text-success">🌐 Usuarios con Cuenta en la Web</h5>
+                                    <span class="badge bg-secondary p-2">Registros Online</span>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>ID Web</th>
+                                                <th>Nombre de Usuario</th>
+                                                <th>Email de Registro</th>
+                                                <th>Rol asignado</th>
+                                                <th>Nº Socio Vinculado</th>
+                                                <th class="text-center">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tabla-usuarios-web">
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted py-3">
+                                                    <i class="fas fa-spinner fa-spin me-2"></i>Sincronizando registros web...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -138,7 +186,7 @@
                                                 <th>Plazas Libres</th>
                                                 <th class="text-center">Acciones</th>
                                             </tr>
-                                        </table>
+                                        </thead>
                                         <tbody id="tabla-viajes-admin">
                                             <tr>
                                                 <td colspan="6" class="text-center text-muted py-3">
@@ -275,7 +323,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title fw-bold" id="modalNuevoSocioLabel">➕ Alta de Socio</h5>
+                    <h5 class="modal-title fw-bold" id="modalNuevoSocioLabel">➕ Alta de Socio en el Libro Oficial</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="form-alta-socio">
@@ -313,20 +361,37 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modalVincularSocio" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white py-2">
+                    <h6 class="modal-title fw-bold">Vincular nº de Socio</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-3">
+                    <input type="hidden" id="vincular-usuario-id">
+                    <label class="form-label small fw-bold">Introduce el número de socio físico:</label>
+                    <input type="number" id="vincular-socio-id" class="form-control" placeholder="Ej: 45" min="1">
+                </div>
+                <div class="modal-footer bg-light py-2">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="guardarVinculacionWeb()">Asociar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="footer-placeholder"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/components/header.js"></script>
     <script src="js/components/footer.js"></script>
-    <script src="js/logistica.js"></script>
-    <script src="js/admin-socios.js"></script>
-    <script src="js/app.js"></script>
 
     <script>
         const BACKEND_URL = "http://127.0.0.1:8000";
 
         document.addEventListener("DOMContentLoaded", () => {
-            // Inicializar datos globales
+            // Inicializar datos globales distribuidos en los paneles al arrancar
             obtenerSociosAPI();
             obtenerPartidosAPI();
             obtenerViajesAPI();
@@ -334,7 +399,7 @@
             obtenerGaleriaAPI();
             obtenerPartnersAPI();
 
-            // Listeners de formularios
+            // Listeners de los formularios del panel
             document.getElementById("form-alta-socio").addEventListener("submit", enviarNuevoSocio);
             document.getElementById("form-nuevo-viaje").addEventListener("submit", enviarNuevoViaje);
             document.getElementById("form-nueva-foto").addEventListener("submit", enviarNuevaFoto);
@@ -342,17 +407,18 @@
         });
 
         // ==========================================
-        // 1. CONTROL DE SOCIOS
+        // 1. SUB-PESTAÑA 1: LIBRO DE SOCIOS FÍSICOS
         // ==========================================
         async function obtenerSociosAPI() {
             const tbody = document.getElementById("tabla-socios-admin");
             try {
-                const res = await fetch(`${BACKEND_URL}/socios`);
+                const res = await fetch(`${BACKEND_URL}/admin/global-data`);
                 if (!res.ok) throw new Error();
-                const socios = await res.json();
+                const data = await res.json();
+                const socios = data.lista_socios || [];
                 
                 if(socios.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay socios registrados.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay socios físicos registrados en el libro oficial.</td></tr>';
                     return;
                 }
                 tbody.innerHTML = "";
@@ -373,7 +439,7 @@
                     tbody.insertAdjacentHTML("beforeend", fila);
                 });
             } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar el listado de socios.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar el listado de socios físicos.</td></tr>';
             }
         }
 
@@ -393,7 +459,7 @@
                     body: JSON.stringify(payload)
                 });
                 if(res.ok) {
-                    alert("¡Socio dado de alta correctamente!");
+                    alert("¡Socio físico guardado en el Libro Oficial con éxito!");
                     document.getElementById("form-alta-socio").reset();
                     bootstrap.Modal.getInstance(document.getElementById("modalNuevoSocio")).hide();
                     obtenerSociosAPI();
@@ -413,7 +479,7 @@
         }
 
         async function eliminarSocio(id) {
-            if (!confirm("¿Dar de baja definitivamente a este socio?")) return;
+            if (!confirm("¿Dar de baja definitivamente a este socio del libro oficial?")) return;
             try {
                 const res = await fetch(`${BACKEND_URL}/socios/${id}`, { method: "DELETE" });
                 if(res.ok) obtenerSociosAPI();
@@ -425,112 +491,147 @@
         }
 
         // ==========================================
-        // 2. GESTIÓN DE VIAJES
+        // 1b. SUB-PESTAÑA 2: CUENTAS WEB REGISTRADAS
         // ==========================================
-        async function obtenerPartidosAPI() {
-            const selectPartido = document.getElementById("viaje-partido-select");
+        async function obtenerUsuariosWebAPI() {
+            const tbody = document.getElementById("tabla-usuarios-web");
             try {
-                const res = await fetch(`${BACKEND_URL}/partidos`);
+                const res = await fetch(`${BACKEND_URL}/admin/global-data`);
                 if (!res.ok) throw new Error();
-                const partidos = await res.json();
-                
-                selectPartido.innerHTML = '<option value="">-- Selecciona un Partido --</option>';
-                partidos.forEach(partido => {
-                    const opt = document.createElement("option");
-                    opt.value = partido.id; 
-                    opt.textContent = `${partido.rival} - ${partido.lugar}`;
-                    selectPartido.appendChild(opt);
+                const data = await res.json();
+                const usuarios = data.usuarios_web || [];
+
+                if(usuarios.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Ningún usuario se ha registrado en la web todavía.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = "";
+                usuarios.forEach(user => {
+                    const socioVinculado = user.socio_id ? `<span class="badge bg-primary">Socio #${String(user.socio_id).padStart(3, '0')}</span>` : '<span class="text-danger small fw-bold">❌ Sin vincular</span>';
+                    const fila = `
+                        <tr>
+                            <td>#${user.id}</td>
+                            <td class="fw-bold">${user.username}</td>
+                            <td>${user.email}</td>
+                            <td><span class="badge bg-dark">${user.role}</span></td>
+                            <td>${socioVinculado}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalVinculacion(${user.id})" title="Vincular ID socio"><i class="fas fa-link"></i></button>
+                            </td>
+                        </tr>`;
+                    tbody.insertAdjacentHTML("beforeend", fila);
                 });
             } catch (err) {
-                selectPartido.innerHTML = '<option value="">Error al cargar partidos del servidor</option>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al sincronizar las cuentas web.</td></tr>';
+            }
+        }
+
+        function abrirModalVinculacion(usuarioId) {
+            document.getElementById("vincular-usuario-id").value = usuarioId;
+            document.getElementById("vincular-socio-id").value = "";
+            const modal = new bootstrap.Modal(document.getElementById("modalVincularSocio"));
+            modal.show();
+        }
+
+        async function guardarVinculacionWeb() {
+            const usuarioId = document.getElementById("vincular-usuario-id").value;
+            const socioId = document.getElementById("vincular-socio-id").value;
+            if(!socioId) return alert("Escribe un número de socio válido.");
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/admin/vincular-usuario`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ usuario_id: parseInt(usuarioId), socio_id: parseInt(socioId) })
+                });
+                if(res.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById("modalVincularSocio")).hide();
+                    obtenerUsuariosWebAPI();
+                } else { alert("Fallo al guardar la vinculación."); }
+            } catch(err) { console.error(err); }
+        }
+
+        // ==========================================
+        // 2. PESTAÑA: VIAJES Y DESPLEGABLE PARTIDOS
+        // ==========================================
+        async function obtenerPartidosAPI() {
+            const select = document.getElementById("viaje-partido-select");
+            try {
+                const res = await fetch(`${BACKEND_URL}/partidos`);
+                if(!res.ok) throw new Error();
+                const partidos = await res.json();
+
+                select.innerHTML = '<option value="">-- Selecciona el encuentro --</option>';
+                partidos.forEach(p => {
+                    select.innerHTML += `<option value="${p.id}">${p.rival} (${p.lugar || 'Liga'})</option>`;
+                });
+            } catch (err) {
+                select.innerHTML = '<option value="">Error al traer partidos desde la API</option>';
             }
         }
 
         async function obtenerViajesAPI() {
-            const tablaCuerpo = document.querySelectorAll("#tabla-viajes-admin")[0]; 
+            const tbody = document.getElementById("tabla-viajes-admin");
             try {
                 const res = await fetch(`${BACKEND_URL}/viajes`);
-                if (!res.ok) throw new Error();
+                if(!res.ok) throw new Error();
                 const viajes = await res.json();
 
-                if (viajes.length === 0) {
-                    tablaCuerpo.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">No hay ningún viaje programado.</td></tr>';
+                if(viajes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay planes de viaje activos en este momento.</td></tr>';
                     return;
                 }
-
-                tablaCuerpo.innerHTML = "";
-                viajes.forEach(viaje => {
+                tbody.innerHTML = "";
+                viajes.forEach(v => {
                     const fila = `
                         <tr>
-                            <td class="fw-bold">#${viaje.id}</td>
-                            <td>${viaje.destino}</td>
-                            <td>${viaje.fecha || 'Disponible'}</td>
-                            <td>${viaje.tipo_transporte}</td>
-                            <td><span class="badge bg-success">${viaje.plazas_disponibles} / ${viaje.plazas_totales}</span></td>
+                            <td>#${v.id}</td>
+                            <td class="fw-bold">${v.destino || 'Desconocido'}</td>
+                            <td>${v.fecha}</td>
+                            <td>${v.tipo_transporte}</td>
+                            <td><span class="badge bg-info text-dark">${v.plazas_libres || v.plazas_totales} vacías</span></td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarViajePorId(${viaje.id})" title="Eliminar viaje"><i class="fas fa-trash"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarViaje(${v.id})"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>`;
-                    tablaCuerpo.insertAdjacentHTML("beforeend", fila);
+                    tbody.insertAdjacentHTML("beforeend", fila);
                 });
             } catch (err) {
-                tablaCuerpo.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-3">Error de comunicación con PostgreSQL.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al conectar con la pasarela de viajes.</td></tr>';
             }
         }
 
         async function enviarNuevoViaje(e) {
             e.preventDefault();
-            
-            const selectPartido = document.getElementById("viaje-partido-select");
-            const partidoId = parseInt(selectPartido.value);
-            const plazasTotales = parseInt(document.getElementById("viaje-plazas").value);
-            const fechaInput = document.getElementById("viaje-fecha").value;
-            const tipoTransporte = document.getElementById("viaje-transporte").value;
-
-            if (!partidoId) { alert("Por favor, selecciona un partido."); return; }
-
-            const payloadViaje = {
-                partido_id: partidoId,
-                destino: selectPartido.options[selectPartido.selectedIndex].text,
-                fecha: fechaInput, 
-                email_conductor: "admin@peniazaragocista.com", 
-                tipo_transporte: tipoTransporte,
-                plazas_totales: plazasTotales,
-                plazas_disponibles: plazasTotales, 
-                precio: 0.0,
-                detalles_precio: "Organizado por la junta",
-                hace_noche: false
+            const payload = {
+                partido_id: parseInt(document.getElementById("viaje-partido-select").value),
+                fecha: document.getElementById("viaje-fecha").value,
+                tipo_transporte: document.getElementById("viaje-transporte").value,
+                plazas_totales: parseInt(document.getElementById("viaje-plazas").value)
             };
-
             try {
                 const res = await fetch(`${BACKEND_URL}/viajes`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payloadViaje)
+                    body: JSON.stringify(payload)
                 });
-                const data = await res.json();
-
-                if (res.status === 200 || res.status === 201) {
-                    alert("¡Viaje publicado con éxito!");
+                if(res.ok) {
                     document.getElementById("form-nuevo-viaje").reset();
                     obtenerViajesAPI();
-                } else {
-                    alert(`Error: ${data.detail || "Esquema inválido"}`);
                 }
-            } catch (err) { alert("Error de conexión con el backend."); }
+            } catch(err) { console.error(err); }
         }
 
-        async function eliminarViajePorId(id) {
-            if (!confirm(`¿Estás seguro de que quieres eliminar el viaje ID #${id}?`)) return;
+        async function eliminarViaje(id) {
+            if(!confirm("¿Retirar este desplazamiento del catálogo de viajes web?")) return;
             try {
                 const res = await fetch(`${BACKEND_URL}/viajes/${id}`, { method: "DELETE" });
-                if (res.ok) { obtenerViajesAPI(); } 
-                else { alert("No se pudo eliminar el viaje."); }
-            } catch (err) { alert("Error al intentar conectar con el backend."); }
+                if(res.ok) obtenerViajesAPI();
+            } catch(err) { console.error(err); }
         }
 
         // ==========================================
-        // 3. RESERVAS DEL LOCAL
+        // 3. PESTAÑA: RESERVAS SEDE / LOCAL
         // ==========================================
         async function obtenerReservasAPI() {
             const tbody = document.getElementById("tabla-reservas-admin");
@@ -538,105 +639,139 @@
                 const res = await fetch(`${BACKEND_URL}/reservas`);
                 if(!res.ok) throw new Error();
                 const reservas = await res.json();
-                
-                if(reservas.length === 0){
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3">No hay solicitudes pendientes.</td></tr>';
+
+                if(reservas.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay solicitudes pendientes de asignación.</td></tr>';
                     return;
                 }
                 tbody.innerHTML = "";
-                reservas.forEach(reserva => {
-                    tbody.innerHTML += `
+                reservas.forEach(r => {
+                    let colorStatus = 'bg-warning text-dark';
+                    if(r.estado === 'Aprobada') colorStatus = 'bg-success';
+                    if(r.estado === 'Denegada') colorStatus = 'bg-danger';
+
+                    const fila = `
                         <tr>
-                            <td class="fw-bold">${reserva.socio_nombre}</td>
-                            <td>${reserva.fecha}</td>
-                            <td>${reserva.motivo}</td>
-                            <td><span class="badge bg-warning text-dark">${reserva.estado}</span></td>
+                            <td class="fw-bold">Socio #${r.socio_id}</td>
+                            <td>${r.fecha_solicitada}</td>
+                            <td>${r.motivo}</td>
+                            <td><span class="badge ${colorStatus}">${r.estado}</span></td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-success me-1 text-white" onclick="resolverReserva(${reserva.id}, 'Aprobada')"><i class="fas fa-thumbs-up"></i></button>
-                                <button class="btn btn-sm btn-danger" onclick="resolverReserva(${reserva.id}, 'Rechazada')"><i class="fas fa-thumbs-down"></i></button>
+                                ${r.estado === 'Pendiente' ? `
+                                    <button class="btn btn-xs btn-success text-white py-1 px-2" onclick="modificarReserva(${r.id}, 'Aprobada')"><i class="fas fa-thumbs-up small"></i></button>
+                                    <button class="btn btn-xs btn-danger py-1 px-2" onclick="modificarReserva(${r.id}, 'Denegada')"><i class="fas fa-thumbs-down small"></i></button>
+                                ` : '-'}
                             </td>
                         </tr>`;
+                    tbody.insertAdjacentHTML("beforeend", fila);
                 });
-            } catch(e) { tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Simulación sin backend de reservas activos.</td></tr>'; }
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Error al compilar solicitudes de local.</td></tr>';
+            }
         }
 
-        async function resolverReserva(id, estado) {
+        async function modificarReserva(id, nuevoEstado) {
             try {
-                await fetch(`${BACKEND_URL}/reservas/${id}`, {
+                const res = await fetch(`${BACKEND_URL}/reservas/${id}`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ estado: estado })
+                    body: JSON.stringify({ estado: nuevoEstado })
                 });
-                obtenerReservasAPI();
-            } catch (e) { console.error(e); }
+                if(res.ok) obtenerReservasAPI();
+            } catch(err) { console.error(err); }
         }
 
         // ==========================================
-        // 4. GESTIÓN DE GALERÍA
+        // 4. PESTAÑA: GALERÍA MULTIMEDIA
         // ==========================================
         async function obtenerGaleriaAPI() {
             const tbody = document.getElementById("tabla-galeria-admin");
             try {
                 const res = await fetch(`${BACKEND_URL}/galeria`);
-                const imagenes = await res.json();
+                if(!res.ok) throw new Error();
+                const fotos = await res.json();
+
+                if(fotos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Galería de imágenes vacía.</td></tr>';
+                    return;
+                }
                 tbody.innerHTML = "";
-                imagenes.forEach(img => {
-                    tbody.innerHTML += `
+                fotos.forEach(f => {
+                    const fila = `
                         <tr>
-                            <td><img src="${BACKEND_URL}${img.ruta}" class="rounded" style="width: 50px; height: auto;"></td>
-                            <td class="fw-bold">${img.titulo}</td>
-                            <td>${img.pie}</td>
+                            <td><img src="${BACKEND_URL}/static/uploads/${f.filename}" alt="Miniatura" class="rounded shadow-sm" style="width:60px; height:45px; object-fit:cover;"></td>
+                            <td class="fw-bold">${f.titulo}</td>
+                            <td class="text-muted small">${f.pie_foto || '-'}</td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarImagen(${img.id})"><i class="fas fa-trash"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarFoto(${f.id})"><i class="fas fa-trash-alt"></i></button>
                             </td>
                         </tr>`;
+                    tbody.insertAdjacentHTML("beforeend", fila);
                 });
-            } catch(e) { tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No se pudieron sincronizar las fotos.</td></tr>'; }
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Error de enlace con el bucket multimedia.</td></tr>';
+            }
         }
 
         async function enviarNuevaFoto(e) {
             e.preventDefault();
+            const archivoInput = document.getElementById("foto-archivo");
+            if(archivoInput.files.length === 0) return;
+
             const formData = new FormData();
-            formData.append("file", document.getElementById("foto-archivo").files[0]);
+            formData.append("file", archivoInput.files[0]);
             formData.append("titulo", document.getElementById("foto-titulo").value);
-            formData.append("pie", document.getElementById("foto-pie").value);
+            formData.append("pie_foto", document.getElementById("foto-pie").value);
 
             try {
-                const res = await fetch(`${BACKEND_URL}/galeria`, { method: "POST", body: formData });
+                const res = await fetch(`${BACKEND_URL}/galeria`, {
+                    method: "POST",
+                    body: formData
+                });
                 if(res.ok) {
-                    alert("Foto publicada.");
                     document.getElementById("form-nueva-foto").reset();
                     obtenerGaleriaAPI();
                 }
-            } catch(e) { console.error(e); }
+            } catch(err) { console.error(err); }
         }
 
-        async function eliminarImagen(id) {
-            if(!confirm("¿Eliminar imagen?")) return;
+        async function eliminarFoto(id) {
+            if(!confirm("¿Eliminar de forma permanente este recurso gráfico de la web?")) return;
             try {
-                await fetch(`${BACKEND_URL}/galeria/${id}`, { method: "DELETE" });
-                obtenerGaleriaAPI();
-            } catch (e) { console.error(e); }
+                const res = await fetch(`${BACKEND_URL}/galeria/${id}`, { method: "DELETE" });
+                if(res.ok) obtenerGaleriaAPI();
+            } catch(err) { console.error(err); }
         }
 
         // ==========================================
-        // 5. GESTIÓN DE PARTNERS
+        // 5. PESTAÑA: COMPAÑÍAS PARTNERS / SPONSORS
         // ==========================================
         async function obtenerPartnersAPI() {
             const tbody = document.getElementById("tabla-partners-admin");
             try {
                 const res = await fetch(`${BACKEND_URL}/partners`);
+                if(!res.ok) throw new Error();
                 const partners = await res.json();
+
+                if(partners.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No hay partners comerciales vinculados.</td></tr>';
+                    return;
+                }
                 tbody.innerHTML = "";
                 partners.forEach(p => {
-                    tbody.innerHTML += `
+                    const fila = `
                         <tr>
-                            <td><span class="badge bg-light text-dark border">${p.categoria}</span></td>
-                            <td class="fw-bold small">${p.nombre}</td>
-                            <td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="eliminarPartner(${p.id})"><i class="fas fa-user-minus"></i></button></td>
+                            <td class="text-primary small fw-bold">${p.categoria}</td>
+                            <td class="fw-bold">${p.nombre}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarPartner(${p.id})"><i class="fas fa-handshake-slash"></i></button>
+                            </td>
                         </tr>`;
+                    tbody.insertAdjacentHTML("beforeend", fila);
                 });
-            } catch(e) { tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Usa partners predefinidos en mock local.</td></tr>'; }
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Error al descargar listado de patrocinadores.</td></tr>';
+            }
         }
 
         async function enviarNuevoPartner(e) {
@@ -655,14 +790,15 @@
                     document.getElementById("form-nuevo-partner").reset();
                     obtenerPartnersAPI();
                 }
-            } catch(e) { console.error(e); }
+            } catch(err) { console.error(err); }
         }
 
         async function eliminarPartner(id) {
+            if(!confirm("¿Remover acuerdo de colaboración con este sponsor?")) return;
             try {
-                await fetch(`${BACKEND_URL}/partners/${id}`, { method: "DELETE" });
-                obtenerPartnersAPI();
-            } catch(e) { console.error(e); }
+                const res = await fetch(`${BACKEND_URL}/partners/${id}`, { method: "DELETE" });
+                if(res.ok) obtenerPartnersAPI();
+            } catch(err) { console.error(err); }
         }
     </script>
 </body>
