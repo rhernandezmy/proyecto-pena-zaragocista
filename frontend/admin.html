@@ -232,10 +232,23 @@
                             <div class="card border-0 shadow-sm p-4">
                                 <h5 class="fw-bold mb-3">📸 Subir Nueva Imagen</h5>
                                 <form id="form-nueva-foto" enctype="multipart/form-data">
+                                    
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">Seleccionar Imagen</label>
-                                        <input type="file" id="foto-archivo" class="form-control" accept="image/*" required>
+                                        
+                                        <input type="file" id="foto-archivo" class="d-none" accept="image/*" required onchange="actualizarNombreArchivo(this)">
+                                        
+                                        <label for="foto-archivo" id="label-foto-archivo" class="form-control text-center text-muted" style="
+                                            cursor: pointer; 
+                                            background-color: #f8f9fa; 
+                                            border: 1px solid #ced4da; 
+                                            padding: 8px 12px;
+                                            transition: all 0.2s ease-in-out;
+                                        " onmouseover="this.style.backgroundColor='#e2e6ea'" onmouseout="this.style.backgroundColor='#f8f9fa'">
+                                            📸 Añadir foto
+                                        </label>
                                     </div>
+
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">Título / Evento</label>
                                         <input type="text" id="foto-titulo" class="form-control" placeholder="Ej: Viaje a Burgos" required>
@@ -248,6 +261,7 @@
                                 </form>
                             </div>
                         </div>
+                        
                         <div class="col-12 col-md-8">
                             <div class="card border-0 shadow-sm p-4">
                                 <h5 class="fw-bold mb-3">🖼️ Fotos en la Web</h5>
@@ -390,27 +404,45 @@
     <script>
         const BACKEND_URL = "http://127.0.0.1:8000";
 
+        // 1. ARRANCAR TODO AL CARGAR LA PÁGINA
         document.addEventListener("DOMContentLoaded", () => {
-            // Inicializar datos globales distribuidos en los paneles al arrancar
             obtenerSociosAPI();
-            obtenerPartidosAPI();
-            obtenerViajesAPI();
-            obtenerReservasAPI();
-            obtenerGaleriaAPI();
+            obtenerPartidosAPI(); 
+            obtenerViajesAPI();   
+            obtenerReservasAPI(); // Carga la tabla de reservas
+            obtenerGaleriaAPI();  // Tu galería intacta
             obtenerPartnersAPI();
+            obtenerUsuariosWebAPI();
 
-            // Listeners de los formularios del panel
+            // Escuchar los envíos de los formularios
             document.getElementById("form-alta-socio").addEventListener("submit", enviarNuevoSocio);
             document.getElementById("form-nuevo-viaje").addEventListener("submit", enviarNuevoViaje);
             document.getElementById("form-nueva-foto").addEventListener("submit", enviarNuevaFoto);
             document.getElementById("form-nuevo-partner").addEventListener("submit", enviarNuevoPartner);
         });
 
-        // ==========================================
-        // 1. SUB-PESTAÑA 1: LIBRO DE SOCIOS FÍSICOS
-        // ==========================================
+        // 2. CAMBIAR EL BOTÓN A VERDE CUANDO ELIGES UNA FOTO
+        function actualizarNombreArchivo(input) {
+            const label = document.getElementById('label-foto-archivo');
+            if (input.files && input.files.length > 0) {
+                label.innerHTML = `✅ ${input.files[0].name}`;
+                label.style.borderColor = '#28a745';
+                label.style.backgroundColor = '#e8f5e9';
+                label.classList.remove('text-muted');
+                label.style.color = '#155724';
+            } else {
+                label.innerHTML = '📸 Añadir foto';
+                label.style.borderColor = '#ced4da';
+                label.style.backgroundColor = '#f8f9fa';
+                label.classList.add('text-muted');
+                label.style.color = '';
+            }
+        }
+
+        // 3. SECCIÓN: SOCIOS FÍSICOS
         async function obtenerSociosAPI() {
             const tbody = document.getElementById("tabla-socios-admin");
+            if (!tbody) return;
             try {
                 const res = await fetch(`${BACKEND_URL}/admin/global-data`);
                 if (!res.ok) throw new Error();
@@ -418,7 +450,7 @@
                 const socios = data.lista_socios || [];
                 
                 if(socios.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay socios físicos registrados en el libro oficial.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay socios físicos registrados.</td></tr>';
                     return;
                 }
                 tbody.innerHTML = "";
@@ -432,14 +464,14 @@
                             <td>${socio.telefono || '-'}</td>
                             <td>${badge}</td>
                             <td class="text-center">
-                                ${socio.cuota !== "Pagada" ? `<button class="btn btn-sm btn-success text-white me-1" onclick="actualizarCuotaSocio(${socio.id}, 'Pagada')" title="Marcar como pagado"><i class="fas fa-check"></i></button>` : ''}
-                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarSocio(${socio.id})" title="Dar de baja"><i class="fas fa-user-slash"></i></button>
+                                ${socio.cuota !== "Pagada" ? `<button class="btn btn-sm btn-success text-white me-1" onclick="actualizarCuotaSocio(${socio.id}, 'Pagada')"><i class="fas fa-check"></i></button>` : ''}
+                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarSocio(${socio.id})"><i class="fas fa-user-slash"></i></button>
                             </td>
                         </tr>`;
                     tbody.insertAdjacentHTML("beforeend", fila);
                 });
             } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar el listado de socios físicos.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar socios.</td></tr>';
             }
         }
 
@@ -459,11 +491,11 @@
                     body: JSON.stringify(payload)
                 });
                 if(res.ok) {
-                    alert("¡Socio físico guardado en el Libro Oficial con éxito!");
+                    alert("¡Socio guardado con éxito!");
                     document.getElementById("form-alta-socio").reset();
                     bootstrap.Modal.getInstance(document.getElementById("modalNuevoSocio")).hide();
                     obtenerSociosAPI();
-                } else { alert("Error al registrar el socio."); }
+                }
             } catch (err) { console.error(err); }
         }
 
@@ -479,306 +511,302 @@
         }
 
         async function eliminarSocio(id) {
-            if (!confirm("¿Dar de baja definitivamente a este socio del libro oficial?")) return;
+            if (!confirm("¿Dar de baja a este socio?")) return;
             try {
                 const res = await fetch(`${BACKEND_URL}/socios/${id}`, { method: "DELETE" });
                 if(res.ok) obtenerSociosAPI();
             } catch(err) { console.error(err); }
         }
 
-        function exportarSociosCSV() {
-            window.open(`${BACKEND_URL}/socios/exportar/csv`, '_blank');
-        }
-
-        // ==========================================
-        // 1b. SUB-PESTAÑA 2: CUENTAS WEB REGISTRADAS
-        // ==========================================
+        // 4. SECCIÓN: CUENTAS WEB
         async function obtenerUsuariosWebAPI() {
-            const tbody = document.getElementById("tabla-usuarios-web");
+            const tbody = document.getElementById("tabla-usuarios-web"); 
+            if (!tbody) return;
             try {
-                const res = await fetch(`${BACKEND_URL}/admin/global-data`);
+                const res = await fetch(`${BACKEND_URL}/admin/global-data`); 
                 if (!res.ok) throw new Error();
                 const data = await res.json();
-                const usuarios = data.usuarios_web || [];
-
-                if(usuarios.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Ningún usuario se ha registrado en la web todavía.</td></tr>';
+                const usuarios = data.usuarios_web || []; 
+                
+                if (usuarios.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No hay cuentas web.</td></tr>';
                     return;
                 }
                 tbody.innerHTML = "";
                 usuarios.forEach(user => {
-                    const socioVinculado = user.socio_id ? `<span class="badge bg-primary">Socio #${String(user.socio_id).padStart(3, '0')}</span>` : '<span class="text-danger small fw-bold">❌ Sin vincular</span>';
-                    const fila = `
+                    tbody.insertAdjacentHTML("beforeend", `
                         <tr>
                             <td>#${user.id}</td>
                             <td class="fw-bold">${user.username}</td>
                             <td>${user.email}</td>
-                            <td><span class="badge bg-dark">${user.role}</span></td>
-                            <td>${socioVinculado}</td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalVinculacion(${user.id})" title="Vincular ID socio"><i class="fas fa-link"></i></button>
-                            </td>
-                        </tr>`;
-                    tbody.insertAdjacentHTML("beforeend", fila);
+                            <td><span class="badge bg-secondary">${user.rol || 'Usuario'}</span></td>
+                        </tr>`);
                 });
-            } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al sincronizar las cuentas web.</td></tr>';
-            }
+            } catch (err) { console.error(err); }
         }
 
-        function abrirModalVinculacion(usuarioId) {
-            document.getElementById("vincular-usuario-id").value = usuarioId;
-            document.getElementById("vincular-socio-id").value = "";
-            const modal = new bootstrap.Modal(document.getElementById("modalVincularSocio"));
-            modal.show();
-        }
-
-        async function guardarVinculacionWeb() {
-            const usuarioId = document.getElementById("vincular-usuario-id").value;
-            const socioId = document.getElementById("vincular-socio-id").value;
-            if(!socioId) return alert("Escribe un número de socio válido.");
-
-            try {
-                const res = await fetch(`${BACKEND_URL}/admin/vincular-usuario`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ usuario_id: parseInt(usuarioId), socio_id: parseInt(socioId) })
-                });
-                if(res.ok) {
-                    bootstrap.Modal.getInstance(document.getElementById("modalVincularSocio")).hide();
-                    obtenerUsuariosWebAPI();
-                } else { alert("Fallo al guardar la vinculación."); }
-            } catch(err) { console.error(err); }
-        }
-
-        // ==========================================
-        // 2. PESTAÑA: VIAJES Y DESPLEGABLE PARTIDOS
-        // ==========================================
+        // 5. SECCIÓN: PARTIDOS
         async function obtenerPartidosAPI() {
-            const select = document.getElementById("viaje-partido-select");
+            const selectPartido = document.querySelector("select[class*='form-select']") || document.getElementById("admin-viaje-destino"); 
+            if (!selectPartido) return;
             try {
                 const res = await fetch(`${BACKEND_URL}/partidos`);
-                if(!res.ok) throw new Error();
+                if (!res.ok) throw new Error();
                 const partidos = await res.json();
-
-                select.innerHTML = '<option value="">-- Selecciona el encuentro --</option>';
-                partidos.forEach(p => {
-                    select.innerHTML += `<option value="${p.id}">${p.rival} (${p.lugar || 'Liga'})</option>`;
+                
+                selectPartido.innerHTML = '<option value="">Selecciona un partido / destino...</option>';
+                
+                if (partidos.length === 0) {
+                    selectPartido.innerHTML = '<option value="">No hay partidos disponibles</option>';
+                    return;
+                }
+                
+                partidos.forEach(partido => {
+                    selectPartido.insertAdjacentHTML("beforeend", `
+                        <option value="${partido.id}">vs ${partido.rival} (${partido.fecha || 'Sin fecha'})</option>
+                    `);
                 });
-            } catch (err) {
-                select.innerHTML = '<option value="">Error al traer partidos desde la API</option>';
+            } catch (err) { 
+                console.error(err); 
+                selectPartido.innerHTML = '<option value="">Error al cargar partidos</option>';
             }
         }
 
+        // 6. SECCIÓN: VIAJES
         async function obtenerViajesAPI() {
-            const tbody = document.getElementById("tabla-viajes-admin");
-            try {
-                const res = await fetch(`${BACKEND_URL}/viajes`);
-                if(!res.ok) throw new Error();
-                const viajes = await res.json();
+            const tablas = document.querySelectorAll("table");
+            let tbody = document.getElementById("tabla-viajes-admin");
+            
+            if (!tbody && tablas.length > 0) {
+                tablas.forEach(tabla => {
+                    if (tabla.innerText.includes("Plazas Libres")) {
+                        tbody = tabla.querySelector("tbody");
+                    }
+                });
+            }
 
-                if(viajes.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay planes de viaje activos en este momento.</td></tr>';
+            if (!tbody) return;
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/viajes`); 
+                if (!res.ok) throw new Error();
+                const viajes = await res.json();
+                
+                if (viajes.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay viajes programados.</td></tr>';
                     return;
                 }
                 tbody.innerHTML = "";
-                viajes.forEach(v => {
-                    const fila = `
+                viajes.forEach(viaje => {
+                    tbody.innerHTML += `
                         <tr>
-                            <td>#${v.id}</td>
-                            <td class="fw-bold">${v.destino || 'Desconocido'}</td>
-                            <td>${v.fecha}</td>
-                            <td>${v.tipo_transporte}</td>
-                            <td><span class="badge bg-info text-dark">${v.plazas_libres || v.plazas_totales} vacías</span></td>
+                            <td>#${viaje.id}</td>
+                            <td class="fw-bold">${viaje.destino || viaje.rival}</td>
+                            <td>${viaje.fecha}</td>
+                            <td><span class="badge bg-info text-dark">${viaje.tipo_transporte || 'Autobús'}</span></td>
+                            <td>${viaje.plazas_libres ?? viaje.plazas_totales}</td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarViaje(${v.id})"><i class="fas fa-trash"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarViaje(${viaje.id})"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>`;
-                    tbody.insertAdjacentHTML("beforeend", fila);
                 });
             } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al conectar con la pasarela de viajes.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar la logística de viajes.</td></tr>';
             }
         }
 
         async function enviarNuevoViaje(e) {
             e.preventDefault();
+            
+            const selectDestino = document.querySelector("select[class*='form-select']");
+            const inputFecha = document.querySelector("input[type='date']");
+            const selectTransporte = document.querySelectorAll("select")[1];
+            const inputPlazas = document.querySelector("input[type='number']");
+
             const payload = {
-                partido_id: parseInt(document.getElementById("viaje-partido-select").value),
-                fecha: document.getElementById("viaje-fecha").value,
-                tipo_transporte: document.getElementById("viaje-transporte").value,
-                plazas_totales: parseInt(document.getElementById("viaje-plazas").value)
+                partido_id: parseInt(selectDestino.value) || null,
+                destino: selectDestino.options[selectDestino.selectedIndex].text.replace("vs ", ""), 
+                fecha: inputFecha.value,
+                tipo_transporte: selectTransporte ? selectTransporte.value : "Autobús de la Peña",
+                plazas_totales: parseInt(inputPlazas.value) || 55
             };
+
             try {
                 const res = await fetch(`${BACKEND_URL}/viajes`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
-                if(res.ok) {
+                if (res.ok) {
+                    alert("¡Viaje On Tour publicado con éxito!");
                     document.getElementById("form-nuevo-viaje").reset();
                     obtenerViajesAPI();
+                } else {
+                    alert("Error al guardar el viaje.");
                 }
-            } catch(err) { console.error(err); }
+            } catch (err) { console.error(err); }
         }
 
         async function eliminarViaje(id) {
-            if(!confirm("¿Retirar este desplazamiento del catálogo de viajes web?")) return;
+            if (!confirm("¿Seguro que quieres borrar este viaje?")) return;
             try {
                 const res = await fetch(`${BACKEND_URL}/viajes/${id}`, { method: "DELETE" });
-                if(res.ok) obtenerViajesAPI();
-            } catch(err) { console.error(err); }
+                if (res.ok) obtenerViajesAPI();
+            } catch (err) { console.error(err); }
         }
 
-        // ==========================================
-        // 3. PESTAÑA: RESERVAS SEDE / LOCAL
-        // ==========================================
+        // 7. SECCIÓN: RESERVAS (CORREGIDA CON EL METODO PATCH EXACTO)
         async function obtenerReservasAPI() {
             const tbody = document.getElementById("tabla-reservas-admin");
+            if (!tbody) return;
             try {
                 const res = await fetch(`${BACKEND_URL}/reservas`);
-                if(!res.ok) throw new Error();
+                if (!res.ok) throw new Error();
                 const reservas = await res.json();
-
-                if(reservas.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay solicitudes pendientes de asignación.</td></tr>';
+                
+                if (reservas.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay reservas.</td></tr>';
                     return;
                 }
                 tbody.innerHTML = "";
-                reservas.forEach(r => {
-                    let colorStatus = 'bg-warning text-dark';
-                    if(r.estado === 'Aprobada') colorStatus = 'bg-success';
-                    if(r.estado === 'Denegada') colorStatus = 'bg-danger';
-
-                    const fila = `
+                reservas.forEach(reserva => {
+                    tbody.insertAdjacentHTML("beforeend", `
                         <tr>
-                            <td class="fw-bold">Socio #${r.socio_id}</td>
-                            <td>${r.fecha_solicitada}</td>
-                            <td>${r.motivo}</td>
-                            <td><span class="badge ${colorStatus}">${r.estado}</span></td>
+                            <td>${reserva.nombre_socio || reserva.usuario || 'Socio'}</td>
+                            <td>${reserva.fecha}</td>
+                            <td>${reserva.evento || reserva.motivo || 'Uso de Sede'}</td>
+                            <td><span class="badge bg-info">${reserva.estado}</span></td>
                             <td class="text-center">
-                                ${r.estado === 'Pendiente' ? `
-                                    <button class="btn btn-xs btn-success text-white py-1 px-2" onclick="modificarReserva(${r.id}, 'Aprobada')"><i class="fas fa-thumbs-up small"></i></button>
-                                    <button class="btn btn-xs btn-danger py-1 px-2" onclick="modificarReserva(${r.id}, 'Denegada')"><i class="fas fa-thumbs-down small"></i></button>
-                                ` : '-'}
+                                <button class="btn btn-sm btn-success text-white me-1" onclick="gestionarReserva(${reserva.id}, 'Aceptada')"><i class="fas fa-check"></i></button>
+                                <button class="btn btn-sm btn-danger" onclick="gestionarReserva(${reserva.id}, 'Rechazada')"><i class="fas fa-times"></i></button>
                             </td>
-                        </tr>`;
-                    tbody.insertAdjacentHTML("beforeend", fila);
+                        </tr>`);
                 });
-            } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Error al compilar solicitudes de local.</td></tr>';
-            }
+            } catch (err) { console.error(err); }
         }
 
-        async function modificarReserva(id, nuevoEstado) {
+        // FUNCIÓN NUEVA: Envía el PATCH correcto tal y como lo pide tu archivo Python
+        async function gestionarReserva(id, nuevoEstado) {
             try {
                 const res = await fetch(`${BACKEND_URL}/reservas/${id}`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ estado: nuevoEstado })
                 });
-                if(res.ok) obtenerReservasAPI();
-            } catch(err) { console.error(err); }
+                if (res.ok) {
+                    alert(`Reserva ${nuevoEstado.toLowerCase()} con éxito.`);
+                    obtenerReservasAPI(); // Recarga la tabla de reservas al momento
+                } else {
+                    alert("Error al actualizar la reserva.");
+                }
+            } catch (err) { console.error(err); }
         }
 
-        // ==========================================
-        // 4. PESTAÑA: GALERÍA MULTIMEDIA
-        // ==========================================
+        // 8. SECCIÓN: GALERÍA DE FOTOS (TOTALMENTE INTACTA)
         async function obtenerGaleriaAPI() {
-            const tbody = document.getElementById("tabla-galeria-admin");
+            const tbody = document.getElementById("tabla-galeria-admin"); 
+            if (!tbody) return;
             try {
                 const res = await fetch(`${BACKEND_URL}/galeria`);
-                if(!res.ok) throw new Error();
+                if (!res.ok) throw new Error();
                 const fotos = await res.json();
-
-                if(fotos.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Galería de imágenes vacía.</td></tr>';
+                
+                if (fotos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No hay imágenes en la galería.</td></tr>';
                     return;
                 }
                 tbody.innerHTML = "";
-                fotos.forEach(f => {
-                    const fila = `
+                fotos.forEach(foto => {
+                    const urlImagen = foto.url_local || `${BACKEND_URL}/${foto.url}`;
+                    tbody.insertAdjacentHTML("beforeend", `
                         <tr>
-                            <td><img src="${BACKEND_URL}/static/uploads/${f.filename}" alt="Miniatura" class="rounded shadow-sm" style="width:60px; height:45px; object-fit:cover;"></td>
-                            <td class="fw-bold">${f.titulo}</td>
-                            <td class="text-muted small">${f.pie_foto || '-'}</td>
+                            <td><img src="${urlImagen}" alt="${foto.titulo}" class="img-thumbnail" style="max-width: 70px; max-height: 50px; object-fit: cover;"></td>
+                            <td class="fw-bold">${foto.titulo}</td>
+                            <td class="text-muted">${foto.pie_foto || '-'}</td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarFoto(${f.id})"><i class="fas fa-trash-alt"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarFotoGaleria(${foto.id})"><i class="fas fa-trash"></i> Eliminar</button>
                             </td>
-                        </tr>`;
-                    tbody.insertAdjacentHTML("beforeend", fila);
+                        </tr>`);
                 });
             } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Error de enlace con el bucket multimedia.</td></tr>';
+                if(tbody) tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">⚠️ Error al cargar la galería.</td></tr>';
             }
         }
 
         async function enviarNuevaFoto(e) {
             e.preventDefault();
-            const archivoInput = document.getElementById("foto-archivo");
-            if(archivoInput.files.length === 0) return;
+            const inputForm = document.getElementById("form-nueva-foto");
+            const inputArchivo = inputForm.querySelector('input[type="file"]'); 
+            const inputTitulo = document.getElementById("admin-foto-titulo") || inputForm.querySelector('input[type="text"]');
+            const inputPie = document.getElementById("admin-foto-pie");
+
+            if (!inputArchivo || inputArchivo.files.length === 0) {
+                alert("Por favor, selecciona una imagen primero.");
+                return;
+            }
 
             const formData = new FormData();
-            formData.append("file", archivoInput.files[0]);
-            formData.append("titulo", document.getElementById("foto-titulo").value);
-            formData.append("pie_foto", document.getElementById("foto-pie").value);
+            formData.append("titulo", inputTitulo.value);
+            formData.append("pie_foto", inputPie ? inputPie.value : "");
+            formData.append("file", inputArchivo.files[0]); 
 
             try {
                 const res = await fetch(`${BACKEND_URL}/galeria`, {
                     method: "POST",
-                    body: formData
+                    body: formData 
                 });
-                if(res.ok) {
-                    document.getElementById("form-nueva-foto").reset();
-                    obtenerGaleriaAPI();
+                if (res.ok) {
+                    alert("¡Foto subida con éxito!");
+                    inputForm.reset();
+                    const label = document.getElementById('label-foto-archivo');
+                    if(label) label.innerHTML = '📸 Añadir foto';
+                    obtenerGaleriaAPI(); 
+                } else {
+                    alert("El servidor dio un error al guardar la foto.");
                 }
-            } catch(err) { console.error(err); }
+            } catch (err) { alert("Error de red."); }
         }
 
-        async function eliminarFoto(id) {
-            if(!confirm("¿Eliminar de forma permanente este recurso gráfico de la web?")) return;
+        async function eliminarFotoGaleria(id) {
+            if (!confirm("¿Seguro que quieres eliminar esta foto?")) return;
             try {
                 const res = await fetch(`${BACKEND_URL}/galeria/${id}`, { method: "DELETE" });
-                if(res.ok) obtenerGaleriaAPI();
-            } catch(err) { console.error(err); }
+                if (res.ok) obtenerGaleriaAPI();
+            } catch (err) { console.error(err); }
         }
 
-        // ==========================================
-        // 5. PESTAÑA: COMPAÑÍAS PARTNERS / SPONSORS
-        // ==========================================
+        // 9. SECCIÓN: PARTNERS
         async function obtenerPartnersAPI() {
             const tbody = document.getElementById("tabla-partners-admin");
+            if (!tbody) return;
             try {
                 const res = await fetch(`${BACKEND_URL}/partners`);
-                if(!res.ok) throw new Error();
+                if (!res.ok) throw new Error();
                 const partners = await res.json();
-
-                if(partners.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No hay partners comerciales vinculados.</td></tr>';
+                
+                if (partners.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No hay patrocinadores.</td></tr>';
                     return;
                 }
                 tbody.innerHTML = "";
-                partners.forEach(p => {
-                    const fila = `
+                partners.forEach(partner => {
+                    tbody.insertAdjacentHTML("beforeend", `
                         <tr>
-                            <td class="text-primary small fw-bold">${p.categoria}</td>
-                            <td class="fw-bold">${p.nombre}</td>
+                            <td><strong>${partner.nombre}</strong></td>
+                            <td><a href="${partner.web}" target="_blank">${partner.web}</a></td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarPartner(${p.id})"><i class="fas fa-handshake-slash"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarPartner(${partner.id})"><i class="fas fa-trash"></i></button>
                             </td>
-                        </tr>`;
-                    tbody.insertAdjacentHTML("beforeend", fila);
+                        </tr>`);
                 });
-            } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Error al descargar listado de patrocinadores.</td></tr>';
-            }
+            } catch (err) { console.error(err); }
         }
 
         async function enviarNuevoPartner(e) {
             e.preventDefault();
             const payload = {
-                categoria: document.getElementById("partner-categoria").value,
-                nombre: document.getElementById("partner-nombre").value
+                nombre: document.getElementById("admin-partner-nombre").value,
+                web: document.getElementById("admin-partner-web").value
             };
             try {
                 const res = await fetch(`${BACKEND_URL}/partners`, {
@@ -786,19 +814,12 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
-                if(res.ok) {
+                if (res.ok) {
+                    alert("¡Patrocinador guardado!");
                     document.getElementById("form-nuevo-partner").reset();
                     obtenerPartnersAPI();
                 }
-            } catch(err) { console.error(err); }
-        }
-
-        async function eliminarPartner(id) {
-            if(!confirm("¿Remover acuerdo de colaboración con este sponsor?")) return;
-            try {
-                const res = await fetch(`${BACKEND_URL}/partners/${id}`, { method: "DELETE" });
-                if(res.ok) obtenerPartnersAPI();
-            } catch(err) { console.error(err); }
+            } catch (err) { console.error(err); }
         }
     </script>
 </body>

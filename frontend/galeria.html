@@ -19,67 +19,12 @@
                 <p class="text-muted m-0">El histórico de fotos de la Peña Zaragocista "Presentes por el Escudo"</p>
             </div>
 
-            <div class="row g-4">
-                
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                    <div class="card border-0 shadow-sm overflow-hidden gallery-card h-100">
-                        <img src="assets/viaje_andorra.webp" class="card-img-top img-fluid" alt="Foto Peña" style="object-fit: cover; height: 220px;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
-                    </div>
+            <div class="row g-4" id="contenedor-galeria">
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted">Cargando los recuerdos de la peña...</p>
                 </div>
-
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                    <div class="card border-0 shadow-sm overflow-hidden gallery-card h-100">
-                        <img src="assets/carnaval_presentes.webp" class="card-img-top img-fluid" alt="Foto Peña" style="object-fit: cover; height: 220px;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
-                    </div>
-                </div>
-
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                    <div class="card border-0 shadow-sm overflow-hidden gallery-card h-100">
-                        <img src="assets/Siempre_presentes.webp" class="card-img-top img-fluid" alt="Foto Peña" style="object-fit: cover; height: 220px;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
-                    </div>
-                </div>
-
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                    <div class="card border-0 shadow-sm overflow-hidden gallery-card h-100">
-                        <img src="assets/Andorra-Real_Zaragoza_previa.webp" class="card-img-top img-fluid" alt="Foto Peña" style="object-fit: cover; height: 220px;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
-                    </div>
-                </div>
-
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                    <div class="card border-0 shadow-sm overflow-hidden gallery-card h-100">
-                        <img src="assets/Castellon-Real Zaragoza.webp" class="card-img-top img-fluid" alt="Foto Peña" style="object-fit: cover; height: 220px;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
-                    </div>
-                </div>
-
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                    <div class="card border-0 shadow-sm overflow-hidden gallery-card h-100">
-                        <img src="assets/Museo_Zaragocista.webp" class="card-img-top img-fluid" alt="Foto Peña" style="object-fit: cover; height: 220px;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
-                    </div>
-                </div>
-
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                    <div class="card border-0 shadow-sm overflow-hidden gallery-card h-100">
-                        <img src="assets/presentes_fiesta_navidad.webp" class="card-img-top img-fluid" alt="Foto Peña" style="object-fit: cover; height: 220px;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
-                    </div>
-                </div>
-
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                    <div class="card border-0 shadow-sm overflow-hidden gallery-card h-100">
-                        <img src="assets/Previa_Racing_Santander-Real_Zaragoza.webp" class="card-img-top img-fluid" alt="Foto Peña" style="object-fit: cover; height: 220px;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
-                    </div>
-                </div>
-
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                    <div class="card border-0 shadow-sm overflow-hidden gallery-card h-100">
-                        <img src="assets/Presentes_Romareda.webp" class="card-img-top img-fluid" alt="Foto Peña" style="object-fit: cover; height: 220px;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
-                    </div>
-                </div>
-
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                    <div class="card border-0 shadow-sm overflow-hidden gallery-card h-100">
-                        <img src="assets/presentes_londres.webp" class="card-img-top img-fluid" alt="Foto Peña" style="object-fit: cover; height: 220px;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
-                    </div>
             </div>
+            
         </div>
     </main>
 
@@ -91,6 +36,7 @@
     <script src="js/app.js"></script>
 
     <script>
+        // Función para abrir la imagen en grande dentro del modal
         function enmascararImagen(elemento) {
             const rutaImagen = elemento.getAttribute('src');
             const imagenModal = document.getElementById('modalImage');
@@ -98,6 +44,58 @@
                 imagenModal.setAttribute('src', rutaImagen);
             }
         }
+
+        // 🔴 SCRIPT DE UNIFICACIÓN DINÁMICA
+        // Se ejecuta automáticamente al cargar la página para pedir las fotos a FastAPI
+        document.addEventListener("DOMContentLoaded", async () => {
+            const contenedor = document.getElementById("contenedor-galeria");
+            
+            try {
+                const respuesta = await fetch("http://127.0.0.1:8000/galeria");
+                if (!respuesta.ok) throw new Error("Error al conectar con la API");
+                
+                const imagenes = await respuesta.json();
+                
+                // Si la base de datos de FastAPI está vacía
+                if (imagenes.length === 0) {
+                    contenedor.innerHTML = `
+                        <div class="col-12 text-center py-5">
+                            <p class="text-muted">No hay fotos publicadas en la galería todavía.</p>
+                        </div>`;
+                    return;
+                }
+                
+                // Limpiamos el mensaje de "Cargando..."
+                contenedor.innerHTML = "";
+                
+                // Recorremos la lista que nos manda el backend y creamos las tarjetas al vuelo
+                imagenes.forEach(foto => {
+                    const columna = document.createElement("div");
+                    columna.className = "col-12 col-sm-6 col-md-4 col-lg-3";
+                    
+                    columna.innerHTML = `
+                        <div class="card border-0 shadow-sm overflow-hidden gallery-card h-100">
+                            <img src="${foto.url}" 
+                                 class="card-img-top img-fluid" 
+                                 alt="${foto.titulo}" 
+                                 title="${foto.pie_foto}"
+                                 style="object-fit: cover; height: 220px; cursor: pointer;" 
+                                 data-bs-toggle="modal" 
+                                 data-bs-target="#galleryModal" 
+                                 onclick="enmascararImagen(this)">
+                        </div>
+                    `;
+                    contenedor.appendChild(columna);
+                });
+
+            } catch (error) {
+                console.error("Fallo al cargar la galería:", error);
+                contenedor.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <p class="text-danger">❌ No se pudieron cargar las fotos. Asegúrate de que el Backend esté corriendo.</p>
+                    </div>`;
+            }
+        });
     </script>
 
     <div class="modal fade" id="galleryModal" tabindex="-1" aria-hidden="true">

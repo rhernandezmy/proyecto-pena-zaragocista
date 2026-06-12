@@ -27,6 +27,8 @@
         <div id="lista-partidos-espana" class="row g-4">
             <p>Cargando partidos...</p>
         </div>
+
+        <div id="contenedor-partidos-globales" class="mt-2"></div>
     </main>
 
     <div id="footer-placeholder"></div>
@@ -37,6 +39,7 @@
         document.addEventListener("DOMContentLoaded", async () => {
             const contenedor = document.getElementById('lista-partidos-espana');
             
+            // 1. CARGAR PARTIDOS DE ESPAÑA
             try {
                 const response = await fetch("http://localhost:8000/mundial/partidos-espana");
                 if (!response.ok) throw new Error("Error al obtener los datos");
@@ -48,43 +51,85 @@
 
                 if (partidos.length === 0) {
                     contenedor.innerHTML = "<p>No hay partidos programados actualmente.</p>";
-                    return;
-                }
+                } else {
+                    partidos.forEach(p => {
+                        const fecha = new Date(p.utcDate).toLocaleDateString();
+                        const hora = new Date(p.utcDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const rival = p.homeTeam.name === "Spain" ? p.awayTeam.name : p.homeTeam.name;
+                        
+                        const haTerminado = p.status === 'FINISHED';
+                        const marcador = haTerminado 
+                            ? (p.homeTeam.name === "Spain" ? `${p.score.fullTime.home} - ${p.score.fullTime.away}` : `${p.score.fullTime.away} - ${p.score.fullTime.home}`)
+                            : "VS";
 
-                partidos.forEach(p => {
-                    const fecha = new Date(p.utcDate).toLocaleDateString();
-                    const hora = new Date(p.utcDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const rival = p.homeTeam.name === "Spain" ? p.awayTeam.name : p.homeTeam.name;
-                    
-                    // Lógica de marcador
-                    const haTerminado = p.status === 'FINISHED';
-                    const marcador = haTerminado 
-                        ? (p.homeTeam.name === "Spain" ? `${p.score.fullTime.home} - ${p.score.fullTime.away}` : `${p.score.fullTime.away} - ${p.score.fullTime.home}`)
-                        : "VS";
-
-                    contenedor.innerHTML += `
-                        <div class="col-md-4">
-                            <div class="card h-100 shadow-sm border-0">
-                                <div class="card-body text-center">
-                                    <h5 class="card-title fw-bold">España vs ${rival}</h5>
-                                    <h2 class="my-3 ${haTerminado ? 'text-danger' : 'text-muted'}">${marcador}</h2>
-                                    <p class="card-text small">
-                                        <strong>Fecha:</strong> ${fecha} <br> 
-                                        <strong>Hora:</strong> ${hora} <br>
-                                        <span class="badge ${haTerminado ? 'bg-success' : 'bg-warning text-dark'} mt-2">
-                                            ${haTerminado ? 'Finalizado' : 'Pendiente'}
-                                        </span>
-                                    </p>
+                        contenedor.innerHTML += `
+                            <div class="col-md-4">
+                                <div class="card h-100 shadow-sm border-0">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title fw-bold">España vs ${rival}</h5>
+                                        <h2 class="my-3 ${haTerminado ? 'text-danger' : 'text-muted'}">${marcador}</h2>
+                                        <p class="card-text small">
+                                            <strong>Fecha:</strong> ${fecha} <br> 
+                                            <strong>Hora:</strong> ${hora} <br>
+                                            <span class="badge ${haTerminado ? 'bg-success' : 'bg-warning text-dark'} mt-2">
+                                                ${haTerminado ? 'Finalizado' : 'Pendiente'}
+                                            </span>
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
-                });
+                        `;
+                    });
+                }
             } catch (error) {
                 console.error("Error:", error);
-                contenedor.innerHTML = `<div class="alert alert-danger">Error al cargar los partidos.</div>`;
+                contenedor.innerHTML = `<div class="alert alert-danger">Error al cargar los partidos de España.</div>`;
             }
+
+            // 2. 🌟 NUEVO: CARGAR MARCADORES GLOBALES (Línea pequeña y discreta)
+            await cargarMarcadoresGlobalesMundial();
         });
+
+        // Función auxiliar para renderizar los otros partidos en formato cinta minimalista
+        async function cargarMarcadoresGlobalesMundial() {
+            const contenedorMundial = document.getElementById('contenedor-partidos-globales');
+            if (!contenedorMundial) return;
+
+            try {
+                const res = await fetch("http://localhost:8000/mundial/partidos-globales");
+                if (!res.ok) return;
+                
+                const datos = await res.json();
+                
+                if (!datos.partidos || datos.partidos.length === 0) return;
+
+                contenedorMundial.innerHTML = "";
+                
+                let htmlContenido = `
+                    <div class="text-center text-muted small border-top pt-3 mt-4" style="font-size: 0.82rem; letter-spacing: 0.5px;">
+                        <span class="fw-bold text-uppercase text-secondary me-2">Otros marcadores del torneo:</span> `;
+                
+                datos.partidos.forEach((partido, index) => {
+                    const golesHome = partido.score?.fullTime?.home !== null ? partido.score.fullTime.home : "-";
+                    const golesAway = partido.score?.fullTime?.away !== null ? partido.score.fullTime.away : "-";
+                    
+                    htmlContenido += `
+                        <span class="mx-2">
+                            ${partido.homeTeam.name} <b class="text-dark">${golesHome}-${golesAway}</b> ${partido.awayTeam.name}
+                        </span>`;
+                        
+                    if (index < datos.partidos.length - 1) {
+                        htmlContenido += ` <span class="text-muted">|</span> `;
+                    }
+                });
+                
+                htmlContenido += `</div>`;
+                contenedorMundial.innerHTML = htmlContenido;
+                
+            } catch (err) {
+                console.error("Error silencioso cargando marcadores del mundial:", err);
+            }
+        }
     </script>
 </body>
 </html>
