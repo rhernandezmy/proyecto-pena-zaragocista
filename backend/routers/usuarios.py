@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from typing import List
 import models
 import database 
-import schemas  # Importamos los esquemas que dejamos listos en el paso anterior
+import schemas
+import datetime # Importado para hacer dinámica la comprobación de cuotas
 
 router = APIRouter(
     prefix="", 
@@ -17,14 +18,14 @@ router = APIRouter(
 @router.get("/socios", response_model=List[dict])
 def obtener_todos_los_socios(db: Session = Depends(database.get_db)):
     """
-    Retorna el listado completo de socios reales de la peña (Pestaña 1).
-    Lee dinámicamente el estado de pago de las cuotas a través del usuario web enlazado.
+    Retorna el listado completo de socios. 
+    Usa el año actual para determinar el estado de la cuota.
     """
+    año_actual = datetime.datetime.now().year
     socios = db.query(models.SocioPena).order_by(models.SocioPena.numero_socio.asc().nullslast()).all()
     
     resultado = []
     for s in socios:
-        # Por defecto la cuota estará Pendiente a menos que tenga un usuario web enlazado con cuota pagada
         estado_pago = "Pendiente"
         email_web = "Sin Cuenta Web"
         usuario_id = None
@@ -32,9 +33,12 @@ def obtener_todos_los_socios(db: Session = Depends(database.get_db)):
         if s.usuario_web:
             usuario_id = s.usuario_web.id
             email_web = s.usuario_web.email
-            cuota_actual = next((c for c in s.usuario_web.cuotas if c.ano_ejercicio == 2026), None)
-            if cuota_actual:
-                estado_pago = cuota_actual.estado_pago
+            
+            cuotas_lista = getattr(s.usuario_web, 'cuotas', [])
+            if cuotas_lista:
+                cuota_actual = next((c for c in cuotas_lista if c.ano_ejercicio == año_actual), None)
+                if cuota_actual:
+                    estado_pago = cuota_actual.estado_pago
 
         resultado.append({
             "id": s.id,
@@ -44,85 +48,88 @@ def obtener_todos_los_socios(db: Session = Depends(database.get_db)):
             "nombre_completo": f"{s.nombre} {s.apellidos}",
             "dni": s.dni if s.dni else "Sin DNI",
             "telefono": s.telefono if s.telefono else "Sin Teléfono",
-            "email_web": email_web,  # Para saber informativamente qué cuenta usa en la web
+            "email_web": email_web,
             "usuario_id": usuario_id,
             "estado_cuota": estado_pago,
             "activo": s.activo
         })
     return resultado
 
-
 @router.post("/crear-socio", status_code=status.HTTP_201_CREATED)
 def admin_crear_socio_pena(socio_in: schemas.SocioPenaCreate, db: Session = Depends(database.get_db)):
-    """
-    Crea un nuevo socio de la peña de forma puramente física/administrativa.
-    Ya no requiere emails obligatorios ni contraseñas temporales por defecto.
-    """
     if socio_in.numero_socio:
-        numero_existente = db.query(models.SocioPena).filter(models.SocioPena.numero_socio == socio_in.numero_socio).first()
-        if numero_existente:
+        if db.query(models.SocioPena).filter(models.SocioPena.numero_socio == socio_in.numero_socio).first():
             raise HTTPException(status_code=400, detail="El número de socio ya está asignado.")
             
-    if socio_in.dni:
-        dni_existente = db.query(models.SocioPena).filter(models.SocioPena.dni == socio_in.dni).first()
-        if dni_existente:
-            raise HTTPException(status_code=400, detail="El DNI introducido ya pertenece a otro socio.")
+    if socio_in.dni and db.query(models.SocioPena).filter(models.SocioPena.dni == socio_in.dni).first():
+        raise HTTPException(status_code=400, detail="El DNI ya pertenece a otro socio.")
 
     try:
         nuevo_socio = models.SocioPena(**socio_in.model_dump())
         db.add(nuevo_socio)
         db.commit()
-        db.refresh(nuevo_socio)
-        
-        return {"status": "success", "message": "¡Socio de la peña creado correctamente en el libro de registro!"}
-        
+        return {"status": "success", "message": "Socio creado correctamente."}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"FALLO_SISTEMA_BD: {str(e)}")
-
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/socios/{socio_id}")
 def actualizar_socio_pena(socio_id: int, payload: dict, db: Session = Depends(database.get_db)):
-    """
-    Modifica los datos de la ficha administrativa del socio.
-    """
     socio = db.query(models.SocioPena).filter(models.SocioPena.id == socio_id).first()
-    if not socio:
-        raise HTTPException(status_code=404, detail="Socio no encontrado en el sistema.")
+    if not socio: raise HTTPException(status_code=404, detail="Socio no encontrado.")
     
     try:
-        if "numero_socio" in payload: socio.numero_socio = payload["numero_socio"]
-        if "nombre" in payload: socio.nombre = payload["nombre"]
-        if "apellidos" in payload: socio.apellidos = payload["apellidos"]
-        if "dni" in payload: socio.dni = payload["dni"]
-        if "telefono" in payload: socio.telefono = payload["telefono"]
-        if "activo" in payload: socio.activo = payload["activo"]
-        
+        for key, value in payload.items():
+            if hasattr(socio, key): setattr(socio, key, value)
         db.commit()
-        return {"status": "success", "message": "¡Ficha de socio modificada correctamente!"}
-        
+        return {"status": "success", "message": "Ficha actualizada."}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail=f"Error al actualizar persistencia: {str(e)}")
-
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.delete("/socios/{socio_id}")
 def dar_baja_socio_pena(socio_id: int, db: Session = Depends(database.get_db)):
     """
-    Baja lógica de un socio de la peña (activo=False).
+    ELIMINAR = DESACTIVAR (Baja lógica).
+    Mantiene todos los datos para contabilidad histórica.
     """
     socio = db.query(models.SocioPena).filter(models.SocioPena.id == socio_id).first()
-    if not socio:
-        raise HTTPException(status_code=404, detail="El socio seleccionado no existe.")
+    if not socio: raise HTTPException(status_code=404, detail="Socio no existe.")
     
     try:
         socio.activo = False
+        if socio.usuario_web:
+            socio.usuario_web.activo = False
         db.commit()
-        return {"status": "success", "message": "Socio desactivado del libro de registro correctamente."}
+        return {"status": "success", "message": "Socio dado de baja (desactivado) para contabilidad."}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"No se pudo procesar la baja en BD: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/socios/{socio_id}/destruir-total")
+def eliminar_fisicamente_socio_pena(socio_id: int, payload: dict, db: Session = Depends(database.get_db)):
+    """
+    Solo para uso interno técnico. Requiere API_TOKEN.
+    """
+    import os
+    if payload.get("codigo_seguridad") != os.getenv("API_TOKEN"):
+        raise HTTPException(status_code=401, detail="Autorización denegada.")
+        
+    socio = db.query(models.SocioPena).filter(models.SocioPena.id == socio_id).first()
+    if not socio: raise HTTPException(status_code=404, detail="No existe.")
+    
+    try:
+        if socio.usuario_web:
+            db.query(models.Cuota).filter(models.Cuota.usuario_id == socio.usuario_web.id).delete()
+            db.query(models.Vehiculo).filter(models.Vehiculo.usuario_id == socio.usuario_web.id).delete()
+            db.query(models.Reserva).filter(models.Reserva.usuario_id == socio.usuario_web.id).delete()
+            db.delete(socio.usuario_web)
+        db.delete(socio)
+        db.commit()
+        return {"status": "success", "message": "Registro destruido físicamente."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 # =========================================================================
 # 🌐 PESTAÑA 2: GESTIÓN DE USUARIOS WEB (Cuentas y Accesos Online)
