@@ -1,12 +1,15 @@
 import os
 import sys
 import httpx
+import csv
+import io
+
 from datetime import datetime, timedelta
 from typing import Optional
-from pydantic import BaseModel
-import csv
+from pydantic import BaseModel, EmailStr
 from fastapi.responses import StreamingResponse
-import io
+from fastapi import status, HTTPException, Depends
+
 
 # 🌟 PARCHE DE EMERGENCIA DE ENTORNO PARA WINDOWS (Acentos y Ñs)
 os.environ["PYTHONIOENCODING"] = "utf-8"
@@ -203,17 +206,13 @@ async def actualizar_liga_si_es_necesario():
 # ---------------------------------------------------------------------
 @app.get("/admin/global-data")
 async def obtener_datos_globales_admin(db: Session = Depends(get_db)):
-    """
-    Envía los socios al panel incluyendo el DNI real y el número de socio real de la BD.
-    """
     try:
-        # Los ordenamos por número de socio para que salgan perfectos en la tabla
+        # 1. Traemos los socios físicos
         socios_db = db.query(models.SocioPena).order_by(models.SocioPena.numero_socio).all()
-        
         lista_socios_formateada = [
             {
                 "id": socio.id,
-                "numero_socio": socio.numero_socio,  # ◄ Enviamos el número limpio de la base de datos
+                "numero_socio": socio.numero_socio if socio.numero_socio is not None else socio.id,
                 "nombre": socio.nombre,
                 "apellidos": socio.apellidos,
                 "dni": socio.dni or "-",          
@@ -225,9 +224,25 @@ async def obtener_datos_globales_admin(db: Session = Depends(get_db)):
             for socio in socios_db
         ]
         
+        # 2. 🚨 NUEVO: Traemos los usuarios de la web reales de la base de datos
+        usuarios_db = db.query(models.Usuario).all()
+        lista_usuarios_formateada = [
+            {
+                "id": u.id,
+                "username": u.username,
+                "email": u.email,
+                "rol": u.rol,
+                "activo": u.activo,
+                "verificado": u.verificado,
+                # Si está vinculado a un socio, formateamos su número de socio (ej: #004), si no, ponemos "-"
+                "socio_vinculado": f"#{str(u.socio_interno.numero_socio).zfill(3)}" if u.socio_interno else "-"
+            }
+            for u in usuarios_db
+        ]
+        
         return {
             "lista_socios": lista_socios_formateada,
-            "usuarios_web": DB_USUARIOS_WEB
+            "usuarios_web": lista_usuarios_formateada  # ◄ ¡Adiós a los datos de prueba inventados!
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener datos globales: {str(e)}")
@@ -358,6 +373,71 @@ async def exportar_socios_csv(db: Session = Depends(get_db)):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+# Esquema para recibir los datos del formulario de registro web
+class RegistroUsuarioWeb(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+
+@app.post("/auth/registro-web", status_code=status.HTTP_201_CREATED)
+async def registrar_usuario_web(datos: RegistroUsuarioWeb, db: Session = Depends(get_db)):
+    """
+    Lógica blindada: Solo permite crear cuenta si el email ya existe en el Libro Oficial de Socios.
+    """
+    try:
+        # 1. Comprobación de seguridad: ¿Este email ya tiene una cuenta web creada?
+        usuario_existente = db.query(models.Usuario).filter(models.Usuario.email == datos.email).first()
+        if usuario_existente:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail="Este correo electrónico ya tiene una cuenta web registrada."
+            )
+            
+        # 2. EL FILTRO VIP: Buscamos si el email está registrado en el Libro Oficial de Socios (y que esté de Alta)
+        socio_oficial = db.query(models.SocioPena).filter(
+            models.SocioPena.email == datos.email,
+            models.SocioPena.activo == True
+        ).first()
+        
+        # 🚫 CASO 2: No es socio oficial o está dado de baja -> LE DENEGAMOS EL PASO
+        if not socio_oficial:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Lo sentimos, este correo no figura en el Libro Oficial de Socios de la Peña. "
+                       "Contacta con la administración si crees que es un error."
+            )
+            
+        # ✅ CASO 1: Es socio oficial -> Creamos la cuenta web enlazada a su socio_id
+        # Nota: Aquí deberías usar tu función para encriptar contraseñas (ej: pwd_context.hash)
+        pwd_encriptada = datos.password # Almacenar hash real en producción
+        
+        nuevo_usuario = models.Usuario(
+            username=datos.username,
+            email=datos.email,
+            hashed_password=pwd_encriptada,
+            rol="socio",          # Rol por defecto siempre socio
+            activo=True,          # Cuenta habilitada en el panel
+            verificado=False,     # Pendiente de pulsar el enlace del email
+            socio_id=socio_oficial.id # Queda vinculado automáticamente a su ficha física
+        )
+        
+        db.add(nuevo_usuario)
+        db.commit()
+        
+        # 📧 Aquí meteremos en el futuro la función: enviar_correo_verificacion(nuevo_usuario.email)
+        
+        return {
+            "status": "ok", 
+            "message": "Cuenta creada. Por favor, verifica tu correo electrónico para activarla.",
+            "socio_vinculado": f"#{str(socio_oficial.numero_socio).zfill(3)}"
+        }
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error en el registro: {str(e)}")
         
 # ---------------------------------------------------------------------
 # ENDPOINTS: VIAJES Y DINÁMICA DE PARTIDOS

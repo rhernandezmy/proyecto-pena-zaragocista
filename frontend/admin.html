@@ -580,18 +580,53 @@
                 const data = await res.json();
                 const usuarios = data.usuarios_web || []; 
                 
+                // Ahora que hay 6 columnas reales tras quitar el DNI, ponemos colspan="6"
                 if (usuarios.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No hay cuentas web.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay cuentas web.</td></tr>';
                     return;
                 }
                 tbody.innerHTML = "";
                 usuarios.forEach(user => {
+                    // 1. Manejo del Badge de Rol
+                    const badgeRol = user.rol === "Admin" 
+                        ? '<span class="badge bg-danger">👑 Admin</span>' 
+                        : '<span class="badge bg-primary">Socio Web</span>';
+                    
+                    // 2. Manejo visual si el usuario ha confirmado su cuenta por correo
+                    const badgeVerificado = user.verificado 
+                        ? ' <span class="text-success" title="Email verificado"><i class="fas fa-check-circle"></i></span>' 
+                        : ' <span class="text-warning" title="Pendiente de verificar email"><i class="fas fa-exclamation-circle"></i></span>';
+
+                    // 3. Estilo por si la cuenta web es desactivada por el administrador
+                    const claseFila = user.activo ? "" : "table-secondary text-muted";
+                    const estiloFila = user.activo ? "" : "style='opacity: 0.7;'";
+                    const textoInactivo = user.activo ? "" : " <strong>(Desactivado)</strong>";
+
+                    // 4. Botones de acción dinámicos para Gestión de Cuentas Web
+                    let botonesAccion = "";
+                    if (user.rol !== "Admin") { // Protegemos al administrador para no autodesactivarse
+                        if (user.activo) {
+                            botonesAccion = `<button class="btn btn-sm btn-outline-danger" title="Desactivar acceso web" onclick="cambiarEstadoUsuarioWeb(${user.id}, false)"><i class="fas fa-user-lock"></i></button>`;
+                        } else {
+                            botonesAccion = `<button class="btn btn-sm btn-success text-white px-2" title="Reactivar acceso web" onclick="cambiarEstadoUsuarioWeb(${user.id}, true)"><i class="fas fa-user-check"></i> Activar</button>`;
+                        }
+                    } else {
+                        botonesAccion = `<span class="text-muted small">Protegido</span>`;
+                    }
+
+                    // Pinta el alias (o el email si viene null temporalmente)
+                    const nombreMostrar = user.username ? user.username : `<span class="text-muted italic">${user.email.split('@')[0]}</span>`;
+
                     tbody.insertAdjacentHTML("beforeend", `
-                        <tr>
+                        <tr class="${claseFila}" ${estiloFila}>
                             <td>#${user.id}</td>
-                            <td class="fw-bold">${user.username}</td>
-                            <td>${user.email}</td>
-                            <td><span class="badge bg-secondary">${user.rol || 'Usuario'}</span></td>
+                            <td class="fw-bold">${nombreMostrar}${textoInactivo}</td>
+                            <td>${user.email}${badgeVerificado}</td>
+                            <td>${badgeRol}</td>
+                            <td class="fw-bold text-primary">${user.socio_vinculado}</td>
+                            <td class="text-center">
+                                ${botonesAccion}
+                            </td>
                         </tr>`);
                 });
             } catch (err) { console.error(err); }

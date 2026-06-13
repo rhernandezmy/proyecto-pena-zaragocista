@@ -30,12 +30,13 @@ class Usuario(Base):
     __tablename__ = "usuarios_web"  # <--- Cambiado de "socios" a "usuarios_web"
     
     id = Column(Integer, primary_key=True, index=True)
-    # Quitamos nombre y apellidos de aquí porque se consultarán a través de socio_interno si está vinculado
+    username = Column(String(50), unique=True, nullable=False) # 🚨 Añadido alias/nombre de usuario web
     email = Column(String(150), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     rol = Column(String(20), default="Socio")
     fecha_registro = Column(DateTime, server_default=func.now())
     activo = Column(Boolean, default=True)
+    verificado = Column(Boolean, default=False)                # 🚨 Control de verificación por email
 
     # El puente de conexión con la ficha física del socio (puede ser NULL)
     socio_pena_id = Column(Integer, ForeignKey("socios_pena.id", ondelete="SET NULL"), nullable=True)
@@ -45,7 +46,6 @@ class Usuario(Base):
     cuotas = relationship("Cuota", back_populates="usuario")
     vehiculos = relationship("Vehiculo", back_populates="usuario", cascade="all, delete-orphan")
     reservas = relationship("Reserva", back_populates="usuario")
-
 
 # =====================================================================
 # 3. CUOTAS Y VEHÍCULOS (Apuntando a usuarios_web)
