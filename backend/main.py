@@ -2,7 +2,7 @@ import os
 import sys
 import httpx
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional
+from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 # 🌟 PARCHE DE EMERGENCIA DE ENTORNO PARA WINDOWS (Acentos y Ñs)
@@ -17,6 +17,10 @@ from fastapi.staticfiles import StaticFiles
 # Herramientas de SQLAlchemy 2.0 y Postgres
 from sqlalchemy import create_engine, Column, Integer, String, select
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
+
+# Importaciones de tu arquitectura local (Base de datos y Modelos)
+import database
+import models
 
 # Importamos los routers modulares
 from routers import noticias
@@ -191,43 +195,115 @@ async def actualizar_liga_si_es_necesario():
                 print(f"⚠️ API Fútbol (Liga) no disponible temporalmente: {str(e)}")
 
 # ---------------------------------------------------------------------
-# ENDPOINTS: PANEL ADMINISTRACIÓN Y CONTROL DE SOCIOS
+# ENDPOINTS: PANEL ADMINISTRACIÓN Y CONTROL DE SOCIOS (CONECTADOS A POSTGRES)
 # ---------------------------------------------------------------------
+
 @app.get("/admin/global-data")
-async def obtener_datos_globales_admin():
-    return {
-        "lista_socios": DB_SOCIOS_FISICOS,
-        "usuarios_web": DB_USUARIOS_WEB
-    }
+async def obtener_datos_globales_admin(db: Session = Depends(get_db)):
+    """
+    Trae los socios reales de la base de datos para pintar la tabla del panel,
+    manteniendo la estructura exacta que tu JS lee.
+    """
+    try:
+        socios_db = db.query(models.SocioPena).all()
+        
+        # Mapeamos los datos de la BD al formato que tu frontend ya consume
+        lista_socios_formateada = [
+            {
+                "id": socio.id,
+                "nombre": socio.nombre,
+                "apellidos": socio.apellidos,
+                "email": getattr(socio, 'email', None) or "",
+                "telefono": socio.telefono or "",
+                "cuota": "Pagada" if socio.activo else "Pendiente"
+            }
+            for socio in socios_db
+        ]
+        
+        return {
+            "lista_socios": lista_socios_formateada,
+            "usuarios_web": DB_USUARIOS_WEB  # Se mantiene intacto tu array web si lo usas
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener datos globales: {str(e)}")
+
 
 @app.post("/socios", status_code=status.HTTP_201_CREATED)
-async def registrar_socio_fisico(socio: SocioNuevo):
-    nuevo_id = max([s["id"] for s in DB_SOCIOS_FISICOS], default=0) + 1
-    socio_dict = {
-        "id": nuevo_id,
-        "nombre": socio.nombre,
-        "apellidos": socio.apellidos,
-        "email": socio.email,
-        "telefono": socio.telefono,
-        "cuota": socio.cuota
-    }
-    DB_SOCIOS_FISICOS.append(socio_dict)
-    return {"status": "ok", "socio": socio_dict}
+async def registrar_socio_fisico(socio: SocioNuevo, db: Session = Depends(get_db)):
+    """
+    Cacha el formulario del frontend y escribe el registro de forma real 
+    y física en la tabla socios_pena de PostgreSQL.
+    """
+    try:
+        nuevo_socio = models.SocioPena(
+            nombre=socio.nombre,
+            apellidos=socio.apellidos,
+            telefono=socio.telefono or None,
+            activo=True  # Por defecto entra como activo (Cuota pagada)
+        )
+        
+        db.add(nuevo_socio)
+        db.commit()      # <--- Escribe físicamente en pgAdmin
+        db.refresh(nuevo_socio)
+        
+        return {
+            "status": "ok",
+            "socio": {
+                "id": nuevo_socio.id,
+                "nombre": nuevo_socio.nombre,
+                "apellidos": nuevo_socio.apellidos,
+                "email": socio.email,
+                "telefono": nuevo_socio.telefono,
+                "cuota": socio.cuota
+            }
+        }
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al guardar socio: {str(e)}")
+
 
 @app.patch("/socios/{socio_id}/cuota")
-async def actualizar_cuota_socio(socio_id: int, payload: CuotaActualizacion):
-    for socio in DB_SOCIOS_FISICOS:
-        if socio["id"] == socio_id:
-            socio["cuota"] = payload.cuota
-            return {"status": "ok"}
-    raise HTTPException(status_code=404, detail="Socio físico no encontrado")
+async def actualizar_cuota_socio(socio_id: int, payload: CuotaActualizacion, db: Session = Depends(get_db)):
+    """
+    Modifica el estado del socio en la base de datos real.
+    Si la cuota es "Pagada", marcamos activo=True. Si no, activo=False.
+    """
+    try:
+        socio = db.query(models.SocioPena).filter(models.SocioPena.id == socio_id).first()
+        if not socio:
+            raise HTTPException(status_code=404, detail="Socio físico no encontrado en la Base de Datos")
+        
+        # Sincronizamos el texto de la cuota con el booleano 'activo' de la BD
+        socio.activo = (payload.cuota.lower() == "pagada")
+        
+        db.commit()
+        return {"status": "ok"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al actualizar cuota: {str(e)}")
+
 
 @app.delete("/socios/{socio_id}")
-async def dar_de_baja_socio(socio_id: int):
-    global DB_SOCIOS_FISICOS
-    DB_SOCIOS_FISICOS = [s for s in DB_SOCIOS_FISICOS if s["id"] != socio_id]
-    return {"status": "ok"}
-
+async def dar_de_baja_socio(socio_id: int, db: Session = Depends(get_db)):
+    """
+    Elimina físicamente al socio de la tabla socios_pena en PostgreSQL.
+    """
+    try:
+        socio = db.query(models.SocioPena).filter(models.SocioPena.id == socio_id).first()
+        if not socio:
+            raise HTTPException(status_code=404, detail="Socio físico no encontrado en la Base de Datos")
+        
+        db.delete(socio)
+        db.commit()      # <--- Borrado real en pgAdmin
+        return {"status": "ok"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al eliminar socio: {str(e)}")
+    
 # ---------------------------------------------------------------------
 # ENDPOINTS: VIAJES Y DINÁMICA DE PARTIDOS
 # ---------------------------------------------------------------------

@@ -55,24 +55,41 @@ def obtener_todos_los_socios(db: Session = Depends(database.get_db)):
         })
     return resultado
 
-@router.post("/crear-socio", status_code=status.HTTP_201_CREATED)
-def admin_crear_socio_pena(socio_in: schemas.SocioPenaCreate, db: Session = Depends(database.get_db)):
-    if socio_in.numero_socio:
-        if db.query(models.SocioPena).filter(models.SocioPena.numero_socio == socio_in.numero_socio).first():
-            raise HTTPException(status_code=400, detail="El número de socio ya está asignado.")
-            
-    if socio_in.dni and db.query(models.SocioPena).filter(models.SocioPena.dni == socio_in.dni).first():
-        raise HTTPException(status_code=400, detail="El DNI ya pertenece a otro socio.")
+@router.post("/socios", status_code=201)
+def guardar_nuevo_socio_oficial(payload: dict, db: Session = Depends(database.get_db)):
+    """
+    Este es el único endpoint real que procesará el formulario.
+    Recibe los datos y los consolida en la tabla física de PostgreSQL.
+    """
+    nombre = payload.get("nombre")
+    apellidos = payload.get("apellidos")
+    telefono = payload.get("telefono") or None
+    dni = payload.get("dni") or None
+    numero_socio = payload.get("numero_socio") or None
+
+    if not nombre or not apellidos:
+        raise HTTPException(status_code=400, detail="Nombre y apellidos requeridos.")
 
     try:
-        nuevo_socio = models.SocioPena(**socio_in.model_dump())
+        nuevo_socio = models.SocioPena(
+            numero_socio=numero_socio,
+            nombre=nombre,
+            apellidos=apellidos,
+            dni=dni,
+            telefono=telefono,
+            activo=True
+        )
+        
         db.add(nuevo_socio)
-        db.commit()
-        return {"status": "success", "message": "Socio creado correctamente."}
+        db.commit()  # <--- Esto es lo que escribe físicamente en pgAdmin
+        db.refresh(nuevo_socio)
+        
+        return {"status": "success", "message": "Socio guardado correctamente"}
+        
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-
+                        
 @router.put("/socios/{socio_id}")
 def actualizar_socio_pena(socio_id: int, payload: dict, db: Session = Depends(database.get_db)):
     socio = db.query(models.SocioPena).filter(models.SocioPena.id == socio_id).first()

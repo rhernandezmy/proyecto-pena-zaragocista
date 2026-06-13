@@ -232,22 +232,30 @@ document.addEventListener("submit", async (e) => {
     if (e.target && e.target.id === "form-alta-socio") {
         e.preventDefault(); 
 
-        // Capturamos los valores directamente de los dos nuevos campos de Bootstrap
-        const nombre = document.getElementById("admin-nuevo-nombre").value.trim();
-        const apellidos = document.getElementById("admin-nuevo-apellidos").value.trim();
-        const email = document.getElementById("admin-nuevo-email").value.trim();
+        // Capturamos los valores directamente de los campos de Bootstrap
+        const nombre = document.getElementById("admin-nuevo-nombre")?.value.trim() || "";
+        const apellidos = document.getElementById("admin-nuevo-apellidos")?.value.trim() || "";
+        const email = document.getElementById("admin-nuevo-email")?.value.trim() || "";
+        
+        // Rescatamos también el estado de la cuota que añadiste en el HTML
+        const selectCuota = document.getElementById("admin-nuevo-cuota");
+        const estado_cuota = selectCuota ? selectCuota.value : "Pendiente";
 
-        // Construimos el envío con las claves exactas que tu PostgreSQL exige
+        // Construimos el envío con las claves exactas
         const nuevoSocioPayload = {
             nombre: nombre,
             apellidos: apellidos,
-            email: email
+            email: email,
+            estado_cuota: estado_cuota,
+            activo: true
         };
 
         try {
             console.log("📡 [API] Enviando nuevo socio al backend...", nuevoSocioPayload);
             
-            const response = await fetch(`${API_BASE_URL}/usuarios/crear-socio`, {
+            // CORRECCIÓN CRÍTICA: Quitamos '/usuarios' y usamos la variable correcta (cámbiala si usas BACKEND_URL)
+            const urlBase = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : BACKEND_URL;
+            const response = await fetch(`${urlBase}/crear-socio`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -257,21 +265,27 @@ document.addEventListener("submit", async (e) => {
 
             if (response.ok) {
                 console.log("✅ [API] Socio creado con éxito. Actualizando tabla...");
+                alert("¡Socio guardado con éxito!");
+                window.location.reload(); // Fuerza al navegador a refrescarse solo tras guardar con éxito
                 
                 // Cerrar el modal de Bootstrap de forma limpia
-                const modalElement = document.getElementById('modalNuevoSocio');
-                const modal = bootstrap.Modal.getInstance(modalElement);
-                if (modal) modal.hide();
+                const modalElement = document.getElementById('modalNuevoSocio') || document.getElementById('form-alta-socio').closest('.modal');
+                if (modalElement) {
+                    const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+                    if (modal) modal.hide();
+                }
 
                 // Resetear el formulario de la pantalla
                 e.target.reset();
 
                 // Recargar la tabla llamando a tus datos globales de la peña
-                await cargarDatosGlobalesDashboard();
+                if (typeof cargarDatosGlobalesDashboard === "function") await cargarDatosGlobalesDashboard();
+                if (typeof obtenerTodosLosSocios === "function") obtenerTodosLosSocios();
+                if (typeof obtenerSociosAPI === "function") obtenerSociosAPI();
             } else {
                 const errorTexto = await response.text();
                 console.error(`❌ [API] Error al crear socio. Estado HTTP: ${response.status}`, errorTexto);
-                alert(`Error: El servidor rechazó los datos. Comprueba que el email no esté repetido.`);
+                alert(`Error del servidor: ${response.status}. No se pudo guardar el socio.`);
             }
         } catch (error) {
             console.error("❌ [Fatal] Error de red al intentar crear el socio:", error);
