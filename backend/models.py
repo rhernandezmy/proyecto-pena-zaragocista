@@ -13,14 +13,15 @@ class SocioPena(Base):
     numero_socio = Column(Integer, unique=True, nullable=True)
     nombre = Column(String(100), nullable=False)
     apellidos = Column(String(150), nullable=False)
-    dni = Column(String(20), unique=True, nullable=True)
+    dni = Column(String(20), nullable=True)          # 🚨 ¡Libre para DNI real y opcional para menores!
     telefono = Column(String(20), nullable=True)
+    email = Column(String(255), nullable=True)
+    estado_cuota = Column(String(50), nullable=True) # 🚨 ¡Nueva columna real para la cuota!
     activo = Column(Boolean, default=True)
     fecha_alta = Column(DateTime, server_default=func.now())
 
-    # Relación inversa: Permite saber si este socio físico tiene una cuenta de acceso web
+    # Relación inversa
     usuario_web = relationship("Usuario", back_populates="socio_interno", uselist=False)
-
 
 # =====================================================================
 # 2. CUENTAS DE ACCESO WEB (Pestaña 2 del Admin y Autenticación)

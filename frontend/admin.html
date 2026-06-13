@@ -83,7 +83,7 @@
                                         <button class="btn btn-sm btn-success me-2" data-bs-toggle="modal" data-bs-target="#modalNuevoSocio">
                                             <i class="fas fa-user-plus me-1"></i> Nuevo Socio
                                         </button>
-                                        <button class="btn btn-sm btn-outline-primary" onclick="exportarSociosCSV()"><i class="fas fa-download me-1"></i> Exportar CSV</button>
+                                        <button class="btn btn-outline-primary" onclick="descargarCSV()"><i class="fas fa-download"></i> Exportar CSV</button>
                                     </div>
                                 </div>
                                 <div class="table-responsive">
@@ -92,6 +92,7 @@
                                             <tr>
                                                 <th>Nº Socio</th>
                                                 <th>Nombre completo</th>
+                                                <th>DNI</th>
                                                 <th>Email</th>
                                                 <th>Teléfono</th>
                                                 <th>Estado Cuota</th>
@@ -351,6 +352,10 @@
                             <input type="text" class="form-control" id="admin-nuevo-apellidos" placeholder="Ej. Martínez" required>
                         </div>
                         <div class="mb-3">
+                            <label for="admin-nuevo-dni" class="form-label">DNI / NIE (Opcional)</label>
+                            <input type="text" class="form-control" id="admin-nuevo-dni" placeholder="Ej: 12345678X">
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label small fw-bold">Correo Electrónico</label>
                             <input type="email" id="admin-nuevo-email" class="form-control" placeholder="Ej: javier@email.com" required>
                         </div>
@@ -439,7 +444,7 @@
             }
         }
 
-        // 3. SECCIÓN: SOCIOS FÍSICOS
+        // 3. SECCIÓN: SOCIOS FÍSICOS (ORDENADO Y CORREGIDO VISUALMENTE)
         async function obtenerSociosAPI() {
             const tbody = document.getElementById("tabla-socios-admin");
             if (!tbody) return;
@@ -449,29 +454,58 @@
                 const data = await res.json();
                 const socios = data.lista_socios || [];
                 
+                // Ahora que hay 7 columnas contando el DNI, ponemos colspan="7"
                 if(socios.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay socios físicos registrados.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No hay socios físicos registrados.</td></tr>';
                     return;
                 }
                 tbody.innerHTML = "";
+                
                 socios.forEach(socio => {
-                    const badge = socio.cuota === "Pagada" ? '<span class="badge bg-success">✅ Pagada 2026</span>' : '<span class="badge bg-warning text-dark">⚠️ Pendiente</span>';
+                    // 1. Manejo del Badge de Cuota (Pagada o Pendiente)
+                    const badgeCuota = socio.cuota === "Pagada" 
+                        ? '<span class="badge bg-success">✅ Pagada 2026</span>' 
+                        : '<span class="badge bg-warning text-dark">⚠️ Pendiente</span>';
+                    
+                    // 2. Manejo del Badge de Estado de Alta (Activo o Inactivo en el histórico)
+                    const badgeEstado = socio.activo 
+                        ? '<span class="badge bg-info text-dark">Alta</span>' 
+                        : '<span class="badge bg-secondary">Baja Histórica</span>';
+
+                    // 3. Estilo visual: Corregimos para que el atributo style no rompa la clase
+                    const claseFila = socio.activo ? "" : "table-secondary text-muted";
+                    const estiloFila = socio.activo ? "" : "style='opacity: 0.75;'";
+
+                    // 4. Botones de acción dinámicos según el estado del socio
+                    let botonesAccion = "";
+                    if (socio.activo) {
+                        if (socio.cuota !== "Pagada") {
+                            botonesAccion += `<button class="btn btn-sm btn-success text-white me-1" title="Marcar como Pagada" onclick="actualizarCuotaSocio(${socio.id}, 'Pagada')"><i class="fas fa-check"></i></button>`;
+                        }
+                        botonesAccion += `<button class="btn btn-sm btn-outline-danger" title="Dar de Baja" onclick="eliminarSocio(${socio.id})"><i class="fas fa-user-slash"></i></button>`;
+                    } else {
+                        // 💡 BOTÓN CORREGIDO: Fino, integrado y con la palabra simple "Activar"
+                        botonesAccion += `<button class="btn btn-sm btn-success text-white px-2" title="Reactivar Socio" onclick="reactivarSocioAPI(${socio.id})"><i class="fas fa-user-plus"></i> Activar</button>`;
+                    }
+
+                    // 🚨 CORRECCIÓN CLAVE: Las celdas siguen estrictamente el orden de tus cabeceras
+                    // Se elimina "|| socio.id" para asegurar que pinte el número de socio real de la base de datos sin duplicados
                     const fila = `
-                        <tr>
-                            <td class="fw-bold">#${String(socio.id).padStart(3, '0')}</td>
-                            <td>${socio.nombre} ${socio.apellidos || ''}</td>
-                            <td>${socio.email}</td>
+                        <tr class="${claseFila}" ${estiloFila}>
+                            <td class="fw-bold">#${String(socio.numero_socio).padStart(3, '0')}</td>
+                            <td>${socio.nombre} ${socio.apellidos || ''} ${!socio.activo ? '<strong>(INACTIVO)</strong>' : ''}</td>
+                            <td>${socio.dni || '-'}</td>
+                            <td>${socio.email || '-'}</td>
                             <td>${socio.telefono || '-'}</td>
-                            <td>${badge}</td>
+                            <td>${badgeCuota} ${badgeEstado}</td>
                             <td class="text-center">
-                                ${socio.cuota !== "Pagada" ? `<button class="btn btn-sm btn-success text-white me-1" onclick="actualizarCuotaSocio(${socio.id}, 'Pagada')"><i class="fas fa-check"></i></button>` : ''}
-                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarSocio(${socio.id})"><i class="fas fa-user-slash"></i></button>
+                                ${botonesAccion}
                             </td>
                         </tr>`;
                     tbody.insertAdjacentHTML("beforeend", fila);
                 });
             } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar socios.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error al cargar socios.</td></tr>';
             }
         }
 
@@ -480,6 +514,7 @@
             const payload = {
                 nombre: document.getElementById("admin-nuevo-nombre").value,
                 apellidos: document.getElementById("admin-nuevo-apellidos").value,
+                dni: document.getElementById("admin-nuevo-dni").value, // ◄ Captura real del DNI
                 email: document.getElementById("admin-nuevo-email").value,
                 telefono: document.getElementById("admin-nuevo-telefono").value,
                 cuota: document.getElementById("admin-nuevo-cuota").value
@@ -511,11 +546,28 @@
         }
 
         async function eliminarSocio(id) {
-            if (!confirm("¿Dar de baja a este socio?")) return;
+            if (!confirm("¿Seguro que quieres dar de BAJA a este socio? Se conservará en el histórico de contabilidad.")) return;
             try {
                 const res = await fetch(`${BACKEND_URL}/socios/${id}`, { method: "DELETE" });
                 if(res.ok) obtenerSociosAPI();
             } catch(err) { console.error(err); }
+        }
+
+        // 🚨 NUEVA FUNCIÓN CONECTADA AL BACKEND PARA REACTIVAR
+        async function reactivarSocioAPI(id) {
+            if (!confirm("¿Quieres volver a activar y pasar a estado de ALTA a este socio?")) return;
+            try {
+                const res = await fetch(`${BACKEND_URL}/socios/${id}/reactivar`, { method: "POST" });
+                if(res.ok) {
+                    alert("¡Socio reactivado con éxito!");
+                    obtenerSociosAPI();
+                }
+            } catch(err) { console.error(err); }
+        }
+
+        // Descargar CSV de socios
+        function descargarCSV() {
+            window.location.href = `${BACKEND_URL}/socios/exportar-csv`;
         }
 
         // 4. SECCIÓN: CUENTAS WEB
@@ -655,7 +707,7 @@
             } catch (err) { console.error(err); }
         }
 
-        // 7. SECCIÓN: RESERVAS (CORREGIDA CON EL METODO PATCH EXACTO)
+        // 7. SECCIÓN: RESERVAS
         async function obtenerReservasAPI() {
             const tbody = document.getElementById("tabla-reservas-admin");
             if (!tbody) return;
@@ -685,7 +737,7 @@
             } catch (err) { console.error(err); }
         }
 
-        // FUNCIÓN NUEVA: Envía el PATCH correcto tal y como lo pide tu archivo Python
+        // FUNCIÓN PARA GESTIONAR EL ESTADO DE LA RESERVA (ACEPTADA O RECHAZADA)
         async function gestionarReserva(id, nuevoEstado) {
             try {
                 const res = await fetch(`${BACKEND_URL}/reservas/${id}`, {

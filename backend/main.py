@@ -3,7 +3,10 @@ import sys
 import httpx
 from datetime import datetime, timedelta
 from typing import Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
+import csv
+from fastapi.responses import StreamingResponse
+import io
 
 # 🌟 PARCHE DE EMERGENCIA DE ENTORNO PARA WINDOWS (Acentos y Ñs)
 os.environ["PYTHONIOENCODING"] = "utf-8"
@@ -15,7 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 # Herramientas de SQLAlchemy 2.0 y Postgres
-from sqlalchemy import create_engine, Column, Integer, String, select
+from sqlalchemy import create_engine, Column, Integer, String, select, func
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
 # Importaciones de tu arquitectura local (Base de datos y Modelos)
@@ -103,9 +106,10 @@ DB_PARTNERS = [
 # ---------------------------------------------------------------------
 class SocioNuevo(BaseModel):
     nombre: str
-    apellidos: Optional[str] = None
-    email: EmailStr
+    apellidos: str
+    email: Optional[str] = None
     telefono: Optional[str] = None
+    dni: Optional[str] = None
     cuota: str
 
 class CuotaActualizacion(BaseModel):
@@ -195,115 +199,166 @@ async def actualizar_liga_si_es_necesario():
                 print(f"⚠️ API Fútbol (Liga) no disponible temporalmente: {str(e)}")
 
 # ---------------------------------------------------------------------
-# ENDPOINTS: PANEL ADMINISTRACIÓN Y CONTROL DE SOCIOS (CONECTADOS A POSTGRES)
+# ENDPOINTS: PANEL ADMINISTRACIÓN Y CONTROL DE SOCIOS
 # ---------------------------------------------------------------------
-
 @app.get("/admin/global-data")
 async def obtener_datos_globales_admin(db: Session = Depends(get_db)):
     """
-    Trae los socios reales de la base de datos para pintar la tabla del panel,
-    manteniendo la estructura exacta que tu JS lee.
+    Envía los socios al panel incluyendo el DNI real y el número de socio real de la BD.
     """
     try:
-        socios_db = db.query(models.SocioPena).all()
+        # Los ordenamos por número de socio para que salgan perfectos en la tabla
+        socios_db = db.query(models.SocioPena).order_by(models.SocioPena.numero_socio).all()
         
-        # Mapeamos los datos de la BD al formato que tu frontend ya consume
         lista_socios_formateada = [
             {
                 "id": socio.id,
+                "numero_socio": socio.numero_socio,  # ◄ Enviamos el número limpio de la base de datos
                 "nombre": socio.nombre,
                 "apellidos": socio.apellidos,
-                "email": getattr(socio, 'email', None) or "",
+                "dni": socio.dni or "-",          
+                "email": socio.email or "",      
                 "telefono": socio.telefono or "",
-                "cuota": "Pagada" if socio.activo else "Pendiente"
+                "activo": socio.activo,  
+                "cuota": socio.estado_cuota if socio.estado_cuota else "Pendiente" 
             }
             for socio in socios_db
         ]
         
         return {
             "lista_socios": lista_socios_formateada,
-            "usuarios_web": DB_USUARIOS_WEB  # Se mantiene intacto tu array web si lo usas
+            "usuarios_web": DB_USUARIOS_WEB
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener datos globales: {str(e)}")
 
-
 @app.post("/socios", status_code=status.HTTP_201_CREATED)
 async def registrar_socio_fisico(socio: SocioNuevo, db: Session = Depends(get_db)):
     """
-    Cacha el formulario del frontend y escribe el registro de forma real 
-    y física en la tabla socios_pena de PostgreSQL.
+    Guarda el socio asignando número automático garantizado sin duplicados, 
+    almacenando el DNI real y la cuota.
     """
     try:
+        # 🚨 CÁLCULO BLINDADO DE NÚMERO DE SOCIO:
+        # Buscamos el número más alto asignado
+        max_numero = db.query(func.max(models.SocioPena.numero_socio)).scalar() or 0
+        # Buscamos el conteo total de filas por si acaso hay nulos
+        total_socios = db.query(func.count(models.SocioPena.id)).scalar() or 0
+        
+        # El siguiente número será el mayor entre el máximo encontrado y el total de registros + 1
+        siguiente_numero = max(max_numero, total_socios) + 1
+
         nuevo_socio = models.SocioPena(
+            numero_socio=siguiente_numero, # Asegura 4, 5, 6, 7... de forma estrictamente correlativa
             nombre=socio.nombre,
             apellidos=socio.apellidos,
+            dni=socio.dni or None,           
             telefono=socio.telefono or None,
-            activo=True  # Por defecto entra como activo (Cuota pagada)
+            email=socio.email or None,  
+            estado_cuota=socio.cuota,        
+            activo=True      
         )
         
         db.add(nuevo_socio)
-        db.commit()      # <--- Escribe físicamente en pgAdmin
+        db.commit()      
         db.refresh(nuevo_socio)
         
         return {
             "status": "ok",
             "socio": {
                 "id": nuevo_socio.id,
+                "numero_socio": nuevo_socio.numero_socio,
                 "nombre": nuevo_socio.nombre,
-                "apellidos": nuevo_socio.apellidos,
-                "email": socio.email,
-                "telefono": nuevo_socio.telefono,
-                "cuota": socio.cuota
+                "cuota": nuevo_socio.estado_cuota
             }
         }
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error al guardar socio: {str(e)}")
-
+        raise HTTPException(status_code=500, detail=f"Error al guardar socio en Postgres: {str(e)}")
 
 @app.patch("/socios/{socio_id}/cuota")
 async def actualizar_cuota_socio(socio_id: int, payload: CuotaActualizacion, db: Session = Depends(get_db)):
     """
-    Modifica el estado del socio en la base de datos real.
-    Si la cuota es "Pagada", marcamos activo=True. Si no, activo=False.
+    Actualiza el estado de la cuota en su columna correspondiente.
     """
     try:
         socio = db.query(models.SocioPena).filter(models.SocioPena.id == socio_id).first()
         if not socio:
-            raise HTTPException(status_code=404, detail="Socio físico no encontrado en la Base de Datos")
+            raise HTTPException(status_code=404, detail="Socio no encontrado")
         
-        # Sincronizamos el texto de la cuota con el booleano 'activo' de la BD
-        socio.activo = (payload.cuota.lower() == "pagada")
-        
+        socio.estado_cuota = payload.cuota # Guardamos en la columna correcta
         db.commit()
         return {"status": "ok"}
-    except HTTPException:
-        raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error al actualizar cuota: {str(e)}")
-
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/socios/{socio_id}")
 async def dar_de_baja_socio(socio_id: int, db: Session = Depends(get_db)):
-    """
-    Elimina físicamente al socio de la tabla socios_pena en PostgreSQL.
-    """
     try:
         socio = db.query(models.SocioPena).filter(models.SocioPena.id == socio_id).first()
         if not socio:
-            raise HTTPException(status_code=404, detail="Socio físico no encontrado en la Base de Datos")
+            raise HTTPException(status_code=404, detail="Socio no encontrado")
         
-        db.delete(socio)
-        db.commit()      # <--- Borrado real en pgAdmin
-        return {"status": "ok"}
-    except HTTPException:
-        raise
+        socio.activo = False
+        db.commit()
+        return {"status": "ok", "message": "Socio desactivado para el histórico"}
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error al eliminar socio: {str(e)}")
-    
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/socios/{socio_id}/reactivar")
+async def reactivar_socio(socio_id: int, db: Session = Depends(get_db)):
+    try:
+        socio = db.query(models.SocioPena).filter(models.SocioPena.id == socio_id).first()
+        if not socio:
+            raise HTTPException(status_code=404, detail="Socio no encontrado")
+        
+        socio.activo = True
+        db.commit()
+        return {"status": "ok", "message": "Socio reactivado con éxito"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/socios/exportar-csv")
+async def exportar_socios_csv(db: Session = Depends(get_db)):
+    """
+    Genera un archivo CSV descargable utilizando .zfill() de Python de forma correcta.
+    """
+    try:
+        socios = db.query(models.SocioPena).order_by(models.SocioPena.numero_socio).all()
+        
+        output = io.StringIO()
+        writer = csv.writer(output, delimiter=';')
+        
+        writer.writerow(["Numero Socio", "Nombre", "Apellidos", "DNI", "Email", "Telefono", "Estado Cuota", "Activo"])
+        
+        for s in socios:
+            # 🚨 CORRECCIÓN: Usamos str(...).zfill(3) que es el método correcto en Python
+            num_socio_formateado = f"#{str(s.numero_socio or s.id).zfill(3)}"
+            
+            writer.writerow([
+                num_socio_formateado,
+                s.nombre,
+                s.apellidos,
+                s.dni or "-",
+                s.email or "-",
+                s.telefono or "-",
+                s.estado_cuota or "Pendiente",
+                "Alta" if s.activo else "Baja"
+            ])
+            
+        output.seek(0)
+        return StreamingResponse(
+            io.BytesIO(output.getvalue().encode('utf-8-sig')), 
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=libro_oficial_socios.csv"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        
 # ---------------------------------------------------------------------
 # ENDPOINTS: VIAJES Y DINÁMICA DE PARTIDOS
 # ---------------------------------------------------------------------
