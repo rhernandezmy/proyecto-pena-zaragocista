@@ -84,24 +84,30 @@ async def obtener_partidos_espana():
 
 @router.get("/partidos-globales")
 async def obtener_partidos_globales():
-    """Devuelve los últimos 4 partidos jugados o planificados del resto de selecciones"""
+    """Devuelve los últimos 4 partidos jugados o en juego del resto de selecciones"""
     await actualizar_cache_mundial_si_es_necesario()
     
-    # Filtramos para quitar los de España (así no se duplican abajo)
+    # 1. Filtramos para quitar los de España y evitar duplicados
     partidos_resto = [
         m for m in cache_mundial["todos_los_partidos"]
         if m.get('homeTeam', {}).get('name') != "Spain" and m.get('awayTeam', {}).get('name') != "Spain"
     ]
+          
+    # 2. 🧠 LÓGICA DE ACTUALIZACIÓN: 
+    # Filtramos los partidos que ya han empezado o terminado (FINISHED, IN_PLAY, PAUSED)
+    partidos_activos_o_terminados = [
+        m for m in partidos_resto 
+        if m.get('status') in ['FINISHED', 'IN_PLAY', 'PAUSED']
+    ]
     
-    # Si la API no ha devuelto nada por falta de internet, metemos un par de ejemplos sutiles
-    if not partidos_resto:
-        return {"partidos": [
-            {"homeTeam": {"name": "Argentina"}, "awayTeam": {"name": "France"}, "score": {"fullTime": {"home": 3, "away": 3}}},
-            {"homeTeam": {"name": "Brazil"}, "awayTeam": {"name": "Croatia"}, "score": {"fullTime": {"home": 1, "away": 1}}}
-        ]}
-        
-    # Devolvemos solo los 4 primeros de la lista para que sea una línea pequeña y no recargue
-    return {"partidos": partidos_resto[:4]}
+    # Si por alguna razón el torneo acaba de empezar y no hay jugados, usamos el plan B (traer los próximos)
+    if not partidos_activos_o_terminados:
+        partidos_activos_o_terminados = partidos_resto
+
+    # 3. Ordenamos al revés (los más recientes primero) y extraemos los 4 primeros
+    ultimos_partidos = partidos_activos_o_terminados[::-1]
+    
+    return {"partidos": ultimos_partidos[:4]}
 
 
 @router.get("/clasificacion-mundial")
