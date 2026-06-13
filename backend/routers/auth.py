@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Header
+from fastapi.responses import HTMLResponse # Importamos para dar una respuesta visual bonita
 from sqlalchemy.orm import Session
 import bcrypt
 import models, database
 from pydantic import BaseModel, EmailStr
+import email_service 
 
 router = APIRouter()
 
@@ -14,18 +16,15 @@ class LoginSchema(BaseModel):
 def login(login_data: LoginSchema, db: Session = Depends(database.get_db)):
     print(f"🔑 [LOGIN] Intentando entrar con: '{login_data.email}'")
     
-    # Buscamos al usuario en la nueva tabla usuarios_web
     socio = db.query(models.Usuario).filter(models.Usuario.email == login_data.email).first()
     
     if not socio:
         raise HTTPException(status_code=401, detail="El correo electrónico no está registrado")
 
-    # Validamos la contraseña con control de errores para hashes corruptos
     try:
         passwd_bytes = login_data.password.encode('utf-8')
         hash_bytes = socio.password_hash.encode('utf-8') if isinstance(socio.password_hash, str) else socio.password_hash
         
-        # Si el hash no empieza por el prefijo de bcrypt, algo fue mal en su inserción
         if not hash_bytes.startswith(b'$2b$') and not hash_bytes.startswith(b'$2a$'):
             raise ValueError("Hash con formato inválido")
             
@@ -40,7 +39,13 @@ def login(login_data: LoginSchema, db: Session = Depends(database.get_db)):
     if not es_valida:
         raise HTTPException(status_code=401, detail="Contraseña incorrecta")
     
-    # Extracción segura de nombres basada en si está vinculado a socios_pena o no
+    if not socio.verificado and socio.rol.lower() != "admin":
+        print(f"🚫 [LOGIN BLOQUEADO] '{login_data.email}' intentó acceder sin verificar el correo.")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cuenta no verificada: Por favor, confirma tu correo electrónico antes de iniciar sesión."
+        )
+    
     nombre_usuario = "Administrador"
     apellidos_usuario = "Peña"
     if socio.socio_interno:
@@ -58,43 +63,118 @@ def login(login_data: LoginSchema, db: Session = Depends(database.get_db)):
         "status": "success"
     }
 
+
 class RegistroSchema(BaseModel):
     email: EmailStr
     password: str
 
 @router.post("/registro")
-def registrar_socio(registro_data: RegistroSchema, db: Session = Depends(database.get_db)):
-    print(f"📝 [REGISTRO] Intentando dar de alta el correo: '{registro_data.email}'")
+async def registrar_socio(registro_data: RegistroSchema, db: Session = Depends(database.get_db)):
+    print(f"📝 [REGISTRO] Validando alta para: '{registro_data.email}'")
     
-    # Buscamos si el usuario existe en usuarios_web
-    socio = db.query(models.Usuario).filter(models.Usuario.email == registro_data.email).first()
+    socio_existente = db.query(models.SocioPena).filter(models.SocioPena.email == registro_data.email).first()
     
-    if not socio:
+    if not socio_existente:
         raise HTTPException(
             status_code=403, 
-            detail="Acceso denegado: Este correo electrónico no está pre-registrado en la plataforma."
+            detail="Acceso denegado: Este correo electrónico no consta en la lista oficial de socios de la peña."
         )
     
-    # Encriptamos la contraseña que ha elegido el usuario en la web
+    usuario_web = db.query(models.Usuario).filter(models.Usuario.email == registro_data.email).first()
+    
+    if usuario_web:
+        raise HTTPException(
+            status_code=409, 
+            detail="Usuario ya registrado: Este perfil ya está activo. Ve al Área Privada para iniciar sesión."
+        )
+    
     password_plana = registro_data.password.encode('utf-8')
     salt = bcrypt.gensalt(12)
     nuevo_hash = bcrypt.hashpw(password_plana, salt).decode('utf-8')
     
-    socio.password_hash = nuevo_hash
-    db.commit()
+    username_automatico = registro_data.email.split("@")[0]
     
-    nombre_log = socio.socio_interno.nombre if socio.socio_interno else "Usuario"
-    print(f"✅ [REGISTRO ÉXITO] Cuenta activada para {nombre_log} ({socio.email})")
-    return {"status": "success", "message": "Cuenta de socio activada correctamente. Ya puedes iniciar sesión."}
+    nuevo_usuario = models.Usuario(
+        username=username_automatico,
+        email=registro_data.email,
+        password_hash=nuevo_hash,
+        rol="Socio",
+        activo=True,
+        verificado=False,  
+        socio_pena_id=socio_existente.id
+    )
+    
+    try:
+        db.add(nuevo_usuario)
+        db.commit()
+        print(f"✅ [ÉXITO] Cuenta web creada (pendiente de verificación) para {socio_existente.nombre}")
+        
+        await email_service.enviar_correo_verificacion(registro_data.email, username_automatico)
+        
+        return {
+            "status": "success", 
+            "message": "¡Cuenta creada con éxito! Te hemos enviado un correo de confirmación."
+        }
+        
+    except Exception as e:
+        db.rollback()
+        print(f"❌ [ERROR DB] Error al insertar en usuarios_web: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error interno del servidor al procesar el alta. Por favor, inténtalo más tarde."
+        )
 
+# =====================================================================
+# 🆕 NUEVO ENDPOINT: VERIFICACIÓN DE CORREO ELECTRÓNICO
+# =====================================================================
+@router.get("/verificar", response_class=HTMLResponse)
+def verificar_cuenta(email: str, db: Session = Depends(database.get_db)):
+    print(f"🔍 [VERIFICACIÓN] Procesando enlace para email: '{email}'")
+    
+    # Buscamos al usuario en la base de datos
+    usuario = db.query(models.Usuario).filter(models.Usuario.email == email).first()
+    
+    if not usuario:
+        return """
+        <html>
+            <body style="font-family: sans-serif; text-align: center; padding: 50px; background-color: #f0f4f8;">
+                <h2 style="color: #da2a1d;">❌ Error de verificación</h2>
+                <p>El enlace no es válido o el usuario no existe en el sistema.</p>
+                <a href="http://localhost:5500/index.html" style="color: #003da5; font-weight: bold;">Volver al inicio</a>
+            </body>
+        </html>
+        """
+        
+    if usuario.verificado:
+        return """
+        <html>
+            <body style="font-family: sans-serif; text-align: center; padding: 50px; background-color: #f0f4f8;">
+                <h2 style="color: #003da5;">ℹ️ Cuenta ya activa</h2>
+                <p>Tu cuenta ya había sido verificada anteriormente. No es necesario repetir el proceso.</p>
+                <a href="http://localhost:5500/index.html" style="color: #003da5; font-weight: bold; text-decoration: none;">Ir a Iniciar Sesión</a>
+            </body>
+        </html>
+        """
+    
+    # Cambiamos el estado a Verificado y guardamos
+    usuario.verificado = True
+    db.commit()
+    print(f"📢 [CUENTA ACTIVADA] El usuario '{email}' ahora está verificado.")
+    
+    # Devolvemos un HTML limpio avisando al usuario de que todo ha ido genial
+    return """
+    <html>
+        <body style="font-family: sans-serif; text-align: center; padding: 50px; background-color: #f0f4f8;">
+            <div style="background: white; max-width: 500px; margin: auto; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid #003da5;">
+                <h2 style="color: #003da5;">✅ ¡Cuenta activada con éxito!</h2>
+                <p style="color: #6c757d; margin-bottom: 25px;">Tu correo electrónico ha sido confirmado. Ya puedes acceder al Área Privada de la Peña.</p>
+                <a href="http://localhost:5500/index.html" style="background-color: #003da5; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">INICIAR SESIÓN</a>
+            </div>
+        </body>
+    </html>
+    """
 
-# =========================================================================
-# 🛡️ GUARDIÁN DE SEGURIDAD (Para proteger las rutas críticas)
-# =========================================================================
 def get_current_admin(x_usuario_id: int = Header(...), db: Session = Depends(database.get_db)):
-    """
-    Controla el acceso tolerando tanto 'Admin' como 'admin' en la base de datos.
-    """
     usuario = db.query(models.Usuario).filter(models.Usuario.id == x_usuario_id).first()
     if not usuario or usuario.rol.lower() != "admin":
         raise HTTPException(

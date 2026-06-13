@@ -2,7 +2,8 @@ const socioLogado = localStorage.getItem("socio_nombre");
 
 // Configuración de los elementos del menú
 let menuViajesHTML = "";
-let botonAuthHTML = `<a class="btn btn-outline-primary" href="login.html">Acceso Socios</a>`;
+// El botón superior invita a registrarse
+let botonAuthHTML = `<a class="btn btn-outline-primary fw-bold" href="registro.html">📝 Registrarse</a>`;
 
 // Si el usuario está logado, activamos el menú privado
 if (socioLogado) {
@@ -18,15 +19,17 @@ if (socioLogado) {
 const headerHTML = `
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand" href="index.html">
-                <img src="assets/logo.png" alt="Logo" style="height: 60px;">
+            <a class="navbar-brand d-flex flex-column align-items-center" href="index.html" title="Volver al Inicio" style="text-decoration: none; margin-right: 0;">
+                <img src="assets/logo.png" alt="Logo Peña Zaragocista" style="height: 55px;">
+                <span style="font-size: 11px; color: #0033A0; font-weight: bold; text-transform: uppercase; margin-top: 2px; letter-spacing: 1px;">Inicio</span>
             </a>
+            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            
             <div class="collapse navbar-collapse" id="navbarNav">
                 <div class="navbar-nav ms-auto align-items-center">
-                    <a class="nav-link fw-bold" href="index.html" style="color: #0033A0;"> Inicio</a>
                     <a class="nav-link fw-bold" href="noticias.html" style="color: #0033A0;">📰 Noticias</a>
                     <a class="nav-link fw-bold" href="partidos.html" style="color: #0033A0;">⚽ Partidos</a>
                     <a class="nav-link fw-bold" href="clasificacion.html" style="color: #0033A0;">📊 Clasificación</a>
@@ -46,8 +49,7 @@ document.getElementById('header-placeholder').innerHTML = headerHTML;
 // Lógica para cerrar sesión
 if (socioLogado) {
     document.getElementById("btn-logout").addEventListener("click", () => {
-        localStorage.removeItem("socio_nombre");
-        localStorage.removeItem("socio_id");
+        localStorage.clear();
         window.location.href = "index.html";
     });
 }

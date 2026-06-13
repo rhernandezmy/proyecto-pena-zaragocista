@@ -9,6 +9,7 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr
 from fastapi.responses import StreamingResponse
 from fastapi import status, HTTPException, Depends
+from routers import auth
 
 
 # 🌟 PARCHE DE EMERGENCIA DE ENTORNO PARA WINDOWS (Acentos y Ñs)
@@ -146,6 +147,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# INCLUSIÓN DEL ROUTER DE AUTENTICACIÓN (LOGIN Y REGISTRO)
+app.include_router(auth.router, prefix="/auth")
 
 # INCLUSIÓN DE LOS ROUTERS EXTERNOS MODULARES
 app.include_router(noticias.router, prefix="/noticias")
