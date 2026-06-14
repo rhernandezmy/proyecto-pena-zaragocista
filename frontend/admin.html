@@ -862,52 +862,108 @@
             } catch (err) { console.error(err); }
         }
 
-        // 9. SECCIÓN: PARTNERS
-        async function obtenerPartnersAPI() {
-            const tbody = document.getElementById("tabla-partners-admin");
-            if (!tbody) return;
-            try {
-                const res = await fetch(`${BACKEND_URL}/partners`);
-                if (!res.ok) throw new Error();
-                const partners = await res.json();
-                
-                if (partners.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No hay patrocinadores.</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = "";
-                partners.forEach(partner => {
-                    tbody.insertAdjacentHTML("beforeend", `
-                        <tr>
-                            <td><strong>${partner.nombre}</strong></td>
-                            <td><a href="${partner.web}" target="_blank">${partner.web}</a></td>
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarPartner(${partner.id})"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>`);
-                });
-            } catch (err) { console.error(err); }
+        // 9. SECCIÓN: PARTNERS (CORREGIDA Y ADAPTADA A TU FORMULARIO REAL)
+
+        // =========================================================================
+// 9. SECCIÓN: PARTNERS (SOLUCIÓN DEFINITIVA POR ID)
+// =========================================================================
+async function obtenerPartnersAPI() {
+    const tbody = document.getElementById("tabla-partners-admin");
+    if (!tbody) return;
+    try {
+        const res = await fetch(`${BACKEND_URL}/partners`);
+        if (!res.ok) throw new Error("Error al obtener partners");
+        const partners = await res.json();
+        
+        if (partners.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">No hay patrocinadores vigentes.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = "";
+        
+        partners.forEach(partner => {
+            const categoriaTexto = partner.categoria || partner.sector || "General";
+            const nombreTexto = partner.nombre_comercial || partner.nombre || "Sponsor Activo";
+
+            tbody.insertAdjacentHTML("beforeend", `
+                <tr>
+                    <td class="fw-bold text-dark">${categoriaTexto}</td>
+                    <td>${nombreTexto}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-danger" onclick="eliminarPartner(${partner.id})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>`);
+        });
+    } catch (err) { 
+        console.error("Error cargando la lista de partners:", err); 
+    }
+}
+
+    async function enviarNuevoPartner(e) {
+        e.preventDefault();
+        
+        // Búsqueda directa y segura por ID (Asegúrate de tener estos IDs en tus inputs del HTML)
+        const inputCat = document.getElementById("partner-categoria") || document.querySelector('input[placeholder*="Sector"]');
+        const inputNom = document.getElementById("partner-nombre") || document.querySelector('input[placeholder*="Comercial"]');
+        
+        const categoriaValor = inputCat ? inputCat.value.trim() : "";
+        const nombreValor = inputNom ? inputNom.value.trim() : "";
+
+        if (!categoriaValor || !nombreValor) {
+            alert("⚠️ Por favor, rellena tanto la Categoría/Sector como el Nombre Comercial.");
+            return;
         }
 
-        async function enviarNuevoPartner(e) {
-            e.preventDefault();
-            const payload = {
-                nombre: document.getElementById("admin-partner-nombre").value,
-                web: document.getElementById("admin-partner-web").value
-            };
-            try {
-                const res = await fetch(`${BACKEND_URL}/partners`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-                if (res.ok) {
-                    alert("¡Patrocinador guardado!");
-                    document.getElementById("form-nuevo-partner").reset();
-                    obtenerPartnersAPI();
-                }
-            } catch (err) { console.error(err); }
+        const payload = {
+            categoria: categoriaValor,
+            sector: categoriaValor,          
+            nombre: nombreValor,
+            nombre_comercial: nombreValor    
+        };
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/partners`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            
+            if (res.ok) {
+                alert("¡Patrocinador vinculado con éxito!");
+                if (inputCat) inputCat.value = "";
+                if (inputNom) inputNom.value = "";
+                obtenerPartnersAPI();
+            } else {
+                const errData = await res.json();
+                alert(`⚠️ No se pudo guardar: ${errData.detail || "Error de validación."}`);
+            }
+        } catch (err) { 
+            console.error("Error al enviar el nuevo partner:", err); 
         }
+    }
+
+    async function eliminarPartner(partnerId) {
+        if (!partnerId) return;
+        if (!confirm("¿Seguro que deseas eliminar este patrocinador?")) return;
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/partners/${partnerId}`, {
+                method: "DELETE"
+            });
+
+            if (res.ok) {
+                alert("Patrocinador eliminado correctamente.");
+                obtenerPartnersAPI(); // Recarga la tabla automáticamente
+            } else {
+                alert("No se pudo eliminar el partner en el servidor.");
+            }
+        } catch (err) {
+            console.error("Error al eliminar partner:", err);
+            alert("Error de red al intentar borrar.");
+        }
+    }
     </script>
 </body>
 </html>
