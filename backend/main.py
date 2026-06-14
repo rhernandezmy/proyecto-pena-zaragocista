@@ -12,7 +12,7 @@ from fastapi import status, HTTPException, Depends
 from routers import auth, usuarios
 
 
-# 🌟 PARCHE DE EMERGENCIA DE ENTORNO PARA WINDOWS (Acentos y Ñs)
+# 🌟 PARCHE DE EMERGENCY DE ENTORNO PARA WINDOWS (Acentos y Ñs)
 os.environ["PYTHONIOENCODING"] = "utf-8"
 if sys.platform == "win32":
     os.environ["PGCLIENTENCODING"] = "utf-8"
@@ -28,9 +28,10 @@ from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from routers import auth, usuarios
 import models
 
-# Importamos los routers modulares
+# Importamos los routers modulares (¡Con reservas ya incluido aquí!)
 from routers import noticias
 from routers import mundial
+from routers import reservas  
 
 # ---------------------------------------------------------------------
 # CONFIGURACIÓN DE RUTAS Y ESTRUCTURA DE ARCHIVOS
@@ -147,13 +148,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# INCLUSIÓN DEL ROUTER DE AUTENTICACIÓN (LOGIN Y REGISTRO)
-app.include_router(auth.router, prefix="/auth")
-app.include_router(usuarios.router)
+# =========================================================================
+# CONTROL DE ENRUTAMIENTO Y ORDEN DE DOCUMENTACIÓN (Swagger UI)
+# =========================================================================
+# 1. Grupo Autenticación
+app.include_router(auth.router, prefix="/auth", tags=["Autenticación"])
 
-# INCLUSIÓN DE LOS ROUTERS EXTERNOS MODULARES
-app.include_router(noticias.router, prefix="/noticias")
-app.include_router(mundial.router, prefix="/mundial")
+# 2. Grupo Partidos (Aquí se acopla tu router de usuarios de forma limpia)
+app.include_router(usuarios.router, tags=["Partidos"])
+
+# 3. Grupo Noticias
+app.include_router(noticias.router, prefix="/noticias", tags=["Noticias"])
+
+# 4. Grupo Mundial
+app.include_router(mundial.router, prefix="/mundial", tags=["Mundial"])
+
+# 5. Grupo Reservas
+app.include_router(reservas.router, prefix="/reservas", tags=["Reservas"])
 
 # ---------------------------------------------------------------------
 # LÓGICA DE ACTUALIZACIÓN ASÍNCRONA (API-FOOTBALL LIGA)
