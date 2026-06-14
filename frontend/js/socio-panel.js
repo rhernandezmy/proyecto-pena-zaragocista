@@ -48,7 +48,7 @@ async function cargarSolicitudesDesdeBackend(socio) {
                 
                 if (res.estado_solicitud === "Pendiente") {
                     badgeEstado = '<span class="badge bg-warning text-dark">⏳ Pendiente</span>';
-                } else if (res.estado_solicitud === "Aprobada" || res.estado_solicitud === "Aprobada") {
+                } else if (res.estado_solicitud === "Aprobada" || res.estado_solicitud === "Aceptada") {
                     badgeEstado = '<span class="badge bg-success">✓ Aprobada</span>';
                 } else {
                     badgeEstado = '<span class="badge bg-danger">✕ Rechazada</span>';
@@ -56,7 +56,7 @@ async function cargarSolicitudesDesdeBackend(socio) {
             }
 
             // Usamos la columna real de tu base de datos para la fecha o un fallback por si viene nula
-            let fechaFormateada = res.fecha_reserva || "Programada";
+            let fechaFormateada = res.fecha_solicitada || res.fecha_reserva || "Programada";
 
             fila.innerHTML = `
                 <td>${badgeTipo}</td>
@@ -83,9 +83,8 @@ async function cargarSolicitudesDesdeBackend(socio) {
 // =========================================================================
 async function ofrecerCocheSocio(viajeId, plazasCoche) {
     // Obtenemos el ID del socio dinámicamente del almacenamiento del Login
-    const socioId = parseInt(localStorage.getItem("socio_id")) || 1;
+    const socioId = parseInt(localStorage.getItem("usuario_id")) || parseInt(localStorage.getItem("socio_id")) || 2;
 
-    // Payload perfectamente adaptado a tu schemas.ReservaCrear
     const payload = {
         usuario_id: socioId,
         tipo_reserva: "Viaje",
@@ -112,7 +111,7 @@ async function ofrecerCocheSocio(viajeId, plazasCoche) {
 
         if (response.ok) {
             alert("🚗 ¡Vehículo registrado con éxito en el viaje!");
-            window.location.reload(); // Recarga limpia para actualizar la tabla
+            window.location.reload(); 
         } else {
             alert(`⚠️ Error del servidor: ${data.detail || "Verifica las restricciones de plazas."}`);
         }
@@ -149,22 +148,25 @@ async function eliminarReservaBackend(reservaId) {
 // 4. ACTUALIZAR LOS DATOS DEL SOCIO Y CARGARLOS AL INICIAR
 // =========================================================================
 document.addEventListener("DOMContentLoaded", async () => {
-    // 1. Obtenemos el ID del socio logueado (Aseguramos que sea un número)
-    const socioId = parseInt(localStorage.getItem("socio_id")) || parseInt(localStorage.getItem("usuario_id")) || 10;
+    // Obtenemos el ID del socio de forma consistente priorizando usuario_id (Admin es 2)
+    const socioId = parseInt(localStorage.getItem("usuario_id")) || parseInt(localStorage.getItem("socio_id")) || 2;
     console.log("ID del socio detectado en LocalStorage:", socioId);
 
-    // 2. Identificamos las cajas de texto de la pantalla de forma segura por sus IDs o clases
-    let inputNombre = document.getElementById("inputNombre");
-    let inputTelefono = document.getElementById("inputTelefono");
-    let inputDireccion = document.getElementById("inputDireccion");
+    // Mapeo directo y seguro mediante selectores por atributo 'placeholder' o tipo para evitar cruces
+    let inputNombre = document.querySelector('input[placeholder*="Nombre"], #inputNombre');
+    let inputEmail = document.querySelector('input[placeholder*="@"], input[type="email"], #inputEmail');
+    let inputTelefono = document.querySelector('input[placeholder*="Teléfono"], input[placeholder*="600"], #inputTelefono');
+    let inputDireccion = document.querySelector('input[placeholder*="Dirección"], input[placeholder*="Localidad"], #inputDireccion');
 
-    if (!inputNombre || !inputTelefono || !inputDireccion) {
-        const inputs = document.querySelectorAll(".form-control, input[type='text']");
-        const inputsEditables = Array.from(inputs).filter(i => !i.readOnly && !i.placeholder.includes("@"));
-        
-        inputNombre = inputsEditables[0] || inputNombre;
-        inputTelefono = inputsEditables[1] || inputTelefono;
-        inputDireccion = inputsEditables[2] || inputDireccion;
+    // Fallback defensivo si los IDs explícitos no están presentes en el HTML
+    if (!inputNombre || !inputTelefono) {
+        const inputs = document.querySelectorAll(".form-control");
+        if (inputs.length >= 4) {
+            inputNombre = inputs[0];
+            inputEmail = inputs[1];
+            inputTelefono = inputs[2];
+            inputDireccion = inputs[3];
+        }
     }
 
     // =========================================================================
@@ -176,7 +178,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const socios = await responseGet.json();
             console.log("Lista de socios recuperada del backend:", socios);
             
-            // Búsqueda ultra-flexible para localizar la ficha del usuario conectado
+            // Búsqueda para localizar al usuario conectado
             const miFicha = socios.find(s => 
                 Number(s.id) === socioId || 
                 Number(s.usuario_id) === socioId || 
@@ -186,12 +188,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (miFicha) {
                 console.log("¡Ficha de socio encontrada con éxito! Datos:", miFicha);
                 
-                // Rellenamos el input combinando nombre y apellidos de forma limpia
+                // Rellenamos el campo de Nombre Completo
                 if (inputNombre) {
                     const nombreFicha = miFicha.nombre || "";
                     const apellidosFicha = miFicha.apellidos || "";
                     
-                    // Si el nombre en la BD ya incluye los apellidos para evitar duplicarlo, lo limpiamos
                     if (apellidosFicha && nombreFicha.includes(apellidosFicha)) {
                         inputNombre.value = nombreFicha.trim();
                     } else {
@@ -199,15 +200,22 @@ document.addEventListener("DOMContentLoaded", async () => {
                     }
                 }
                 
-                // Control de placeholders estáticos ("no tiene" / "Sin Dirección")
+                // CORRECCIÓN CRÍTICA: Inyectamos el email real y prevenimos que se pinte el teléfono aquí
+                if (inputEmail) {
+                    inputEmail.value = miFicha.email || "presentexelescudo@gmail.com";
+                }
+                
+                // Asignamos el teléfono de contacto de forma limpia
                 if (inputTelefono) {
                     inputTelefono.value = (miFicha.telefono && miFicha.telefono !== "Sin Teléfono" && miFicha.telefono !== "no tiene") ? miFicha.telefono : "";
                 }
+                
+                // Asignamos la dirección de residencia
                 if (inputDireccion) {
                     inputDireccion.value = (miFicha.direccion && miFicha.direccion !== "Sin Dirección") ? miFicha.direccion : "";
                 }
 
-                // Ejecutamos la función de reservas pasándole su ficha real
+                // Cargamos las solicitudes del panel de reservas del socio
                 if (typeof cargarSolicitudesDesdeBackend === "function") {
                     cargarSolicitudesDesdeBackend(miFicha);
                 }
@@ -263,9 +271,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 });
 
                 if (response.ok) {
-                    // Actualizamos el LocalStorage para el saludo del panel
                     localStorage.setItem("socio_nombre", nombreValor);
-                    
                     alert("✅ ¡Tus datos se han guardado correctamente en PostgreSQL!");
                     window.location.reload(); 
                 } else {

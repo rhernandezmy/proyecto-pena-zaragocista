@@ -47,7 +47,7 @@ function crearCeldaAcciones(idRegistro, esSocio = true) {
         // Botones específicos para la aprobación de Reservas del Local
         const btnAprobar = document.createElement("button");
         btnAprobar.className = "btn btn-sm btn-success text-white fw-bold me-1";
-        btnAprobar.innerHTML = '<i class="fas fa-thumbs-up me-1"></i> Approbar';
+        btnAprobar.innerHTML = '<i class="fas fa-thumbs-up me-1"></i> Aprobar';
         btnAprobar.onclick = () => procesarResolucionReserva(idRegistro, 'Aprobada');
 
         const btnRechazar = document.createElement("button");
@@ -88,23 +88,29 @@ function renderizarSociosDinamicos(socios) {
         const tr = document.createElement("tr");
 
         const tdId = document.createElement("td");
+        const numSocio = socio.numero_socio || socio.id;
         tdId.className = "fw-bold";
-        tdId.innerText = `#${String(socio.id).padStart(3, '0')}`;
+        tdId.innerText = `#${String(numSocio).padStart(3, '0')}`;
 
         const tdNombre = document.createElement("td");
-        tdNombre.innerText = socio.nombre_completo || socio.nombre || "Sin nombre";
+        // Asegurar la concatenación correcta del censo de PostgreSQL si vienen separados
+        if (socio.nombre && socio.apellidos) {
+            tdNombre.innerText = `${socio.nombre} ${socio.apellidos}`;
+        } else {
+            tdNombre.innerText = socio.nombre_completo || socio.nombre || "Sin nombre";
+        }
 
         const tdEmail = document.createElement("td");
-        tdEmail.innerText = socio.email;
+        tdEmail.innerText = socio.email || "Sin correo";
 
         const tdTelefono = document.createElement("td");
         tdTelefono.innerText = socio.telefono || "600 000 000";
 
-        // Mapeo dinámico del estado de la cuota anual
-        const esPagada = socio.estado_cuota === "Pagada" || socio.cuota_pagada === true;
+        // Mapeo unificado con la columna estado_cuota de PostgreSQL
+        const esAlDia = socio.estado_cuota === "Al día" || socio.estado_cuota === "Pagada" || socio.cuota_pagada === true;
         const celdaBadge = crearCeldaBadge(
-            esPagada ? "✅ Pagada 2026" : "⚠️ Pendiente",
-            esPagada ? "bg-success" : "bg-warning text-dark"
+            esAlDia ? "✅ Al día 2026" : "⚠️ Pendiente",
+            esAlDia ? "bg-success" : "bg-warning text-dark"
         );
 
         const celdaAcciones = crearCeldaAcciones(socio.id, true);
@@ -154,7 +160,7 @@ function renderizarReservasLocalDinamicas(reservas) {
 
         // Determinar estilo del badge según el estado de la solicitud
         let claseBadge = "bg-warning text-dark";
-        if (reserva.estado_solicitud === "Aprobada") claseBadge = "bg-success";
+        if (reserva.estado_solicitud === "Aprobada" || reserva.estado_solicitud === "Aceptada") claseBadge = "bg-success";
         if (reserva.estado_solicitud === "Rechazada") claseBadge = "bg-danger";
 
         const celdaBadge = crearCeldaBadge(reserva.estado_solicitud || "⏳ Pendiente", claseBadge);
@@ -239,9 +245,9 @@ document.addEventListener("submit", async (e) => {
         
         // Rescatamos también el estado de la cuota que añadiste en el HTML
         const selectCuota = document.getElementById("admin-nuevo-cuota");
-        const estado_cuota = selectCuota ? selectCuota.value : "Pendiente";
+        const estado_cuota = selectCuota ? selectCuota.value : "Al día";
 
-        // Construimos el envío con las claves exactas
+        // Construimos el envío con las claves exactas de la base de datos
         const nuevoSocioPayload = {
             nombre: nombre,
             apellidos: apellidos,
@@ -253,9 +259,7 @@ document.addEventListener("submit", async (e) => {
         try {
             console.log("📡 [API] Enviando nuevo socio al backend...", nuevoSocioPayload);
             
-            // CORRECCIÓN CRÍTICA: Quitamos '/usuarios' y usamos la variable correcta (cámbiala si usas BACKEND_URL)
-            const urlBase = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : BACKEND_URL;
-            const response = await fetch(`${urlBase}/crear-socio`, {
+            const response = await fetch(`${API_BASE_URL}/crear-socio`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -266,9 +270,8 @@ document.addEventListener("submit", async (e) => {
             if (response.ok) {
                 console.log("✅ [API] Socio creado con éxito. Actualizando tabla...");
                 alert("¡Socio guardado con éxito!");
-                window.location.reload(); // Fuerza al navegador a refrescarse solo tras guardar con éxito
                 
-                // Cerrar el modal de Bootstrap de forma limpia
+                // Cerrar el modal de Bootstrap de forma limpia si existe
                 const modalElement = document.getElementById('modalNuevoSocio') || document.getElementById('form-alta-socio').closest('.modal');
                 if (modalElement) {
                     const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
@@ -278,10 +281,8 @@ document.addEventListener("submit", async (e) => {
                 // Resetear el formulario de la pantalla
                 e.target.reset();
 
-                // Recargar la tabla llamando a tus datos globales de la peña
-                if (typeof cargarDatosGlobalesDashboard === "function") await cargarDatosGlobalesDashboard();
-                if (typeof obtenerTodosLosSocios === "function") obtenerTodosLosSocios();
-                if (typeof obtenerSociosAPI === "function") obtenerSociosAPI();
+                // Recargar la tabla llamando a tus datos globales de la peña de forma inmediata
+                await cargarDatosGlobalesDashboard();
             } else {
                 const errorTexto = await response.text();
                 console.error(`❌ [API] Error al crear socio. Estado HTTP: ${response.status}`, errorTexto);
@@ -294,12 +295,11 @@ document.addEventListener("submit", async (e) => {
     }
 });
 
-// --- LÓGICA PARA EL PANEL DE ADMINISTRADOR ---
+// --- LÓGICA PARA LOS DESPLAZAMIENTOS EN EL PANEL ---
 document.addEventListener("DOMContentLoaded", () => {
     const formViaje = document.getElementById("form-nuevo-viaje");
     
     if (formViaje) {
-        // Escuchar el envío del formulario de nuevo viaje
         formViaje.addEventListener("submit", (e) => {
             e.preventDefault();
             const destino = formViaje.querySelector('input[type="text"]').value;
@@ -309,11 +309,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             crearViaje(destino, fecha, tipo, plazas);
             formViaje.reset();
-            renderizarViajesAdmin(); // Recargar la tabla
+            renderizarViajesAdmin(); // Recargar la tabla local
             alert("🚀 Viaje publicado con éxito en la web.");
         });
 
-        // Carga inicial de la tabla del administrador
         renderizarViajesAdmin();
     }
 });
@@ -322,12 +321,14 @@ function renderizarViajesAdmin() {
     const tablaAdmin = document.querySelector("#viajes-pane tbody");
     if (!tablaAdmin) return;
 
+    // Comprobación de seguridad si la función mock de viajes existe
+    if (typeof obtenerViajes !== "function") return;
+
     const viajes = obtenerViajes();
-    tablaAdmin.innerHTML = ""; // Limpiar filas estáticas
+    tablaAdmin.innerHTML = ""; 
 
     viajes.forEach(viaje => {
-        // Calcular plazas libres si es autobús
-        const ocupadas = viaje.suscritos.length;
+        const ocupadas = viaje.suscritos ? viaje.suscritos.length : 0;
         const libres = viaje.plazasTotales - ocupadas;
         const badgeTransporte = viaje.tipo.includes("Autobús") ? '🚌 Autobús' : '🚗 Coches';
 
@@ -347,10 +348,11 @@ function renderizarViajesAdmin() {
     });
 }
 
-// Función que se ejecuta al hacer clic en la papelera
 function btnEliminarViaje(id) {
     if (confirm("⚠️ ¿Seguro que quieres cancelar y eliminar este desplazamiento?")) {
-        eliminarViaje(id);
-        renderizarViajesAdmin();
+        if (typeof eliminarViaje === "function") {
+            eliminarViaje(id);
+            renderizarViajesAdmin();
+        }
     }
 }
