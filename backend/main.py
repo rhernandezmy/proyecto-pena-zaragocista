@@ -9,7 +9,7 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr
 from fastapi.responses import StreamingResponse
 from fastapi import status, HTTPException, Depends
-from routers import auth
+from routers import auth, usuarios
 
 
 # 🌟 PARCHE DE EMERGENCIA DE ENTORNO PARA WINDOWS (Acentos y Ñs)
@@ -25,8 +25,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import create_engine, Column, Integer, String, select, func
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
-# Importaciones de tu arquitectura local (Base de datos y Modelos)
-import database
+from routers import auth, usuarios
 import models
 
 # Importamos los routers modulares
@@ -150,6 +149,7 @@ app.add_middleware(
 
 # INCLUSIÓN DEL ROUTER DE AUTENTICACIÓN (LOGIN Y REGISTRO)
 app.include_router(auth.router, prefix="/auth")
+app.include_router(usuarios.router)
 
 # INCLUSIÓN DE LOS ROUTERS EXTERNOS MODULARES
 app.include_router(noticias.router, prefix="/noticias")

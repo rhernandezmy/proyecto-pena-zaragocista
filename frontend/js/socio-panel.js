@@ -144,3 +144,138 @@ async function eliminarReservaBackend(reservaId) {
         alert("Error de conexión al intentar borrar.");
     }
 }
+
+// =========================================================================
+// 4. ACTUALIZAR LOS DATOS DEL SOCIO Y CARGARLOS AL INICIAR
+// =========================================================================
+document.addEventListener("DOMContentLoaded", async () => {
+    // 1. Obtenemos el ID del socio logueado (Aseguramos que sea un número)
+    const socioId = parseInt(localStorage.getItem("socio_id")) || parseInt(localStorage.getItem("usuario_id")) || 10;
+    console.log("ID del socio detectado en LocalStorage:", socioId);
+
+    // 2. Identificamos las cajas de texto de la pantalla de forma segura por sus IDs o clases
+    let inputNombre = document.getElementById("inputNombre");
+    let inputTelefono = document.getElementById("inputTelefono");
+    let inputDireccion = document.getElementById("inputDireccion");
+
+    if (!inputNombre || !inputTelefono || !inputDireccion) {
+        const inputs = document.querySelectorAll(".form-control, input[type='text']");
+        const inputsEditables = Array.from(inputs).filter(i => !i.readOnly && !i.placeholder.includes("@"));
+        
+        inputNombre = inputsEditables[0] || inputNombre;
+        inputTelefono = inputsEditables[1] || inputTelefono;
+        inputDireccion = inputsEditables[2] || inputDireccion;
+    }
+
+    // =========================================================================
+    // 🔄 PARTE A: LEER LOS DATOS REALES DE POSTGRESQL AL ENTRAR A LA WEB
+    // =========================================================================
+    try {
+        const responseGet = await fetch(`${API_URL}/socios`);
+        if (responseGet.ok) {
+            const socios = await responseGet.json();
+            console.log("Lista de socios recuperada del backend:", socios);
+            
+            // Búsqueda ultra-flexible para localizar la ficha del usuario conectado
+            const miFicha = socios.find(s => 
+                Number(s.id) === socioId || 
+                Number(s.usuario_id) === socioId || 
+                Number(s.numero_socio) === socioId
+            );
+            
+            if (miFicha) {
+                console.log("¡Ficha de socio encontrada con éxito! Datos:", miFicha);
+                
+                // Rellenamos el input combinando nombre y apellidos de forma limpia
+                if (inputNombre) {
+                    const nombreFicha = miFicha.nombre || "";
+                    const apellidosFicha = miFicha.apellidos || "";
+                    
+                    // Si el nombre en la BD ya incluye los apellidos para evitar duplicarlo, lo limpiamos
+                    if (apellidosFicha && nombreFicha.includes(apellidosFicha)) {
+                        inputNombre.value = nombreFicha.trim();
+                    } else {
+                        inputNombre.value = miFicha.nombre_completo || `${nombreFicha} ${apellidosFicha}`.trim();
+                    }
+                }
+                
+                // Control de placeholders estáticos ("no tiene" / "Sin Dirección")
+                if (inputTelefono) {
+                    inputTelefono.value = (miFicha.telefono && miFicha.telefono !== "Sin Teléfono" && miFicha.telefono !== "no tiene") ? miFicha.telefono : "";
+                }
+                if (inputDireccion) {
+                    inputDireccion.value = (miFicha.direccion && miFicha.direccion !== "Sin Dirección") ? miFicha.direccion : "";
+                }
+
+                // Ejecutamos la función de reservas pasándole su ficha real
+                if (typeof cargarSolicitudesDesdeBackend === "function") {
+                    cargarSolicitudesDesdeBackend(miFicha);
+                }
+            } else {
+                console.warn(`No se encontró ningún socio en el backend que coincida con el ID: ${socioId}`);
+                if (inputNombre && localStorage.getItem("socio_nombre")) {
+                    inputNombre.value = localStorage.getItem("socio_nombre");
+                }
+            }
+        }
+    } catch (error) {
+        console.error("Error al pintar los datos guardados en el inicio:", error);
+    }
+
+    // =========================================================================
+    // 💾 PARTE B: GUARDAR LOS DATOS CUANDO EL SOCIO MODIFICA ALGO
+    // =========================================================================
+    const botones = document.querySelectorAll("button");
+    let botonGuardarReal = null;
+    
+    botones.forEach(btn => {
+        if (btn.textContent.trim().includes("Guardar Cambios")) {
+            botonGuardarReal = btn;
+        }
+    });
+
+    if (botonGuardarReal) {
+        botonGuardarReal.addEventListener("click", async (e) => {
+            e.preventDefault();
+
+            const nombreValor = inputNombre ? inputNombre.value.trim() : "";
+            const telefonoValor = inputTelefono ? inputTelefono.value.trim() : "";
+            const direccionValor = inputDireccion ? inputDireccion.value.trim() : "";
+
+            if (!nombreValor) {
+                alert("⚠️ El nombre completo no puede estar vacío.");
+                return;
+            }
+
+            const payloadActualizar = {
+                nombre: nombreValor,
+                telefono: telefonoValor,
+                direccion: direccionValor
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/usuarios/${socioId}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payloadActualizar)
+                });
+
+                if (response.ok) {
+                    // Actualizamos el LocalStorage para el saludo del panel
+                    localStorage.setItem("socio_nombre", nombreValor);
+                    
+                    alert("✅ ¡Tus datos se han guardado correctamente en PostgreSQL!");
+                    window.location.reload(); 
+                } else {
+                    const errorData = await response.json();
+                    alert(`⚠️ Error del servidor (${response.status}): ${errorData.detail || "No se pudieron guardar los datos."}`);
+                }
+            } catch (error) {
+                console.error("Error en la conexión PUT de usuario:", error);
+                alert("⚠️ Error de red: No se pudo conectar con el servidor de FastAPI.");
+            }
+        });
+    }
+});

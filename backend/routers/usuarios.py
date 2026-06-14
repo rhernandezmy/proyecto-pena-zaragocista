@@ -207,3 +207,56 @@ def vincular_cuenta_web_a_socio(usuario_id: int, req: schemas.VincularSocioReque
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error al procesar el vínculo: {str(e)}")
+    
+# =========================================================================
+# 🔄 ACTUALIZACIÓN DE PERFIL DESDE EL PANEL DEL SOCIO
+# =========================================================================
+
+@router.put("/usuarios/{usuario_id}")
+def actualizar_perfil_socio(usuario_id: int, payload: dict, db: Session = Depends(database.get_db)):
+    # 1. Buscamos la cuenta de usuario web en PostgreSQL
+    usuario = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado en la base de datos.")
+    
+    nombre_completo = payload.get("nombre", "").strip()
+    nuevo_telefono = payload.get("telefono", "").strip()
+    nueva_direccion = payload.get("direccion", "").strip()
+
+    if not nombre_completo:
+        raise HTTPException(status_code=400, detail="El nombre completo es obligatorio.")
+
+    # 2. SEPARACIÓN INTELIGENTE: Extrae el primer bloque como Nombre y el resto como Apellidos
+    partes = nombre_completo.split(" ")
+    nombre_pila = partes[0]
+    apellidos_pila = " ".join(partes[1:]) if len(partes) > 1 else ""
+
+    try:
+        # 3. Guardamos en la tabla Usuario Web
+        if hasattr(usuario, 'nombre'):
+            usuario.nombre = nombre_pila
+        if hasattr(usuario, 'apellidos'):
+            usuario.apellidos = apellidos_pila
+        if hasattr(usuario, 'telefono'):
+            usuario.telefono = nuevo_telefono
+        if hasattr(usuario, 'direccion'):
+            usuario.direccion = nueva_direccion
+
+        # 4. Sincronizamos la tabla física SocioPena buscando directamente por su ID de enlace
+        if hasattr(usuario, 'socio_pena_id') and usuario.socio_pena_id is not None:
+            socio_fisico = db.query(models.SocioPena).filter(models.SocioPena.id == usuario.socio_pena_id).first()
+            if socio_fisico:
+                socio_fisico.nombre = nombre_pila
+                socio_fisico.apellidos = apellidos_pila
+                if hasattr(socio_fisico, 'telefono'):
+                    socio_fisico.telefono = nuevo_telefono
+                if hasattr(socio_fisico, 'direccion'):
+                    socio_fisico.direccion = nueva_direccion
+
+        # 5. Guardado definitivo en PostgreSQL
+        db.commit()
+        return {"status": "success", "message": "Tus datos se han guardado correctamente."}
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al guardar en la base de datos: {str(e)}")
