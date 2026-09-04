@@ -40,17 +40,17 @@ Este archivo actúa como el mapa de ruta definitivo del proyecto para asegurar l
 - [x] Endpoint unificado de administración /panel/admin/global-data para servir socios, viajes y reservas_local de un solo golpe de forma asíncrona.
 - [x] *Estado Memoria:* Pendiente actualizar diagrama de clases/casos de uso (sección 3).
 
-### 🟡 Módulo de Cuotas y Pasarela Stripe (⏳ EN PROCESO)
+### 🟡 Módulo de Cuotas y Pasarela Stripe  (¡LISTO!)
 - [x] Modelo `Cuota` implementado en `models.py`.
-- [ ] Definir esquemas Pydantic para `PaymentIntent`.
-- [ ] Implementar `routers/cuotas.py` con integración (Sandbox).
-- [ ] *Estado Memoria:* Pendiente volcar lógica final tras validación Sandbox.
+- [x] Definir esquemas Pydantic para `PaymentIntent`.
+- [x] Implementar `routers/cuotas.py` con integración (Sandbox).
+- [x] *Estado Memoria:* Pendiente volcar lógica final tras validación Sandbox.
 
 ---
 
-## 🎨 2. ESTADO DEL FRONTEND (Pantallas de Usuario e Integración)
+## 🎨 2. ESTADO DEL FRONTEND (Pantallas de Usuario e Integración)  (¡LISTO!)
 
-- [ ] Creación de Mockups visuales para la memoria (Figma/Diagramas).
+- [x] Creación de Mockups visuales para la memoria (Figma/Diagramas).
 - [x] Estructura semántica HTML5 + Bootstrap unificada bajo una identidad visual corporativa fija (azul y oro) para todas las vistas (index.html, viajes.html, partidos.html, noticias.html).
 - [x] Implementación de estructura HTML5 + Bootstrap (index.html, login.html).
 - [x] Arquitectura de componentes globales dinámicos (header.js y footer.js) para evitar duplicidad de código.
@@ -77,4 +77,4 @@ Cada vez que el código sufra una modificación, se debe verificar que:
 4. **Memoria:** El apartado de "Diseño del Sistema" contemple los modelos `rivales_maestros` y `partidos` con su geolocalización.
 
 ---
-**Última actualización:** 09/06/2026 (Tras merge exitoso de Frontend a Main)
+**Última actualización:** 04/09/2026
