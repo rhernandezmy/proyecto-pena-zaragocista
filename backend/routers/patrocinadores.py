@@ -19,7 +19,7 @@ def crear_patrocinador(patrocinador: schemas.PatrocinadorCrear, db: Session = De
     db.refresh(nuevo_patro)
     return nuevo_patro
 
-# 3. ELIMINAR UN PATROCINADOR (NUEVO: Para la acción del botón de quitar)
+# 3. ELIMINAR UN PATROCINADOR
 @router.delete("/{patrocinador_id}", status_code=status.HTTP_204_NO_CONTENT)
 def eliminar_patrocinador(patrocinador_id: int, db: Session = Depends(get_db)):
     # Buscamos si existe el partner en la base de datos

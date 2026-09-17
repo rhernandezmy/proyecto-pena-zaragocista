@@ -3,35 +3,13 @@ from typing import Optional
 from datetime import datetime
 
 # =========================================================================
-# ⚽ PARTIDOS Y RIVALES
-# =========================================================================
-class PartidoCrear(BaseModel):
-    rival: str
-    fecha: datetime
-    lugar: str
-    rival_maestro_id: Optional[int] = None
-    latitud: Optional[float] = None
-    longitud: Optional[float] = None
-
-    class Config:
-        from_attributes = True
-
-class RivalMaestroCrear(BaseModel):
-    nombre_equipo: str
-    estadio: str
-    latitud: float
-    longitud: float
-
-    class Config:
-        from_attributes = True
-
-
-# =========================================================================
 # 🚌 VIAJES
 # =========================================================================
 class ViajeCrear(BaseModel):
-    partido_id: int
+    rival: str
     destino: str
+    partido_api_id: Optional[int] = None
+    fecha_partido: Optional[datetime] = None
     email_conductor: EmailStr
     tipo_transporte: str = "Coche"
     plazas_totales: int
@@ -45,11 +23,11 @@ class ViajeCrear(BaseModel):
 
 
 # =========================================================================
-# 📅 RESERVAS (Actualizado para admitir Reservas de Local)
+# 📅 RESERVAS
 # =========================================================================
 class ReservaCrear(BaseModel):
     usuario_id: int  
-    viaje_id: Optional[int] = None       # Ahora es opcional por si es reserva de Local
+    viaje_id: Optional[int] = None       # Opcional si es reserva del local de la peña
     asientos_reservados: int = 1
     tipo_reserva: str = "Viaje"          # "Viaje" o "Local"
     motivo_evento: Optional[str] = None  # Ej: "Ver partido contra Castellón"
@@ -59,19 +37,18 @@ class ReservaCrear(BaseModel):
 
 
 # =========================================================================
-# 🤝 PATROCINADORES (Actualizado con enlace web y lectura completa)
+# 🤝 PATROCINADORES
 # =========================================================================
 class PatrocinadorCrear(BaseModel):
     nombre: str
     tipo_negocio: str = "Bar"
     logo_url: Optional[str] = None
-    enlace_web: Optional[str] = None     # NUEVO: Para redirigir al pulsar en el sponsor
+    enlace_web: Optional[str] = None
     contribucion: float = 0.0
 
     class Config:
         from_attributes = True
 
-# Esquema de salida (lectura) que incluye el ID generado por la Base de Datos
 class Patrocinador(PatrocinadorCrear):
     id: int
 
@@ -110,10 +87,10 @@ class CuotaPagoCrear(BaseModel):
 
 
 # =========================================================================
-# 👥 NUEVOS SCHEMAS: GESTIÓN DE SOCIOS Y USUARIOS WEB (Para el Admin)
+# 👥 GESTIÓN DE SOCIOS Y USUARIOS WEB (Admin)
 # =========================================================================
 
-# --- Esquemas Pestaña 1: Ficha del Socio Físico ---
+# --- Ficha del Socio Físico ---
 class SocioPenaBase(BaseModel):
     numero_socio: Optional[int] = None
     nombre: str
@@ -132,7 +109,7 @@ class SocioPenaResponse(SocioPenaBase):
     class Config:
         from_attributes = True
 
-# --- Esquemas Pestaña 2: Cuentas de la Web ---
+# --- Cuentas de la Web ---
 class UsuarioWebResponse(BaseModel):
     id: int
     email: EmailStr
@@ -140,11 +117,10 @@ class UsuarioWebResponse(BaseModel):
     activo: bool
     fecha_registro: datetime
     socio_pena_id: Optional[int] = None
-    # Si está vinculado, incluye la información de su ficha física de socio
     socio_interno: Optional[SocioPenaResponse] = None
 
     class Config:
         from_attributes = True
 
 class VincularSocioRequest(BaseModel):
-    socio_pena_id: Optional[int] = None  # ID de la ficha a vincular (o None para desvincular)
+    socio_pena_id: Optional[int] = None

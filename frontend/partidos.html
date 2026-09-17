@@ -10,25 +10,26 @@
 <body class="bg-light">
     <div id="header-placeholder"></div>
     
-    <main class="container py-5">
-        <h1 class="mt-5 mb-4 text-primary">Partidos Real Zaragoza</h1>
-        
-        <div class="alert alert-warning">
-            <strong>Real Zaragoza:</strong> Actualmente no hay partidos programados.
-        </div>
-
-        <div class="d-flex justify-content-between align-items-center mt-5 mb-4">
-            <h2 class="text-primary">Partidos de España (Mundial 2026)</h2>
-            <a href="clasificacion.html" class="btn btn-outline-primary fw-bold">
-                <i class="fas fa-trophy me-2"></i> Ver Clasificación
+    <main class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mt-3 mb-3">
+            <div>
+                <h2 class="text-primary fw-bold mb-0">
+                    <i class="fas fa-futbol me-2"></i>Partidos Real Zaragoza
+                </h2>
+                <small class="text-muted">Calendario oficial de la temporada</small>
+            </div>
+            <a href="clasificacion.html" class="btn btn-sm btn-outline-primary fw-bold shadow-sm">
+                <i class="fas fa-trophy me-1"></i> Clasificación
             </a>
         </div>
 
-        <div id="lista-partidos-espana" class="row g-4">
-            <p>Cargando partidos...</p>
+        <!-- Contenedor con mini-tarjetas comprimidas -->
+        <div id="lista-partidos-zaragoza" class="row g-2 justify-content-center">
+            <div class="col-12 text-center py-4">
+                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                <p class="mt-2 text-muted small">Cargando partidos del Real Zaragoza...</p>
+            </div>
         </div>
-
-        <div id="contenedor-partidos-globales" class="mt-2"></div>
     </main>
 
     <div id="footer-placeholder"></div>
@@ -37,44 +38,108 @@
     <script src="js/components/footer.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
-            const contenedor = document.getElementById('lista-partidos-espana');
+            const contenedor = document.getElementById('lista-partidos-zaragoza');
             
-            // 1. CARGAR PARTIDOS DE ESPAÑA
             try {
-                const response = await fetch("http://localhost:8000/mundial/partidos-espana");
-                if (!response.ok) throw new Error("Error al obtener los datos");
+                const response = await fetch("http://localhost:8000/partidos-zaragoza");
+                if (!response.ok) throw new Error("Error al consultar la API");
                 
                 const data = await response.json();
-                const partidos = data.partidos;
+                const partidos = data.partidos || []; 
 
                 contenedor.innerHTML = ""; 
 
-                if (partidos.length === 0) {
-                    contenedor.innerHTML = "<p>No hay partidos programados actualmente.</p>";
+                if (!partidos || partidos.length === 0) {
+                    contenedor.innerHTML = `
+                        <div class="col-12">
+                            <div class="alert alert-info text-center p-2 small border-0 shadow-sm">
+                                No hay partidos programados actualmente para el Real Zaragoza.
+                            </div>
+                        </div>`;
                 } else {
                     partidos.forEach(p => {
-                        const fecha = new Date(p.utcDate).toLocaleDateString();
-                        const hora = new Date(p.utcDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                        const rival = p.homeTeam.name === "Spain" ? p.awayTeam.name : p.homeTeam.name;
+                        const fixture = p.fixture || {};
+                        const teams = p.teams || {};
+                        const goals = p.goals || {};
+                        const league = p.league || {};
+
+                        // Nombres de equipos y escudos
+                        const equipoLocal = teams.home?.name || "Real Zaragoza";
+                        const equipoVisitante = teams.away?.name || "Rival";
+                        const escudoLocal = teams.home?.logo || "";
+                        const escudoVisitante = teams.away?.logo || "";
                         
-                        const haTerminado = p.status === 'FINISHED';
-                        const marcador = haTerminado 
-                            ? (p.homeTeam.name === "Spain" ? `${p.score.fullTime.home} - ${p.score.fullTime.away}` : `${p.score.fullTime.away} - ${p.score.fullTime.home}`)
-                            : "VS";
+                        // Estado del partido
+                        const estadoShort = fixture.status?.short;
+                        const haTerminado = ['FT', 'AET', 'PEN'].includes(estadoShort);
+                        const enDirecto = ['1H', 'HT', '2H', 'ET', 'P', 'LIVE'].includes(estadoShort);
+
+                        // Marcador
+                        let marcador = "VS";
+                        if (haTerminado || enDirecto) {
+                            marcador = `${goals.home ?? 0} - ${goals.away ?? 0}`;
+                        }
+
+                        // Lógica para badge superior y pie de tarjeta (Finalizado arriba, Resultado/Fecha abajo)
+                        let badgeEstado = '<span class="badge bg-warning text-dark" style="font-size: 0.65rem;">Pendiente</span>';
+                        let textoPie = '';
+
+                        if (haTerminado) {
+                            badgeEstado = '<span class="badge bg-success" style="font-size: 0.65rem;">Finalizado</span>';
+                            
+                            const signo = fixture.resultado_signo; // Victoria, Empate o Derrota
+                            if (signo === "Victoria") {
+                                textoPie = '<span class="text-success fw-bold"><i class="fas fa-check-circle me-1"></i>Victoria</span>';
+                            } else if (signo === "Derrota") {
+                                textoPie = '<span class="text-danger fw-bold"><i class="fas fa-times-circle me-1"></i>Derrota</span>';
+                            } else {
+                                textoPie = '<span class="text-warning text-dark fw-bold"><i class="fas fa-minus-circle me-1"></i>Empate</span>';
+                            }
+                        } else if (enDirecto) {
+                            badgeEstado = '<span class="badge bg-danger blink" style="font-size: 0.65rem;">EN DIRECTO</span>';
+                            textoPie = '<span class="text-danger fw-bold">Jugándose ahora</span>';
+                        } else {
+                            // Si está PENDIENTE, usamos la fecha y hora reales
+                            const fechaObj = fixture.date ? new Date(fixture.date) : null;
+                            const fecha = fechaObj ? fechaObj.toLocaleDateString('es-ES') : 'Por determinar';
+                            const hora = fechaObj ? fechaObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                            
+                            textoPie = `<i class="far fa-calendar-alt me-1"></i>${fecha} ${hora ? `| ${hora}` : ''}`;
+                        }
+
+                        // Extraer número de jornada
+                        const jornada = league.round ? league.round.replace(/[^0-9]/g, '') : '-';
 
                         contenedor.innerHTML += `
-                            <div class="col-md-4">
-                                <div class="card h-100 shadow-sm border-0">
-                                    <div class="card-body text-center">
-                                        <h5 class="card-title fw-bold">España vs ${rival}</h5>
-                                        <h2 class="my-3 ${haTerminado ? 'text-danger' : 'text-muted'}">${marcador}</h2>
-                                        <p class="card-text small">
-                                            <strong>Fecha:</strong> ${fecha} <br> 
-                                            <strong>Hora:</strong> ${hora} <br>
-                                            <span class="badge ${haTerminado ? 'bg-success' : 'bg-warning text-dark'} mt-2">
-                                                ${haTerminado ? 'Finalizado' : 'Pendiente'}
-                                            </span>
-                                        </p>
+                            <div class="col-6 col-md-4 col-lg-3">
+                                <div class="card h-100 shadow-sm border-0 gallery-card">
+                                    <div class="card-body text-center p-2 d-flex flex-column justify-content-between">
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="badge bg-light text-dark border style-lh-sm" style="font-size: 0.65rem;">J${jornada}</span>
+                                                ${badgeEstado}
+                                            </div>
+                                            
+                                            <div class="d-flex align-items-center justify-content-center my-2 gap-1">
+                                                ${escudoLocal ? `<img src="${escudoLocal}" width="20" height="20" alt="logo">` : ''}
+                                                <span class="fw-bold text-dark lh-sm" style="font-size: 0.8rem;">${equipoLocal}</span>
+                                            </div>
+                                            <span class="text-muted fw-normal d-block my-0" style="font-size: 0.75rem;">vs</span>
+                                            <div class="d-flex align-items-center justify-content-center my-2 gap-1">
+                                                ${escudoVisitante ? `<img src="${escudoVisitante}" width="20" height="20" alt="logo">` : ''}
+                                                <span class="fw-bold text-dark lh-sm" style="font-size: 0.8rem;">${equipoVisitante}</span>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h4 class="my-1 fw-bold ${haTerminado ? 'text-primary' : (enDirecto ? 'text-danger' : 'text-secondary')}" style="font-size: 1.2rem;">
+                                                ${marcador}
+                                            </h4>
+                                            
+                                            <div class="text-muted border-top pt-1 mt-1" style="font-size: 0.7rem;">
+                                                ${textoPie}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -82,54 +147,15 @@
                     });
                 }
             } catch (error) {
-                console.error("Error:", error);
-                contenedor.innerHTML = `<div class="alert alert-danger">Error al cargar los partidos de España.</div>`;
+                console.error("Error al cargar partidos:", error);
+                contenedor.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-danger text-center p-2 small border-0 shadow-sm">
+                            Error al conectar con la API de partidos. Asegúrate de tener arrancado el Backend.
+                        </div>
+                    </div>`;
             }
-
-            // 2. 🌟 NUEVO: CARGAR MARCADORES GLOBALES (Línea pequeña y discreta)
-            await cargarMarcadoresGlobalesMundial();
         });
-
-        // Función auxiliar para renderizar los otros partidos en formato cinta minimalista
-        async function cargarMarcadoresGlobalesMundial() {
-            const contenedorMundial = document.getElementById('contenedor-partidos-globales');
-            if (!contenedorMundial) return;
-
-            try {
-                const res = await fetch("http://localhost:8000/mundial/partidos-globales");
-                if (!res.ok) return;
-                
-                const datos = await res.json();
-                
-                if (!datos.partidos || datos.partidos.length === 0) return;
-
-                contenedorMundial.innerHTML = "";
-                
-                let htmlContenido = `
-                    <div class="text-center text-muted small border-top pt-3 mt-4" style="font-size: 0.82rem; letter-spacing: 0.5px;">
-                        <span class="fw-bold text-uppercase text-secondary me-2">Otros marcadores del torneo:</span> `;
-                
-                datos.partidos.forEach((partido, index) => {
-                    const golesHome = partido.score?.fullTime?.home !== null ? partido.score.fullTime.home : "-";
-                    const golesAway = partido.score?.fullTime?.away !== null ? partido.score.fullTime.away : "-";
-                    
-                    htmlContenido += `
-                        <span class="mx-2">
-                            ${partido.homeTeam.name} <b class="text-dark">${golesHome}-${golesAway}</b> ${partido.awayTeam.name}
-                        </span>`;
-                        
-                    if (index < datos.partidos.length - 1) {
-                        htmlContenido += ` <span class="text-muted">|</span> `;
-                    }
-                });
-                
-                htmlContenido += `</div>`;
-                contenedorMundial.innerHTML = htmlContenido;
-                
-            } catch (err) {
-                console.error("Error silencioso cargando marcadores del mundial:", err);
-            }
-        }
     </script>
 </body>
 </html>

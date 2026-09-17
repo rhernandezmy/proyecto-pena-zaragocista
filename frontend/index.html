@@ -50,16 +50,19 @@
                 </aside>
 
                 <div class="col-12 col-lg-8">
-                    <div class="alert alert-info border-0 shadow-sm mb-5 text-center" role="alert">
-                        <h4 class="alert-heading">📅 Partidos de nuestro  Real Zaragoza <span style="color: #004a99; margin-left: 10px;">❤</span><span style="color: #ffffff; -webkit-text-stroke: 1px #004a99;">❤</span></h4>
-                        <p class="mb-0">Actualmente no hay partidos programados del Real Zaragoza. ¡Volveremos con más fuerza la próxima temporada!</p>
+                    <div class="alert alert-info border-0 shadow-sm mb-4 text-center" role="alert">
+                        <h4 class="alert-heading">📅 Próximos Partidos del Real Zaragoza <span style="color: #004a99; margin-left: 10px;">💙</span><span style="color: #ffffff; -webkit-text-stroke: 1px #004a99;">🤍</span></h4>
+                        <p class="mb-0">¡Ya ha comenzado LaLiga! Consulta el calendario de encuentros de nuestro equipo y organízate con la peña.</p>
                     </div>
 
-                    <div class="text-center mb-4">
-                        <h2 class="mb-3">🏆 ¡Todos con La Roja en el Mundial 2026!</h2>
-                        <a href="partidos.html" class="btn btn-primary btn-lg shadow-sm px-4">Ver partidos</a>
+                    <div class="text-center mb-5">
+                        <a href="partidos.html" class="btn btn-primary btn-lg shadow-sm px-4">
+                            <i class="fas fa-calendar-alt me-2"></i>Ver calendario de partidos
+                        </a>
                     </div>
-                    <div id="contenedor-mundial" class="row g-4 justify-content-center"></div>
+
+                    <!-- Contenedor dinámico listo para renderizar las tarjetas/filas de los partidos desde tu script JavaScript -->
+                    <div id="contenedor-partidos" class="row g-4 justify-content-center"></div>
                     
                     <section class="my-5">
                         <div class="text-center mb-4">
@@ -78,36 +81,39 @@
                             <hr class="mx-auto" style="width: 60px; height: 3px; background-color: #0d6efd; border: none; opacity: 1;">
                         </div>
 
-                        <div class="row g-4">
-                            <div class="col-12 col-md-4">
+                        <!-- Cambiado col-md-4 por col-6 col-md-3 y añadido justify-content-center -->
+                        <div class="row g-3 justify-content-center">
+                            <div class="col-6 col-md-3 col-lg-2">
                                 <div class="card h-100 border-0 shadow-sm overflow-hidden gallery-card">
-                                    <img src="assets/viaje_andorra.webp" class="card-img-top img-fluid" alt="Desplazamiento Andorra" style="object-fit: cover; height: 280px;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
-                                    <div class="card-body bg-light text-center py-2">
-                                        <small class="text-muted fw-bold">#PresentesPorElEscudo en Andorra</small>
+                                    <!-- Altura reducida a 140px y cursor pointer para dar feedback de miniatura -->
+                                    <img src="assets/viaje_andorra.webp" class="card-img-top img-fluid" alt="Desplazamiento Andorra" style="object-fit: cover; height: 140px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
+                                    <div class="card-body bg-light text-center p-2">
+                                        <small class="text-muted fw-bold style-lh-sm" style="font-size: 0.75rem;">#PresentesPorElEscudo en Andorra</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-4">
+                            <div class="col-6 col-md-3 col-lg-2">
                                 <div class="card h-100 border-0 shadow-sm overflow-hidden gallery-card">
-                                    <img src="assets/carnaval_presentes.webp" class="card-img-top img-fluid" alt="Recibimiento al Real Zaragoza" style="object-fit: cover; height: 280px;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
-                                    <div class="card-body bg-light text-center py-2">
-                                        <small class="text-muted fw-bold">Carnaval de los Presentes</small>
+                                    <img src="assets/carnaval_presentes.webp" class="card-img-top img-fluid" alt="Recibimiento al Real Zaragoza" style="object-fit: cover; height: 140px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
+                                    <div class="card-body bg-light text-center p-2">
+                                        <small class="text-muted fw-bold" style="font-size: 0.75rem;">Carnaval de los Presentes</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-4">
+                            <div class="col-6 col-md-3 col-lg-2">
                                 <div class="card h-100 border-0 shadow-sm overflow-hidden gallery-card">
-                                    <img src="assets/Siempre_presentes.webp" class="card-img-top img-fluid" alt="Grada Romareda" style="object-fit: cover; height: 280px;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
-                                    <div class="card-body bg-light text-center py-2">
-                                        <small class="text-muted fw-bold">Siempre Presentes viajando por toda España</small>
+                                    <img src="assets/Siempre_presentes.webp" class="card-img-top img-fluid" alt="Grada Romareda" style="object-fit: cover; height: 140px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
+                                    <div class="card-body bg-light text-center p-2">
+                                        <small class="text-muted fw-bold" style="font-size: 0.75rem;">Siempre Presentes por España</small>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="text-center mt-5">
-                            <a href="galeria.html" class="btn btn-primary btn-lg shadow-sm px-4">📸 Ver Galería Completa</a>
+                        <div class="text-center mt-4">
+                            <a href="galeria.html" class="btn btn-primary btn-sm shadow-sm px-4">📸 Ver Galería Completa</a>
                         </div>
+                        
                         <div class="text-center mt-5">
                             <h3 class="fw-bold">¿Quieres unirte al sentimiento?</h3>
                             <p>Prepárate para vivir experiencias y kilómetros de carretera con nosotros.</p>

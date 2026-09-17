@@ -74,40 +74,19 @@ class Vehiculo(Base):
 
 
 # =====================================================================
-# 4. INFRAESTRUCTURA DE PARTIDOS Y VIAJES (Sin cambios estructurales)
+# 4. INFRAESTRUCTURA DE VIAJES Y RESERVAS (Simplificada)
 # =====================================================================
-class RivalMaestro(Base):
-    __tablename__ = "rivales_maestros"
-    id = Column(Integer, primary_key=True, index=True)
-    nombre_equipo = Column(String(100), unique=True, nullable=False)
-    estadio = Column(String(100), nullable=False)
-    latitud = Column(Float, nullable=False)
-    longitud = Column(Float, nullable=False)
-    
-    partidos = relationship("Partido", back_populates="rival_maestro")
-
-
-class Partido(Base):
-    __tablename__ = "partidos"
-    id = Column(Integer, primary_key=True, index=True)
-    rival = Column(String(100), nullable=False)
-    fecha = Column(DateTime, nullable=False)
-    lugar = Column(String(100), default="La Romareda")
-    estado = Column(String(20), default="Programado")
-    latitud = Column(Float, nullable=True)
-    longitud = Column(Float, nullable=True)
-    rival_maestro_id = Column(Integer, ForeignKey("rivales_maestros.id", ondelete="SET NULL"), nullable=True)
-    
-    viajes = relationship("Viaje", back_populates="partido", cascade="all, delete-orphan")
-    rival_maestro = relationship("RivalMaestro", back_populates="partidos")
-
-
 class Viaje(Base):
     __tablename__ = "viajes"
     id = Column(Integer, primary_key=True, index=True)
+    
+    # En lugar de enlazar a una tabla 'partidos', guardamos los datos directamente o el API_ID del partido
+    partido_api_id = Column(Integer, nullable=True) # ID que viene de API-Football
+    rival = Column(String(100), nullable=False)     # Ej: "Nàstic de Tarragona"
     destino = Column(String(100), nullable=False)
+    fecha_partido = Column(DateTime, nullable=True)
+    
     email_conductor = Column(String(100), nullable=False, default="presentesxelescudo@gmail.com")
-    partido_id = Column(Integer, ForeignKey("partidos.id", ondelete="CASCADE"), nullable=False)
     tipo_transporte = Column(String(30), default="Coche")
     plazas_totales = Column(Integer, nullable=False)
     plazas_disponibles = Column(Integer, nullable=False)
@@ -117,7 +96,6 @@ class Viaje(Base):
     latitud = Column(Float, nullable=True)
     longitud = Column(Float, nullable=True)
     
-    partido = relationship("Partido", back_populates="viajes")
     reservas = relationship("Reserva", back_populates="viaje", cascade="all, delete-orphan")
 
 

@@ -6,7 +6,7 @@ import models
 router = APIRouter(tags=["Panel"])
 
 
-# 1. VISTA SOCIO: Obtener datos individuales de un socio por Email (¡Blindado!)
+# 1. VISTA SOCIO: Obtener datos individuales de un socio por Email
 @router.get("/socio/{email}")
 def get_socio_panel_data(email: str, db: Session = Depends(get_db)):
     usuario = db.query(models.Usuario).filter(models.Usuario.email == email).first()
@@ -41,7 +41,7 @@ def get_socio_panel_data(email: str, db: Session = Depends(get_db)):
     }
 
 
-# 2. VISTA ADMIN: Obtener TODOS los datos globales de la peña (¡Corregido y Cruzado!)
+# 2. VISTA ADMIN: Obtener TODOS los datos globales de la peña
 @router.get("/admin/global-data")
 def get_admin_global_data(db: Session = Depends(get_db)):
     """

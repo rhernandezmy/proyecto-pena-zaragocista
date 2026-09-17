@@ -11,25 +11,27 @@
 
     <main class="container py-5">
         <h2 class="fw-bold mb-4">🛡️ Clasificación Real Zaragoza pendiente de confirmar grupos</h2>
-        <h2 class="fw-bold mb-4">🌍 Clasificación (Datos: Mundial 2026)</h2>
-        <div class="card border-0 shadow-sm p-4">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle" id="tabla-clasificacion">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>#</th>
-                            <th>Selección</th>
-                            <th>PJ</th>
-                            <th>Pts</th>
-                        </tr>
-                    </thead>
-                    <tbody id="body-clasificacion">
-                        <tr><td colspan="4" class="text-center">Cargando datos del Mundial...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </main>
+        <div id="clasificacion-container" class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Equipo</th>
+                        <th scope="col">Puntos</th>
+                        <th scope="col">PJ</th>
+                        <th scope="col">PG</th>
+                        <th scope="col">PE</th>
+                        <th scope="col">PP</th>
+                        <th scope="col">GF</th>
+                        <th scope="col">GC</th>
+                        <th scope="col">DG</th>
+                    </tr>
+                </thead>
+                <tbody id="clasificacion-body">
+                    <!-- Filas de la clasificación se generarán dinámicamente -->
+                </tbody>
+            </table>
+        </main>
 
     <div id="footer-placeholder"></div>
     <script src="js/components/header.js"></script>

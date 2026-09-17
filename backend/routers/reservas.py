@@ -7,7 +7,7 @@ from database import get_db
 router = APIRouter(prefix="", tags=["Reservas"])
 
 # =========================================================================
-# 1. OBTENER TODAS LAS RESERVAS (Vitamina para el Admin)
+# 1. OBTENER TODAS LAS RESERVAS
 # =========================================================================
 @router.get("")
 def obtener_reservas(db: Session = Depends(get_db)):
@@ -106,7 +106,7 @@ def obtener_viajeros_por_viaje(viaje_id: int, db: Session = Depends(get_db)):
 
 
 # =========================================================================
-# 4. RESOLVER RESERVA DEL LOCAL (Mantenido con tu arquitectura PATCH)
+# 4. RESOLVER RESERVA DEL LOCAL
 # =========================================================================
 @router.patch("/{reserva_id}/resolucion")
 def resolver_reserva_local(reserva_id: int, estado: str, db: Session = Depends(get_db)):
