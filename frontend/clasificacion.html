@@ -2,38 +2,78 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clasificación - Peña Zaragocista</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Estilos personalizados para forzar los fondos suaves sobre Bootstrap */
+        .fila-zaragoza td { background-color: #dbeafe !important; font-weight: bold; }
+        .fila-ascenso td { background-color: #eff6ff !important; }
+        .fila-playoff td { background-color: #f0fdf4 !important; }
+        .fila-descenso td { background-color: #fef2f2 !important; }
+        .tabla-compacta td, .tabla-compacta th { padding: 0.35rem 0.5rem !important; font-size: 0.85rem; }
+    </style>
 </head>
 <body class="bg-light">
     <div id="header-placeholder"></div>
 
-    <main class="container py-5">
-        <h2 class="fw-bold mb-4">🛡️ Clasificación Real Zaragoza pendiente de confirmar grupos</h2>
-        <div id="clasificacion-container" class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">Equipo</th>
-                        <th scope="col">Puntos</th>
-                        <th scope="col">PJ</th>
-                        <th scope="col">PG</th>
-                        <th scope="col">PE</th>
-                        <th scope="col">PP</th>
-                        <th scope="col">GF</th>
-                        <th scope="col">GC</th>
-                        <th scope="col">DG</th>
-                    </tr>
-                </thead>
-                <tbody id="clasificacion-body">
-                    <!-- Filas de la clasificación se generarán dinámicamente -->
-                </tbody>
-            </table>
-        </main>
+    <main class="container py-3" style="max-width: 950px;">
+        <div class="d-flex justify-content-between align-items-center mt-2 mb-3">
+            <div>
+                <h3 class="text-primary fw-bold mb-0">
+                    <i class="fas fa-trophy me-2"></i>Clasificación Primera Federación
+                </h3>
+                <small class="text-muted">PRIMERA RFEF | Grupo 2</small>
+            </div>
+            <a href="partidos.html" class="btn btn-sm btn-outline-primary fw-bold shadow-sm">
+                <i class="fas fa-futbol me-1"></i> Ver Partidos
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div id="clasificacion-container" class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0 tabla-compacta">
+                        <thead class="table-dark text-center">
+                            <tr>
+                                <th scope="col" style="width: 40px;">#</th>
+                                <th scope="col" class="text-start">Equipo</th>
+                                <th scope="col" style="width: 50px;">PTS</th>
+                                <th scope="col" style="width: 45px;">PJ</th>
+                                <th scope="col" style="width: 45px;">PG</th>
+                                <th scope="col" style="width: 45px;">PE</th>
+                                <th scope="col" style="width: 45px;">PP</th>
+                                <th scope="col" class="d-none d-md-table-cell" style="width: 45px;">GF</th>
+                                <th scope="col" class="d-none d-md-table-cell" style="width: 45px;">GC</th>
+                                <th scope="col" style="width: 50px;">DG</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clasificacion-body">
+                            <tr>
+                                <td colspan="10" class="text-center py-4">
+                                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                    <p class="mt-2 text-muted small mb-0">Cargando clasificación actual...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer bg-white border-top py-2">
+                <div class="d-flex flex-wrap gap-3 justify-content-center style-lh-sm" style="font-size: 0.75rem;">
+                    <span><span class="d-inline-block rounded me-1" style="width: 10px; height: 10px; background-color: #eff6ff; border: 1px solid #bfdbfe;"></span> Ascenso Directo (1º)</span>
+                    <span><span class="d-inline-block rounded me-1" style="width: 10px; height: 10px; background-color: #f0fdf4; border: 1px solid #bbf7d0;"></span> Play-off Ascenso (2º-5º)</span>
+                    <span><span class="d-inline-block rounded me-1" style="width: 10px; height: 10px; background-color: #fef2f2; border: 1px solid #fecaca;"></span> Descenso (16º-20º)</span>
+                </div>
+            </div>
+        </div>
+    </main>
 
     <div id="footer-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/components/header.js"></script>
     <script src="js/components/footer.js"></script>
     <script src="js/clasificacion.js"></script>

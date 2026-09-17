@@ -8,161 +8,189 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="bg-light">
 
     <div id="header-placeholder"></div>
 
-    <main class="py-5">
-        <div class="container-fluid px-lg-5"> 
-            <div class="row">
+    <main class="py-4">
+        <div class="container-fluid px-lg-4"> 
+            <div class="row g-3">
                 
+                <!-- LATERAL IZQUIERDO -->
                 <aside class="col-12 col-lg-2 d-none d-lg-block">
-                    <div class="card p-3 border-0 shadow-sm mb-4 position-sticky" style="top: 20px;">
-                        <h6 class="fw-bold text-center text-uppercase style-color" style="color: #0033A0;">📊 Clasificación Liga 2026-2027</h6>
-                        <ol class="list-group list-group-numbered list-group-flush small">
-                            <li class="list-group-item d-flex justify-content-between align-items-center fw-bold bg-light">
-                                Real Zaragoza <span class="badge bg-primary rounded-pill">0</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center text-muted">
-                                Teruel CF <span class="badge bg-secondary rounded-pill">0</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center text-muted">
-                                SD Huesca <span class="badge bg-secondary rounded-pill">0</span>
-                            </li>
-                        </ol>
-                        <div class="text-center mt-3">
-                            <a href="clasificacion.html" class="btn btn-sm btn-link p-0 text-decoration-none">Ver completa →</a>
+                    <!-- Widget Clasificación -->
+                    <div class="card p-3 border-0 shadow-sm mb-3 bg-white">
+                        <h6 class="fw-bold text-center text-uppercase mb-3" style="color: #0033A0; font-size: 0.8rem;">
+                            <i class="fas fa-trophy me-1"></i> Clasificación 26/27
+                        </h6>
+                        <div id="widget-clasificacion-aragon">
+                            <div class="text-center py-2 text-muted small">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-2 border-top pt-2">
+                            <a href="clasificacion.html" class="btn btn-sm btn-link p-0 text-decoration-none fw-bold" style="font-size: 0.75rem;">Ver completa →</a>
                         </div>
                     </div>
 
-                    <div class="card p-3 border-0 shadow-sm position-sticky" style="top: 240px; text-align: center; background-color: #f8f9fa;">
-                        <h6 class="fw-bold text-uppercase style-color" style="color: #0033A0;">🏠 Nuestro Local</h6>
-                        <div class="text-start small mt-2">
-                            <p class="text-muted mb-2 text-center">¿Quieres celebrar tu evento o reservar el local para un partido?</p>
-                            <div class="p-2 border rounded bg-white mb-2 text-center">
-                                <a href="reservas.html" class="list-group-item list-group-item-action py-3 lh-tight">
-                                    <small class="text-muted d-block">Disponibilidad:</small>
-                                    <span class="fw-bold text-success small">📅 Comprobar Fechas</span>
-                                </a>
-                            </div>
-                        </div>
+                    <!-- Widget Local -->
+                    <div class="card p-3 border-0 shadow-sm bg-white text-center">
+                        <h6 class="fw-bold text-uppercase mb-2" style="color: #0033A0; font-size: 0.8rem;">
+                            <i class="fas fa-home me-1"></i> Nuestro Local
+                        </h6>
+                        <p class="text-muted small mb-2" style="font-size: 0.75rem;">¿Quieres reservar el local para un evento o partido?</p>
+                        <a href="reservas.html" class="btn btn-sm btn-outline-success w-100 fw-bold" style="font-size: 0.75rem;">
+                            📅 Comprobar Fechas
+                        </a>
                     </div>
                 </aside>
 
+                <!-- COLUMNA CENTRAL -->
                 <div class="col-12 col-lg-8">
-                    <div class="alert alert-info border-0 shadow-sm mb-4 text-center" role="alert">
-                        <h4 class="alert-heading">📅 Próximos Partidos del Real Zaragoza <span style="color: #004a99; margin-left: 10px;">💙</span><span style="color: #ffffff; -webkit-text-stroke: 1px #004a99;">🤍</span></h4>
-                        <p class="mb-0">¡Ya ha comenzado LaLiga! Consulta el calendario de encuentros de nuestro equipo y organízate con la peña.</p>
-                    </div>
-
-                    <div class="text-center mb-5">
-                        <a href="partidos.html" class="btn btn-primary btn-lg shadow-sm px-4">
-                            <i class="fas fa-calendar-alt me-2"></i>Ver calendario de partidos
-                        </a>
-                    </div>
-
-                    <!-- Contenedor dinámico listo para renderizar las tarjetas/filas de los partidos desde tu script JavaScript -->
-                    <div id="contenedor-partidos" class="row g-4 justify-content-center"></div>
                     
-                    <section class="my-5">
-                        <div class="text-center mb-4">
-                            <h2 class="fw-bold text-uppercase" style="letter-spacing: 1px;">📰 Últimas Noticias</h2>
-                            <p class="text-muted">Mantente al día de la actualidad de nuestra Peña y del Real Zaragoza</p>
-                            <hr class="mx-auto" style="width: 60px; height: 3px; background-color: #0d6efd; border: none; opacity: 1;">
-                            <a href="noticias.html" class="btn btn-primary btn-lg shadow-sm px-4">Ver noticias</a>
-                        </div>
-                        <div id="contenedor-noticias" class="row g-4 justify-content-center"></div>
-                    </section>
-
-                    <section class="my-5">
-                        <div class="text-center mb-4">
-                            <h2 class="fw-bold text-uppercase" style="letter-spacing: 1px;">Presentes On Tour</h2>
-                            <p class="text-muted">Capturas de nuestra pasión en los estadios y desplazamientos con la peña</p>
-                            <hr class="mx-auto" style="width: 60px; height: 3px; background-color: #0d6efd; border: none; opacity: 1;">
+                    <!-- BLOQUE 1: Próximo Partido -->
+                    <div class="card border-0 shadow-sm p-3 mb-4 bg-white">
+                        <div class="alert alert-info border-0 shadow-sm mb-3 text-center py-2">
+                            <h5 class="fw-bold mb-1">
+                                📅 Próximo Partido Real Zaragoza <span style="color: #004a99;">💙</span><span style="color: #ffffff; -webkit-text-stroke: 1px #004a99;">🤍</span>
+                            </h5>
+                            <small class="text-muted">Horarios y detalles del siguiente encuentro oficial</small>
                         </div>
 
-                        <!-- Cambiado col-md-4 por col-6 col-md-3 y añadido justify-content-center -->
-                        <div class="row g-3 justify-content-center">
-                            <div class="col-6 col-md-3 col-lg-2">
-                                <div class="card h-100 border-0 shadow-sm overflow-hidden gallery-card">
-                                    <!-- Altura reducida a 140px y cursor pointer para dar feedback de miniatura -->
-                                    <img src="assets/viaje_andorra.webp" class="card-img-top img-fluid" alt="Desplazamiento Andorra" style="object-fit: cover; height: 140px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
-                                    <div class="card-body bg-light text-center p-2">
-                                        <small class="text-muted fw-bold style-lh-sm" style="font-size: 0.75rem;">#PresentesPorElEscudo en Andorra</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3 col-lg-2">
-                                <div class="card h-100 border-0 shadow-sm overflow-hidden gallery-card">
-                                    <img src="assets/carnaval_presentes.webp" class="card-img-top img-fluid" alt="Recibimiento al Real Zaragoza" style="object-fit: cover; height: 140px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
-                                    <div class="card-body bg-light text-center p-2">
-                                        <small class="text-muted fw-bold" style="font-size: 0.75rem;">Carnaval de los Presentes</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3 col-lg-2">
-                                <div class="card h-100 border-0 shadow-sm overflow-hidden gallery-card">
-                                    <img src="assets/Siempre_presentes.webp" class="card-img-top img-fluid" alt="Grada Romareda" style="object-fit: cover; height: 140px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
-                                    <div class="card-body bg-light text-center p-2">
-                                        <small class="text-muted fw-bold" style="font-size: 0.75rem;">Siempre Presentes por España</small>
-                                    </div>
-                                </div>
+                        <!-- Mini Tarjeta de Próximo Partido Dinámica -->
+                        <div id="contenedor-proximo-partido" class="row justify-content-center my-2">
+                            <div class="col-12 text-center py-3">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                <p class="text-muted small mt-1 mb-0">Cargando próximo encuentro...</p>
                             </div>
                         </div>
 
-                        <div class="text-center mt-4">
-                            <a href="galeria.html" class="btn btn-primary btn-sm shadow-sm px-4">📸 Ver Galería Completa</a>
-                        </div>
-                        
-                        <div class="text-center mt-5">
-                            <h3 class="fw-bold">¿Quieres unirte al sentimiento?</h3>
-                            <p>Prepárate para vivir experiencias y kilómetros de carretera con nosotros.</p>
-                            <a href="contacto.html" class="btn btn-primary btn-lg shadow-sm px-4">
-                                <i class="fas fa-arrow-right me-2"></i> ¡Únete!
+                        <div class="text-center mt-2">
+                            <a href="partidos.html" class="btn btn-primary btn-sm shadow-sm px-4 fw-bold">
+                                <i class="fas fa-calendar-alt me-2"></i>Ver calendario completo
                             </a>
                         </div>
-                    </section>
+                    </div>
+
+                    <!-- BLOQUE 2: Últimas Noticias -->
+                    <div class="card border-0 shadow-sm p-4 mb-4 bg-white">
+                        <div class="text-center mb-3">
+                            <h4 class="fw-bold text-uppercase mb-1" style="letter-spacing: 1px; color: #0033A0;">
+                                <i class="far fa-newspaper me-2"></i>Últimas Noticias
+                            </h4>
+                            <p class="text-muted small mb-2">Actualidad de nuestra Peña y del Real Zaragoza</p>
+                            <hr class="mx-auto my-2" style="width: 50px; height: 3px; background-color: #0d6efd; border: none; opacity: 1;">
+                        </div>
+
+                        <div id="contenedor-noticias" class="row g-3 justify-content-center">
+                            <!-- Se rellenará desde JS o mostrará mensaje por defecto -->
+                            <div class="col-12 text-center text-muted small py-2">
+                                No hay noticias recientes publicadas.
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <a href="noticias.html" class="btn btn-outline-primary btn-sm shadow-sm px-4 fw-bold">Ver todas las noticias</a>
+                        </div>
+                    </div>
+
+                    <!-- BLOQUE 3: Galería Presentes On Tour -->
+                    <div class="card border-0 shadow-sm p-4 mb-4 bg-white">
+                        <div class="text-center mb-3">
+                            <h4 class="fw-bold text-uppercase mb-1" style="letter-spacing: 1px; color: #0033A0;">
+                                <i class="fas fa-camera me-2"></i>Presentes On Tour
+                            </h4>
+                            <p class="text-muted small mb-2">Desplazamientos y momentos vividos con la peña</p>
+                            <hr class="mx-auto my-2" style="width: 50px; height: 3px; background-color: #0d6efd; border: none; opacity: 1;">
+                        </div>
+
+                        <div class="row g-2 justify-content-center">
+                            <div class="col-6 col-md-3">
+                                <div class="card h-100 border-0 shadow-sm overflow-hidden gallery-card">
+                                    <img src="assets/viaje_andorra.webp" class="card-img-top img-fluid" alt="Andorra" style="object-fit: cover; height: 120px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
+                                    <div class="card-body bg-light text-center p-1">
+                                        <small class="text-muted fw-bold d-block text-truncate" style="font-size: 0.7rem;">#PresentesEnAndorra</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="card h-100 border-0 shadow-sm overflow-hidden gallery-card">
+                                    <img src="assets/carnaval_presentes.webp" class="card-img-top img-fluid" alt="Carnaval" style="object-fit: cover; height: 120px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
+                                    <div class="card-body bg-light text-center p-1">
+                                        <small class="text-muted fw-bold d-block text-truncate" style="font-size: 0.7rem;">Carnaval Zaragocista</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="card h-100 border-0 shadow-sm overflow-hidden gallery-card">
+                                    <img src="assets/Siempre_presentes.webp" class="card-img-top img-fluid" alt="Grada" style="object-fit: cover; height: 120px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
+                                    <div class="card-body bg-light text-center p-1">
+                                        <small class="text-muted fw-bold d-block text-truncate" style="font-size: 0.7rem;">Siempre Presentes</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="card h-100 border-0 shadow-sm overflow-hidden gallery-card">
+                                    <img src="assets/viaje_andorra.webp" class="card-img-top img-fluid" alt="Desplazamiento" style="object-fit: cover; height: 120px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#galleryModal" onclick="enmascararImagen(this)">
+                                    <div class="card-body bg-light text-center p-1">
+                                        <small class="text-muted fw-bold d-block text-truncate" style="font-size: 0.7rem;">Marea Blanquiazul</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-3">
+                            <a href="galeria.html" class="btn btn-outline-primary btn-sm shadow-sm px-4 fw-bold">📸 Ver Galería Completa</a>
+                        </div>
+                    </div>
+
+                    <!-- Banner final -->
+                    <div class="card border-0 shadow-sm p-4 bg-white text-center">
+                        <h4 class="fw-bold mb-1">¿Quieres unirte al sentimiento?</h4>
+                        <p class="text-muted small mb-3">Prepárate para vivir experiencias y kilómetros de carretera con nosotros.</p>
+                        <div>
+                            <a href="contacto.html" class="btn btn-primary shadow-sm px-4 fw-bold">
+                                <i class="fas fa-arrow-right me-2"></i> ¡Hazte Socio!
+                            </a>
+                        </div>
+                    </div>
+
                 </div>
 
+                <!-- LATERAL DERECHO -->
                 <aside class="col-12 col-lg-2 d-none d-lg-block">
-    
-                    <div class="card p-3 border-0 shadow-sm mb-4 position-sticky" style="top: 20px; text-align: center; background-color: #f8f9fa;">
-                        <h6 class="fw-bold text-uppercase style-color" style="color: #0033A0;">👤 Área Privada</h6>
+                    <!-- Área Privada -->
+                    <div class="card p-3 border-0 shadow-sm mb-3 bg-white text-center">
+                        <h6 class="fw-bold text-uppercase style-color" style="color: #0033A0; font-size: 0.8rem;">👤 Área Privada</h6>
                         
-                        <div id="panel-anonimo" class="mt-3">
-                            <p class="text-muted small">Accede a tus ventajas como socio registrado de la peña.</p>
-                            <a href="login.html" class="btn btn-sm btn-outline-primary w-100 fw-bold">🔑 Iniciar Sesión</a>
+                        <div id="panel-anonimo" class="mt-2">
+                            <p class="text-muted small mb-2" style="font-size: 0.75rem;">Acceso exclusivo para socios de la peña.</p>
+                            <a href="login.html" class="btn btn-sm btn-outline-primary w-100 fw-bold" style="font-size: 0.75rem;">🔑 Iniciar Sesión</a>
                         </div>
 
                         <div id="socio-panel-info" class="text-start small mt-2 d-none">
                             <div class="text-center mb-2">
-                                <span class="fw-bold" id="nombre-bienvenida">Socio</span>
+                                <span class="fw-bold text-primary" id="nombre-bienvenida">Socio</span>
                             </div>
-                            <div class="p-2 border rounded bg-white mb-2">
-                                <small class="text-muted d-block">Estado de Cuota:</small>
-                                <span class="badge bg-success">✅ Pagada 2026</span>
+                            <div class="p-2 border rounded bg-light mb-2">
+                                <small class="text-muted d-block" style="font-size: 0.65rem;">Estado Cuota:</small>
+                                <span class="badge bg-success" style="font-size: 0.65rem;">✅ Pagada 2026</span>
                             </div>
-                            <div class="p-2 border rounded bg-white mb-2">
-                                <small class="text-muted d-block">Tus Reservas:</small>
-                                <span class="fw-bold text-secondary text-truncate d-block">🚗 Coches en el area privada</span>
-                            </div>
-                            
-                            <div class="text-center mt-3 d-flex flex-column gap-2">
-                                <a href="socio.html" class="btn btn-sm btn-primary w-100 fw-bold">Gestionar mi Perfil</a>
-                                <button id="btn-cerrar-sesion" class="btn btn-sm btn-link text-danger text-decoration-none">Cerrar Sesión</button>
+                            <div class="text-center mt-2 d-flex flex-column gap-1">
+                                <a href="socio.html" class="btn btn-sm btn-primary w-100 fw-bold" style="font-size: 0.75rem;">Mi Perfil</a>
+                                <button id="btn-cerrar-sesion" class="btn btn-sm btn-link text-danger text-decoration-none p-0" style="font-size: 0.75rem;">Cerrar Sesión</button>
                             </div>
                         </div>
                     </div>
 
-                    <div class="card p-3 border-0 shadow-sm position-sticky" style="top: 260px; text-align: center;">
-                        <h6 class="fw-bold text-uppercase style-color" style="color: #0033A0;">🤝 Partners</h6>
-                        
-                        <div id="contenedor-partners-index" class="d-flex flex-column gap-3 align-items-center">
-                            <div class="text-muted small py-2">Cargando patrocinadores...</div>
+                    <!-- Partners -->
+                    <div class="card p-3 border-0 shadow-sm bg-white text-center">
+                        <h6 class="fw-bold text-uppercase style-color mb-2" style="color: #0033A0; font-size: 0.8rem;">🤝 Partners</h6>
+                        <div id="contenedor-partners-index" class="d-flex flex-column gap-2 align-items-center">
+                            <div class="text-muted small py-1" style="font-size: 0.75rem;">Cargando...</div>
                         </div>
-                        
-                        <div class="text-center mt-3">
-                            <a href="partners.html" class="btn btn-sm btn-link p-0 text-decoration-none fw-bold" style="color: #0033A0;">Ver completa →</a>
+                        <div class="text-center mt-2 border-top pt-2">
+                            <a href="partners.html" class="btn btn-sm btn-link p-0 text-decoration-none fw-bold" style="color: #0033A0; font-size: 0.75rem;">Ver todos →</a>
                         </div>
                     </div>
                 </aside>
@@ -171,7 +199,7 @@
         </div>
     </main>
 
-<div id="footer-placeholder"></div>
+    <div id="footer-placeholder"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/components/header.js"></script>
@@ -180,39 +208,21 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
-            // -----------------------------------------------------------------
-            // 1. GESTIÓN DE SESIÓN Y ROLES DE SOCIO
-            // -----------------------------------------------------------------
+            const urlBackend = typeof BACKEND_URL !== "undefined" ? BACKEND_URL : "http://localhost:8000";
+
+            // 1. SESIÓN DE SOCIO
             const panelAnonimo = document.getElementById("panel-anonimo");
             const socioPanelInfo = document.getElementById("socio-panel-info");
             const nombreBienvenida = document.getElementById("nombre-bienvenida");
-            const btnCambiarRol = document.getElementById("btn-cambiar-rol");
             const btnCerrarSesion = document.getElementById("btn-cerrar-sesion");
 
             const socioId = localStorage.getItem("socio_id");
             const socioNombre = localStorage.getItem("socio_nombre");
-            const socioRol = localStorage.getItem("socio_rol"); 
 
             if (socioId && socioNombre) {
                 if (panelAnonimo) panelAnonimo.classList.add("d-none");
                 if (socioPanelInfo) socioPanelInfo.classList.remove("d-none");
                 if (nombreBienvenida) nombreBienvenida.textContent = `¡Hola, ${socioNombre}!`;
-
-                // Filtro de seguridad para el botón de Administración
-                if (btnCambiarRol) {
-                    if (socioRol === "Admin" || socioRol === "admin") {
-                        btnCambiarRol.classList.remove("d-none"); 
-                        btnCambiarRol.setAttribute("href", "panel.html"); 
-                    } else {
-                        btnCambiarRol.classList.add("d-none");
-                    }
-                }
-            } else {
-                if (panelAnonimo) {
-                    panelAnonimo.classList.remove('d-none');
-                    panelAnonimo.classList.add("d-block");
-                }
-                if (socioPanelInfo) socioPanelInfo.classList.add("d-none");
             }
 
             if (btnCerrarSesion) {
@@ -223,61 +233,224 @@
                 });
             }
 
-            // -----------------------------------------------------------------
-            // 2. CARGA DINÁMICA DE PARTNERS DESDE LA API
-            // -----------------------------------------------------------------
-            const contenedorPartners = document.getElementById("contenedor-partners-index");
-            if (contenedorPartners) {
-                // Si BACKEND_URL ya viene definida de js/app.js, la respeta; si no, usa el fallback local
-                const urlBackend = typeof BACKEND_URL !== "undefined" ? BACKEND_URL : "http://localhost:8000";
-
+            // 2. PRÓXIMO PARTIDO DINÁMICO EN LA PORTADA
+            const contenedorProximo = document.getElementById("contenedor-proximo-partido");
+            if (contenedorProximo) {
                 try {
-                    const res = await fetch(`${urlBackend}/partners`);
-                    if (!res.ok) throw new Error("Error en la respuesta del servidor");
-                    
-                    const partners = await res.json();
-                    
-                    if (partners.length === 0) {
-                        contenedorPartners.innerHTML = '<div class="text-muted small py-2">Próximamente nuevos patrocinadores</div>';
-                    } else {
-                        contenedorPartners.innerHTML = ""; // Limpiamos el mensaje de carga
+                    const res = await fetch(`${urlBackend}/partidos-zaragoza`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        const partidos = data.partidos || [];
+                        
+                        // Buscar el primer partido pendiente (NS o que no haya terminado)
+                        const proximo = partidos.find(p => p.fixture?.status?.short === 'NS') || partidos[0];
 
-                        // Mostramos un máximo de 4 partners
-                        partners.slice(0, 4).forEach(partner => {
-                            const categoria = partner.categoria || partner.sector || "Patrocinador";
-                            const nombre = partner.nombre_comercial || partner.nombre || "Sponsor Activo";
+                        if (proximo) {
+                            const local = proximo.teams?.home?.name || "Real Zaragoza";
+                            const visitante = proximo.teams?.away?.name || "Rival";
+                            const escLocal = proximo.teams?.home?.logo || "";
+                            const escVisitante = proximo.teams?.away?.logo || "";
+                            const round = proximo.league?.round?.replace(/[^0-9]/g, '') || '1';
+                            
+                            const fechaObj = proximo.fixture?.date ? new Date(proximo.fixture.date) : null;
+                            const fecha = fechaObj ? fechaObj.toLocaleDateString('es-ES') : 'Fecha pendiente';
+                            const hora = fechaObj ? fechaObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
-                            contenedorPartners.insertAdjacentHTML("beforeend", `
-                                <div class="p-2 border rounded bg-light w-100 animate__animated animate__fadeIn">
-                                    <small class="text-muted d-block mb-1 text-uppercase fw-semibold" style="font-size: 0.75rem;">${categoria}</small>
-                                    <span class="fw-bold text-secondary small">⭐ ${nombre}</span>
+                            contenedorProximo.innerHTML = `
+                                <div class="col-12 col-md-8">
+                                    <div class="card border rounded p-2 bg-light text-center shadow-sm">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="badge bg-primary style-lh-sm" style="font-size: 0.65rem;">Jornada ${round}</span>
+                                            <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">Próximo Encuentro</span>
+                                        </div>
+                                        <div class="d-flex align-items-center justify-content-center gap-3 my-2">
+                                            <div class="text-center" style="width: 40%;">
+                                                ${escLocal ? `<img src="${escLocal}" width="28" height="28" alt="logo">` : ''}
+                                                <div class="fw-bold text-dark text-truncate small">${local}</div>
+                                            </div>
+                                            <div class="fw-bold text-primary fs-5">VS</div>
+                                            <div class="text-center" style="width: 40%;">
+                                                ${escVisitante ? `<img src="${escVisitante}" width="28" height="28" alt="logo">` : ''}
+                                                <div class="fw-bold text-dark text-truncate small">${visitante}</div>
+                                            </div>
+                                        </div>
+                                        <div class="border-top pt-1 text-muted small" style="font-size: 0.75rem;">
+                                            <i class="far fa-calendar-alt me-1"></i>${fecha} ${hora ? `| ${hora} h` : ''}
+                                        </div>
+                                    </div>
                                 </div>
-                            `);
+                            `;
+                        }
+                    }
+                } catch (e) {
+                    contenedorProximo.innerHTML = '<div class="text-muted small py-2">No se pudo cargar el próximo partido.</div>';
+                }
+            }
+
+            // 3. WIDGET CLASIFICACIÓN ARAGÓN
+            const widgetClasificacion = document.getElementById("widget-clasificacion-aragon");
+            if (widgetClasificacion) {
+                try {
+                    const res = await fetch(`${urlBackend}/clasificacion-zaragoza`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        let tabla = Array.isArray(data.clasificacion) ? data.clasificacion : [];
+
+                        const aragoneses = tabla.filter(item => {
+                            const nombre = (item.team?.name || item.equipo || "").toLowerCase();
+                            return nombre.includes("zaragoza") || nombre.includes("huesca") || nombre.includes("teruel");
                         });
+
+                        if (aragoneses.length > 0) {
+                            let htmlTabla = `<table class="table table-sm table-borderless align-middle mb-0" style="font-size: 0.75rem;"><tbody>`;
+                            aragoneses.forEach(item => {
+                                const pos = item.rank || item.posicion || "-";
+                                const eq = item.team?.name || item.equipo || "Equipo";
+                                const pts = item.points ?? item.puntos ?? 0;
+                                const esZ = eq.toLowerCase().includes("zaragoza");
+
+                                htmlTabla += `
+                                    <tr class="${esZ ? 'fw-bold bg-primary-subtle text-primary' : 'text-muted'}">
+                                        <td class="py-1">#${pos}</td>
+                                        <td class="py-1 text-truncate" style="max-width: 90px;">${eq}</td>
+                                        <td class="py-1 text-end"><span class="badge ${esZ ? 'bg-primary' : 'bg-secondary'}">${pts}p</span></td>
+                                    </tr>
+                                `;
+                            });
+                            htmlTabla += `</tbody></table>`;
+                            widgetClasificacion.innerHTML = htmlTabla;
+                        }
                     }
                 } catch (err) {
-                    console.error("Error al cargar la barra lateral de partners:", err);
-                    contenedorPartners.innerHTML = '<div class="text-danger small py-2">⚠️ No se pudieron cargar los partners</div>';
+                    widgetClasificacion.innerHTML = '<div class="text-danger small py-1">Error al cargar</div>';
+                }
+            }
+
+            // 4. CARGA DE PARTNERS
+            const contenedorPartners = document.getElementById("contenedor-partners-index");
+            if (contenedorPartners) {
+                try {
+                    const res = await fetch(`${urlBackend}/partners`);
+                    if (res.ok) {
+                        const partners = await res.json();
+                        if (partners.length > 0) {
+                            contenedorPartners.innerHTML = "";
+                            partners.slice(0, 3).forEach(p => {
+                                const nombre = p.nombre_comercial || p.nombre || "Sponsor";
+                                contenedorPartners.insertAdjacentHTML("beforeend", `
+                                    <div class="p-2 border rounded bg-light w-100 text-center shadow-sm mb-1" title="${nombre}">
+                                        <span class="fw-bold text-secondary d-block lh-sm" style="font-size: 0.75rem; word-break: break-word; white-space: normal;">
+                                            ⭐ ${nombre}
+                                        </span>
+                                    </div>
+                                `);
+                            });
+                        } else {
+                            contenedorPartners.innerHTML = '<div class="text-muted small py-1" style="font-size: 0.75rem;">Próximamente</div>';
+                        }
+                    }
+                } catch (err) {
+                    contenedorPartners.innerHTML = '<div class="text-muted small py-1" style="font-size: 0.75rem;">Sin conexión</div>';
+                }
+            }
+
+            // 5. CARGA DE ÚLTIMAS NOTICIAS EN LA PORTADA
+            const contenedorNoticias = document.getElementById("contenedor-noticias");
+            if (contenedorNoticias) {
+                try {
+                    const res = await fetch(`${urlBackend}/noticias`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        const noticias = Array.isArray(data) ? data : (data.noticias || data.items || data.data || []);
+                        
+                        if (noticias.length > 0) {
+                            contenedorNoticias.innerHTML = "";
+
+                            noticias.slice(0, 4).forEach(noticia => {
+                                const titulo = noticia.titulo || noticia.title || "Noticia Zaragocista";
+                                const enlace = noticia.link || noticia.url || noticia.enlace || `noticias.html?id=${noticia.id || ''}`;
+                                
+                                // 1. Buscador de imagen con extracción de HTML como respaldo
+                                let imagen = noticia.imagen_url || noticia.imagen || noticia.image || noticia.thumbnail || noticia.enclosure?.url || noticia.media_thumbnail?.url || "";
+                                
+                                // Si no hay campo explícito de imagen, busca la primera <img> del contenido/descripción del RSS
+                                if (!imagen) {
+                                    const htmlContent = noticia.content || noticia.description || noticia["content:encoded"] || "";
+                                    const match = htmlContent.match(/<img[^>]+src=["']([^"']+)["']/i);
+                                    if (match && match[1]) {
+                                        imagen = match[1];
+                                    }
+                                }
+
+                                // Si sigue sin encontrar nada, usa la imagen por defecto
+                                if (!imagen) {
+                                    imagen = "assets/logo.png";
+                                }
+
+                                // 2. Formato de Fecha
+                                let fechaStr = "Reciente";
+                                const rawFecha = noticia.fecha || noticia.pubDate || noticia.published_at;
+                                if (rawFecha) {
+                                    const d = new Date(rawFecha);
+                                    if (!isNaN(d.getTime())) {
+                                        fechaStr = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+                                    }
+                                }
+
+                                const fuente = noticia.fuente || noticia.source || noticia.categoria || "Real Zaragoza";
+
+                                contenedorNoticias.insertAdjacentHTML("beforeend", `
+                                    <div class="col-6 col-md-3">
+                                        <div class="card h-100 border-0 shadow-sm overflow-hidden text-start rounded-3">
+                                            <div style="height: 110px; overflow: hidden; background-color: #e9ecef; position: relative;">
+                                                <img src="${imagen}" class="card-img-top img-fluid" alt="${titulo}" 
+                                                     style="object-fit: cover; height: 100%; width: 100%;"
+                                                     onerror="this.onerror=null; this.src='assets/logo.png';">
+                                                <span class="badge bg-primary position-absolute top-0 start-0 m-2 shadow-sm" style="font-size: 0.6rem; opacity: 0.90;">
+                                                    ${fuente}
+                                                </span>
+                                            </div>
+                                            <div class="card-body p-2 d-flex flex-column justify-content-between">
+                                                <div>
+                                                    <small class="text-muted fw-semibold d-block mb-1" style="font-size: 0.68rem;">
+                                                        <i class="far fa-calendar-alt me-1 text-primary"></i>${fechaStr}
+                                                    </small>
+                                                    <h6 class="card-title fw-bold text-dark mb-2" 
+                                                        style="font-size: 0.78rem; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 2rem;" 
+                                                        title="${titulo}">
+                                                        ${titulo}
+                                                    </h6>
+                                                </div>
+                                                <a href="${enlace}" target="_blank" class="btn btn-sm btn-outline-primary w-100 fw-bold py-1 style-lh-sm mt-1" style="font-size: 0.72rem;">
+                                                    Leer noticia <i class="fas fa-external-link-alt ms-1" style="font-size: 0.65rem;"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `);
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error al cargar noticias en portada:", err);
                 }
             }
         });
 
-        // Funciones globales (fuera del DOMContentLoaded para que el HTML pueda llamarlas con 'onclick')
         function enmascararImagen(elemento) {
             const rutaImagen = elemento.getAttribute('src');
             const imagenModal = document.getElementById('modalImage');
-            if (imagenModal) {
-                imagenModal.setAttribute('src', rutaImagen);
-            }
+            if (imagenModal) imagenModal.setAttribute('src', rutaImagen);
         }
     </script>
 
+    <!-- Modal Imagen Ampliada -->
     <div class="modal fade" id="galleryModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content bg-transparent border-0">
-                <div class="modal-body p-0 position-relative text-center">
+                <div class="modal-body p-0 text-center">
                     <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
-                    <img src="" id="modalImage" class="img-fluid rounded shadow-lg" alt="Imagen ampliada" style="max-height: 85vh; object-fit: contain;">
+                    <img src="" id="modalImage" class="img-fluid rounded shadow-lg" alt="Imagen" style="max-height: 85vh; object-fit: contain;">
                 </div>
             </div>
         </div>
