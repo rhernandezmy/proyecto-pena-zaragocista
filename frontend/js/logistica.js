@@ -10,14 +10,14 @@ document.addEventListener("DOMContentLoaded", () => {
         configurarFormularioViajeAdmin();
     }
 
-    // NUEVO: Verificamos si existe el contenedor de solicitudes del LOCAL para activarlo
+    // Verificamos si existe el contenedor de solicitudes del LOCAL para activarlo
     if (document.getElementById("tabla-reservas-local-admin")) {
         cargarReservasLocalAdmin();
     }
 });
 
 // =========================================================================
-// 1. CARGAR PARTIDOS EN EL SELECT DESPLEGABLE (Mantenido)
+// 1. CARGAR PARTIDOS EN EL SELECT DESPLEGABLE
 // =========================================================================
 async function cargarPartidosEnDesplegable() {
     const selectPartido = document.getElementById("viaje-partido-select");
@@ -50,7 +50,7 @@ async function cargarPartidosEnDesplegable() {
 }
 
 // =========================================================================
-// 2. OBTENER Y PINTAR VIAJES EN LA TABLA DE ADMINISTRACIÓN (Mantenido)
+// 2. OBTENER Y PINTAR VIAJES EN LA TABLA DE ADMINISTRACIÓN
 // =========================================================================
 async function cargarViajesAdmin() {
     const tablaViajes = document.getElementById("tabla-viajes-admin");
@@ -93,7 +93,7 @@ async function cargarViajesAdmin() {
 }
 
 // =========================================================================
-// 3. CONFIGURAR EL FORMULARIO DE CREACIÓN DE VIAJES (Mantenido)
+// 3. CONFIGURAR EL FORMULARIO DE CREACIÓN DE VIAJES
 // =========================================================================
 function configurarFormularioViajeAdmin() {
     const formViaje = document.getElementById("form-nuevo-viaje");
@@ -150,7 +150,7 @@ function configurarFormularioViajeAdmin() {
 }
 
 // =========================================================================
-// 4. ELIMINAR VIAJE DE LA BASE DE DATOS (Mantenido)
+// 4. ELIMINAR VIAJE DE LA BASE DE DATOS
 // =========================================================================
 async function eliminarViajeBackend(idViaje) {
     if (!confirm(`¿Seguro que deseas eliminar el viaje con ID #${idViaje}?`)) return;
@@ -172,60 +172,67 @@ async function eliminarViajeBackend(idViaje) {
     }
 }
 
-
 // =========================================================================
-// NUEVO -> 5. CARGAR Y PINTAR SOLICITUDES DEL LOCAL EN EL PANEL DEL ADMIN
+// 5. CARGAR Y PINTAR SOLICITUDES DEL LOCAL EN EL PANEL DEL ADMIN
 // =========================================================================
 async function cargarReservasLocalAdmin() {
     const tablaLocal = document.getElementById("tabla-reservas-local-admin");
     if (!tablaLocal) return;
 
     try {
-        // Consultamos el endpoint unificado de reservas
         const response = await fetch(`${API_URL}/reservas`);
         if (!response.ok) throw new Error("Error al descargar reservas");
 
         const todasLasReservas = await response.json();
         tablaLocal.innerHTML = "";
 
-        // Filtramos para quedarnos estrictamente con las peticiones del LOCAL
         const reservasLocal = todasLasReservas.filter(r => r.tipo_reserva === "Local");
 
         if (reservasLocal.length === 0) {
-            tablaLocal.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-3">No hay solicitudes de uso del local pendientes ni registradas.</td></tr>`;
+            tablaLocal.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-3">No hay solicitudes pendientes o registradas.</td></tr>`;
             return;
         }
 
         reservasLocal.forEach(res => {
             const fila = document.createElement("tr");
-            
-            // Tratamiento visual de las fechas
+
+            // 1. Mapeo del Nombre del Socio
+            const nombreSocio = res.socio_nombre || res.nombre_socio || res.socio || (res.usuario_id ? `Socio #${res.usuario_id}` : "Socio registrado");
+            const emailSocio = res.socio_email || res.email_socio || "";
+
+            // 2. CORRECCIÓN DE FECHA: Priorizamos la fecha SOLICITADA (Elegida por el usuario)
+            let fechaRaw = res.fecha_solicitada || res.fecha_evento || res.fecha_reserva;
             let fechaLimpia = "Sin fecha";
-            if (res.fecha_solicitada) {
-                fechaLimpia = res.fecha_solicitada.split("T")[0];
+
+            if (fechaRaw) {
+                fechaLimpia = fechaRaw.split("T")[0];
             }
 
-            // Tratamiento visual según el estado de la solicitud
-            let badgeEstado = "";
-            if (res.estado_solicitud === "Pendiente") {
-                badgeEstado = `<span class="badge bg-warning text-dark">⏳ Pendiente</span>`;
-            } else if (res.estado_solicitud === "Aprobada") {
+            // 3. Mapeo del Motivo
+            const motivo = res.motivo_evento || res.motivo || "Uso de Sede";
+
+            // 4. Mapeo del Estado (evitando undefined)
+            const estado = res.estado_solicitud || res.estado || "Pendiente";
+
+            // Tratamiento visual según el estado obtenido
+            let badgeEstado = `<span class="badge bg-warning text-dark">⏳ ${estado}</span>`;
+            if (estado === "Aprobada" || estado === "Aceptada") {
                 badgeEstado = `<span class="badge bg-success">✅ Aprobada</span>`;
-            } else {
+            } else if (estado === "Rechazada") {
                 badgeEstado = `<span class="badge bg-danger">❌ Rechazada</span>`;
             }
 
             fila.innerHTML = `
                 <td class="fw-bold">#${res.id}</td>
-                <td><strong>${res.socio_nombre}</strong><br><small class="text-muted">${res.socio_email}</small></td>
+                <td><strong>${nombreSocio}</strong>${emailSocio ? `<br><small class="text-muted">${emailSocio}</small>` : ''}</td>
                 <td><span class="badge bg-light text-dark border">${fechaLimpia}</span></td>
-                <td><em>"${res.motivo_evento}"</em></td>
+                <td><em>"${motivo}"</em></td>
                 <td class="text-center">${badgeEstado}</td>
                 <td class="text-center">
-                    <button class="btn btn-xs btn-success me-1" onclick="resolverLocalBackend(${res.id}, 'Aprobada')" title="Aprobar Solicitud" ${res.estado_solicitud !== 'Pendiente' ? 'disabled' : ''}>
+                    <button class="btn btn-xs btn-success me-1" onclick="resolverLocalBackend(${res.id}, 'Aprobada')" title="Aprobar Solicitud" ${estado !== 'Pendiente' ? 'disabled' : ''}>
                         <i class="fas fa-check"></i>
                     </button>
-                    <button class="btn btn-xs btn-warning me-1" onclick="resolverLocalBackend(${res.id}, 'Rechazada')" title="Rechazar Solicitud" ${res.estado_solicitud !== 'Pendiente' ? 'disabled' : ''}>
+                    <button class="btn btn-xs btn-warning me-1" onclick="resolverLocalBackend(${res.id}, 'Rechazada')" title="Rechazar Solicitud" ${estado !== 'Pendiente' ? 'disabled' : ''}>
                         <i class="fas fa-times"></i>
                     </button>
                     <button class="btn btn-xs btn-outline-danger" onclick="eliminarReservaLocalBackend(${res.id})" title="Eliminar Registro">
@@ -238,52 +245,49 @@ async function cargarReservasLocalAdmin() {
 
     } catch (error) {
         console.error("Error al renderizar el local:", error);
-        tablaLocal.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-3">⚠️ Error al conectar con el módulo de reservas del local.</td></tr>`;
+        tablaLocal.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-3">⚠️ Error al conectar con el módulo de reservas.</td></tr>`;
     }
 }
 
 // =========================================================================
-// NUEVO -> 6. ENVIAR RESOLUCIÓN AL BACKEND (PATCH)
+// 6. ENVIAR RESOLUCIÓN AL BACKEND (PATCH)
 // =========================================================================
-async function resolverLocalBackend(reservaId, nuevoEstado) {
+async function resolverLocalBackend(idReserva, nuevoEstado) {
     try {
-        // Apuntamos al endpoint estructurado: /reservas/{id}/resolucion?estado=...
-        const response = await fetch(`${API_URL}/reservas/${reservaId}/resolucion?estado=${nuevoEstado}`, {
-            method: "PATCH"
+        const response = await fetch(`${API_URL}/reservas/${idReserva}/resolucion?estado=${nuevoEstado}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" }
         });
 
         if (response.ok) {
-            alert(`📍 Solicitud procesada y marcada como: ${nuevoEstado}`);
-            cargarReservasLocalAdmin(); // Refresca la tabla automáticamente en caliente
+            cargarReservasLocalAdmin(); // Refresca la tabla tras actualizar
         } else {
             const err = await response.json();
-            alert(`⚠️ Error al resolver la solicitud: ${err.detail}`);
+            alert(`Error al actualizar la reserva: ${err.detail || 'Operación no permitida.'}`);
         }
     } catch (error) {
-        console.error("Error:", error);
-        alert("Fallo de red al enviar la resolución del local.");
+        console.error("Error al resolver la reserva:", error);
+        alert("Error al conectar con el servidor.");
     }
 }
 
 // =========================================================================
-// NUEVO -> 7. ELIMINAR / CANCELAR RESERVA DE LOCAL DEFINITIVAMENTE (DELETE)
+// 7. ELIMINAR / CANCELAR RESERVA DE LOCAL DEFINITIVAMENTE
 // =========================================================================
-async function eliminarReservaLocalBackend(reservaId) {
-    if (!confirm("⚠️ ¿Estás seguro de que deseas eliminar permanentemente este registro de reserva del local?")) return;
+async function eliminarReservaLocalBackend(idReserva) {
+    if (!confirm("¿Seguro que deseas borrar este registro de reserva?")) return;
 
     try {
-        const response = await fetch(`${API_URL}/reservas/${reservaId}`, {
+        const response = await fetch(`${API_URL}/reservas/${idReserva}`, {
             method: "DELETE"
         });
 
         if (response.ok) {
-            alert("🗑️ Registro eliminado de la base de datos con éxito.");
             cargarReservasLocalAdmin();
         } else {
-            alert("No se pudo eliminar la reserva solicitada.");
+            alert("No se pudo eliminar el registro.");
         }
     } catch (error) {
-        console.error("Error:", error);
-        alert("Fallo en la comunicación de red.");
+        console.error("Error al eliminar la reserva:", error);
     }
 }

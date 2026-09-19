@@ -8,12 +8,49 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* Estilos personalizados para forzar los fondos suaves sobre Bootstrap */
-        .fila-zaragoza td { background-color: #dbeafe !important; font-weight: bold; }
-        .fila-ascenso td { background-color: #eff6ff !important; }
-        .fila-playoff td { background-color: #f0fdf4 !important; }
-        .fila-descenso td { background-color: #fef2f2 !important; }
-        .tabla-compacta td, .tabla-compacta th { padding: 0.35rem 0.5rem !important; font-size: 0.85rem; }
+        /* Estilos de la tabla compacta */
+        .tabla-compacta td, .tabla-compacta th { 
+            padding: 0.45rem 0.6rem !important; 
+            font-size: 0.85rem; 
+        }
+
+        /* 1º Puesto: Ascenso Directo (Verde Fuerte/Intenso) */
+        .fila-ascenso td { 
+            background-color: #86efac !important; /* Verde vivo e intenso */
+            color: #064e3b !important;
+            font-weight: 600;
+        }
+        .fila-ascenso { 
+            border-left: 5px solid #16a34a !important; 
+        }
+
+        /* 2º - 5º Puesto: Play-off Ascenso (Verde Suave) */
+        .fila-playoff td { 
+            background-color: #dcfce7 !important; /* Verde más claro */
+            color: #14532d !important;
+        }
+        .fila-playoff { 
+            border-left: 5px solid #4ade80 !important; 
+        }
+
+        /* 16º - 20º Puesto: Descenso (Rojo) */
+        .fila-descenso td { 
+            background-color: #fee2e2 !important; 
+            color: #7f1d1d !important;
+        }
+        .fila-descenso { 
+            border-left: 5px solid #dc2626 !important; 
+        }
+
+        /* Real Zaragoza (Destacado en Azul sin iconos extras) */
+        .fila-zaragoza td { 
+            background-color: #2563eb !important; 
+            color: #ffffff !important; 
+            font-weight: 700; 
+        }
+        .fila-zaragoza td span, .fila-zaragoza td small { 
+            color: #ffffff !important; 
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -62,10 +99,11 @@
                 </div>
             </div>
             <div class="card-footer bg-white border-top py-2">
-                <div class="d-flex flex-wrap gap-3 justify-content-center style-lh-sm" style="font-size: 0.75rem;">
-                    <span><span class="d-inline-block rounded me-1" style="width: 10px; height: 10px; background-color: #eff6ff; border: 1px solid #bfdbfe;"></span> Ascenso Directo (1º)</span>
-                    <span><span class="d-inline-block rounded me-1" style="width: 10px; height: 10px; background-color: #f0fdf4; border: 1px solid #bbf7d0;"></span> Play-off Ascenso (2º-5º)</span>
-                    <span><span class="d-inline-block rounded me-1" style="width: 10px; height: 10px; background-color: #fef2f2; border: 1px solid #fecaca;"></span> Descenso (16º-20º)</span>
+                <div class="d-flex flex-wrap gap-3 justify-content-center fw-semibold" style="font-size: 0.78rem;">
+                    <span><span class="d-inline-block rounded me-1" style="width: 12px; height: 12px; background-color: #86efac; border: 1px solid #16a34a;"></span> Ascenso Directo (1º)</span>
+                    <span><span class="d-inline-block rounded me-1" style="width: 12px; height: 12px; background-color: #dcfce7; border: 1px solid #4ade80;"></span> Play-off Ascenso (2º-5º)</span>
+                    <span><span class="d-inline-block rounded me-1" style="width: 12px; height: 12px; background-color: #fee2e2; border: 1px solid #dc2626;"></span> Descenso (16º-20º)</span>
+                    <span><span class="d-inline-block rounded-circle me-1" style="width: 12px; height: 12px; background-color: #2563eb;"></span> Real Zaragoza</span>
                 </div>
             </div>
         </div>

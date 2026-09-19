@@ -1,11 +1,12 @@
 const API_URL = "http://127.0.0.1:8000"; // Puerto de tu FastAPI
 
 document.addEventListener("DOMContentLoaded", () => {
-    const formSocio = document.getElementById("form-nuevo-socio"); // Formulario en admin.html
-    const btnExportar = document.getElementById("btn-exportar-csv"); // Busca si tienes este ID para el CSV
+    const formSocio = document.getElementById("form-nuevo-socio");
+    const btnExportar = document.getElementById("btn-exportar-csv");
 
-    // 1. Cargar la lista de socios en la tabla nada más entrar
+    // 1. Cargar las tablas al iniciar la página
     cargarSociosBackend();
+    cargarReservasAdmin(); // 👈 Carga las reservas del local
 
     // 2. Escuchar cuando el administrador crea un nuevo socio (POST)
     if (formSocio) {
@@ -34,7 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (response.status === 201) {
                     alert("🚀 ¡Socio guardado correctamente en la Base de Datos!");
                     formSocio.reset();
-                    cargarSociosBackend(); // Recargamos la tabla
+                    cargarSociosBackend();
                 } else {
                     alert(`⚠️ Error: ${data.detail}`);
                 }
@@ -45,13 +46,15 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 3. ENLACE EXPORTAR CSV (Arreglado)
+    // 3. ENLACE EXPORTAR CSV
     if (btnExportar) {
         btnExportar.addEventListener("click", exportarSociosCSV);
     }
 });
 
-// 4. Función para pintar la tabla llamando a tu GET /socios
+// =========================================================================
+// 4. Cargar y pintar la tabla de socios (GET /socios)
+// =========================================================================
 async function cargarSociosBackend() {
     const tablaSocios = document.querySelector("#socios-pane tbody"); 
     if (!tablaSocios) return;
@@ -61,15 +64,14 @@ async function cargarSociosBackend() {
         if (!response.ok) throw new Error("Error al obtener socios");
         
         const socios = await response.json();
-        tablaSocios.innerHTML = ""; // Limpiamos filas antiguas
+        tablaSocios.innerHTML = "";
 
         socios.forEach(socio => {
-            // Si el socio está inactivo, le ponemos un estilo visual de "archivado"
             const claseFila = socio.activo ? "" : "table-danger text-muted";
             const textoActivo = socio.activo ? "" : " (DE BAJA)";
 
             const fila = document.createElement("tr");
-            if (!socio.activo) fila.className = claseFila; // Aplica el fondo rojo claro si está de baja
+            if (!socio.activo) fila.className = claseFila;
             
             let badgeCuota = socio.estado_cuota === "Al día" 
                 ? '<span class="badge bg-success">Al día</span>' 
@@ -99,10 +101,92 @@ async function cargarSociosBackend() {
     }
 }
 
-// 5. NUEVA FUNCIÓN PARA MODIFICAR SOCIOS (PUT)
+// =========================================================================
+// 5. Cargar solicitudes del Local (GET /reservas)
+// =========================================================================
+async function cargarReservasAdmin() {
+    // 🎯 Apuntamos directamente al ID de tu HTML: "tabla-reservas-admin"
+    const tablaReservas = document.getElementById("tabla-reservas-admin"); 
+    if (!tablaReservas) return;
+
+    try {
+        const response = await fetch(`${API_URL}/reservas`);
+        if (!response.ok) throw new Error("Error al obtener reservas");
+
+        const reservas = await response.json();
+        const reservasLocal = reservas.filter(r => r.tipo_reserva === "Local");
+
+        tablaReservas.innerHTML = "";
+
+        if (reservasLocal.length === 0) {
+            tablaReservas.innerHTML = `<tr><td colspan="5" class="text-center py-3">No hay solicitudes de reserva registradas.</td></tr>`;
+            return;
+        }
+
+        reservasLocal.forEach(r => {
+            const socio = r.socio_nombre || `Usuario #${r.usuario_id}`;
+            const fecha = r.fecha_solicitada ? r.fecha_solicitada.split("T")[0] : "Sin fecha";
+            const motivo = r.motivo_evento || "Uso de Sede";
+            const estado = r.estado_solicitud || "Pendiente";
+
+            let badgeClass = "bg-warning text-dark";
+            if (estado === "Aprobada") badgeClass = "bg-success";
+            if (estado === "Rechazada") badgeClass = "bg-danger";
+
+            const fila = document.createElement("tr");
+            fila.innerHTML = `
+                <td class="fw-bold">${socio}</td>
+                <td>${fecha}</td>
+                <td>${motivo}</td>
+                <td><span class="badge ${badgeClass}">${estado}</span></td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-success me-1" onclick="resolverReserva(${r.id}, 'Aprobada')" title="Aprobar">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="resolverReserva(${r.id}, 'Rechazada')" title="Rechazar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </td>
+            `;
+            tablaReservas.appendChild(fila);
+        });
+
+    } catch (error) {
+        console.error("Error al cargar reservas:", error);
+        tablaReservas.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-3">Error al conectar con el servidor.</td></tr>`;
+    }
+}
+
+// =========================================================================
+// 6. Resolver Reserva del Local (PATCH /reservas/{id}/resolucion?estado=...)
+// =========================================================================
+async function resolverReserva(reservaId, nuevoEstado) {
+    try {
+        // 🔧 CORRECCIÓN: Se añade '/resolucion' a la URL para coincidir con FastAPI
+        const response = await fetch(`${API_URL}/reservas/${reservaId}/resolucion?estado=${encodeURIComponent(nuevoEstado)}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" }
+        });
+
+        if (response.ok) {
+            alert(`✅ Reserva marcada como: ${nuevoEstado}`);
+            cargarReservasAdmin(); // Recargar la tabla tras actualizar
+        } else {
+            const data = await response.json();
+            alert(`⚠️ Error al actualizar la reserva: ${data.detail || 'Operación no permitida.'}`);
+        }
+    } catch (error) {
+        console.error("Error al resolver reserva:", error);
+        alert("Error de conexión al intentar actualizar la reserva.");
+    }
+}
+
+// =========================================================================
+// 7. Modificar Socios (PUT /socios/{id})
+// =========================================================================
 async function editarSocio(id, nombreActual, apellidosActual, emailActual) {
     const nuevoNombre = prompt("Modificar Nombre:", nombreActual);
-    if (nuevoNombre === null) return; // Si cancela, salimos
+    if (nuevoNombre === null) return;
     
     const nuevosApellidos = prompt("Modificar Apellidos:", apellidosActual);
     if (nuevosApellidos === null) return;
@@ -127,7 +211,7 @@ async function editarSocio(id, nombreActual, apellidosActual, emailActual) {
 
         if (response.ok) {
             alert("✅ Socio modificado y guardado con éxito en la base de datos.");
-            cargarSociosBackend(); // Refrescar vista
+            cargarSociosBackend();
         } else {
             alert(`⚠️ Error al actualizar: ${data.detail}`);
         }
@@ -137,7 +221,9 @@ async function editarSocio(id, nombreActual, apellidosActual, emailActual) {
     }
 }
 
-// 6. NUEVA FUNCIÓN PARA ELIMINAR / DAR DE BAJA (DELETE)
+// =========================================================================
+// 8. Eliminar / Dar de Baja Socio (DELETE /socios/{id})
+// =========================================================================
 async function eliminarSocio(id) {
     if (!confirm("⚠️ ¿Estás completamente seguro de que deseas dar de baja y eliminar a este socio del sistema?")) {
         return;
@@ -152,7 +238,7 @@ async function eliminarSocio(id) {
 
         if (response.ok) {
             alert("🗑️ El socio ha sido eliminado correctamente del registro.");
-            cargarSociosBackend(); // Refrescar la tabla
+            cargarSociosBackend();
         } else {
             alert(`⚠️ No se pudo procesar la baja: ${data.detail}`);
         }
@@ -162,21 +248,21 @@ async function eliminarSocio(id) {
     }
 }
 
-// 7. NUEVA FUNCIÓN PARA EXPORTAR A CSV CLIENT-SIDE
+// =========================================================================
+// 9. Exportar Socios a CSV
+// =========================================================================
 async function exportarSociosCSV() {
     try {
         const response = await fetch(`${API_URL}/socios`);
         if (!response.ok) throw new Error("No se pueden obtener datos para exportar");
         const socios = await response.json();
 
-        // Construimos las líneas del archivo CSV
         let csvContent = "data:text/csv;charset=utf-8,ID,Nombre Completo,Email,Telefono,Estado Cuota\n";
         
         socios.forEach(s => {
             csvContent += `${s.id},"${s.nombre_completo}",${s.email},${s.telefono},${s.estado_cuota}\n`;
         });
 
-        // Truco del navegador para forzar la descarga del archivo listo
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);

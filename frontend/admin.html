@@ -751,20 +751,35 @@
                 if (!res.ok) throw new Error();
                 const reservas = await res.json();
                 
-                if (reservas.length === 0) {
+                // Filtramos solo las reservas de tipo Local
+                const reservasLocal = reservas.filter(r => r.tipo_reserva === "Local");
+
+                if (reservasLocal.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay reservas.</td></tr>';
                     return;
                 }
+                
                 tbody.innerHTML = "";
-                reservas.forEach(reserva => {
+                reservasLocal.forEach(reserva => {
+                    // Mapeo con fallback para evitar 'undefined'
+                    const socio = reserva.socio_nombre || reserva.nombre_socio || reserva.usuario || `Socio #${reserva.usuario_id}`;
+                    const fecha = reserva.fecha_solicitada ? reserva.fecha_solicitada.split("T")[0] : (reserva.fecha || "Sin fecha");
+                    const motivo = reserva.motivo_evento || reserva.evento || reserva.motivo || 'Uso de Sede';
+                    const estado = reserva.estado_solicitud || reserva.estado || 'Pendiente';
+
+                    // Badge dinámico según estado
+                    let badgeClass = "bg-warning text-dark";
+                    if (estado === "Aprobada" || estado === "Aceptada") badgeClass = "bg-success";
+                    if (estado === "Rechazada") badgeClass = "bg-danger";
+
                     tbody.insertAdjacentHTML("beforeend", `
                         <tr>
-                            <td>${reserva.nombre_socio || reserva.usuario || 'Socio'}</td>
-                            <td>${reserva.fecha}</td>
-                            <td>${reserva.evento || reserva.motivo || 'Uso de Sede'}</td>
-                            <td><span class="badge bg-info">${reserva.estado}</span></td>
+                            <td class="fw-bold">${socio}</td>
+                            <td>${fecha}</td>
+                            <td>${motivo}</td>
+                            <td><span class="badge ${badgeClass}">${estado}</span></td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-success text-white me-1" onclick="gestionarReserva(${reserva.id}, 'Aceptada')"><i class="fas fa-check"></i></button>
+                                <button class="btn btn-sm btn-success text-white me-1" onclick="gestionarReserva(${reserva.id}, 'Aprobada')"><i class="fas fa-check"></i></button>
                                 <button class="btn btn-sm btn-danger" onclick="gestionarReserva(${reserva.id}, 'Rechazada')"><i class="fas fa-times"></i></button>
                             </td>
                         </tr>`);
@@ -772,19 +787,21 @@
             } catch (err) { console.error(err); }
         }
 
-        // FUNCIÓN PARA GESTIONAR EL ESTADO DE LA RESERVA (ACEPTADA O RECHAZADA)
+        // FUNCIÓN PARA GESTIONAR EL ESTADO DE LA RESERVA (APROBADA O RECHAZADA)
         async function gestionarReserva(id, nuevoEstado) {
             try {
-                const res = await fetch(`${BACKEND_URL}/reservas/${id}`, {
+                // Corrección: Endpoint /resolucion?estado=...
+                const res = await fetch(`${BACKEND_URL}/reservas/${id}/resolucion?estado=${encodeURIComponent(nuevoEstado)}`, {
                     method: "PATCH",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ estado: nuevoEstado })
+                    headers: { "Content-Type": "application/json" }
                 });
+                
                 if (res.ok) {
                     alert(`Reserva ${nuevoEstado.toLowerCase()} con éxito.`);
-                    obtenerReservasAPI(); // Recarga la tabla de reservas al momento
+                    obtenerReservasAPI(); // Recarga la tabla al instante
                 } else {
-                    alert("Error al actualizar la reserva.");
+                    const data = await res.json().catch(() => ({}));
+                    alert(`Error al actualizar la reserva: ${data.detail || 'Operación fallida'}`);
                 }
             } catch (err) { console.error(err); }
         }

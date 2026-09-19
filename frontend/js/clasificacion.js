@@ -64,17 +64,17 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <td>
                         <div class="d-flex align-items-center">
                             ${escudo ? `<img src="${escudo}" width="18" height="18" class="me-2" alt="escudo">` : ''}
-                            <span class="${esZaragoza ? 'text-primary fw-bold' : ''}">${equipo} ${esZaragoza ? '💙' : ''}</span>
+                            <span>${equipo}</span>
                         </div>
                     </td>
-                    <td class="text-center fw-bold text-primary">${puntos}</td>
+                    <td class="text-center fw-bold">${puntos}</td>
                     <td class="text-center">${pj}</td>
-                    <td class="text-center text-success">${pg}</td>
-                    <td class="text-center text-muted">${pe}</td>
-                    <td class="text-center text-danger">${pp}</td>
-                    <td class="text-center d-none d-md-table-cell text-muted">${gf}</td>
-                    <td class="text-center d-none d-md-table-cell text-muted">${gc}</td>
-                    <td class="text-center ${dg > 0 ? 'text-success fw-bold' : (dg < 0 ? 'text-danger' : 'text-muted')}">${dg > 0 ? '+' + dg : dg}</td>
+                    <td class="text-center">${pg}</td>
+                    <td class="text-center">${pe}</td>
+                    <td class="text-center">${pp}</td>
+                    <td class="text-center d-none d-md-table-cell">${gf}</td>
+                    <td class="text-center d-none d-md-table-cell">${gc}</td>
+                    <td class="text-center fw-bold">${dg > 0 ? '+' + dg : dg}</td>
                 </tr>
             `;
         });

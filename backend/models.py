@@ -109,7 +109,7 @@ class Reserva(Base):
     tipo_reserva = Column(String(20), default="Viaje")
     motivo_evento = Column(String(255), nullable=True)
     estado_solicitud = Column(String(20), default="Pendiente")
-    fecha_solicitada = Column(DateTime, server_default=func.now())
+    fecha_solicitada = Column(DateTime, nullable=True)
     
     viaje = relationship("Viaje", back_populates="reservas")
     usuario = relationship("Usuario", back_populates="reservas")

@@ -27,10 +27,11 @@ class ViajeCrear(BaseModel):
 # =========================================================================
 class ReservaCrear(BaseModel):
     usuario_id: int  
-    viaje_id: Optional[int] = None       # Opcional si es reserva del local de la peña
+    viaje_id: Optional[int] = None       # Opcional si es reserva del local
     asientos_reservados: int = 1
     tipo_reserva: str = "Viaje"          # "Viaje" o "Local"
     motivo_evento: Optional[str] = None  # Ej: "Ver partido contra Castellón"
+    fecha_solicitada: Optional[str] = None # 👈 ¡AGREGAR ESTA LÍNEA! (Formato YYYY-MM-DD o ISO)
 
     class Config:
         from_attributes = True

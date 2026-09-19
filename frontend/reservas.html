@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <style>
-        /* Rejilla real y forzada de 7 columnas para los días de la semana */
+        /* Rejilla real de 7 columnas para los días de la semana */
         .semana-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
@@ -46,7 +46,7 @@
                 <h1 class="fw-bold text-dark">🏠 Reserva de nuestro Local Social</h1>
                 <p class="text-muted">Consulta los días disponibles en el calendario. Haz clic en un día libre para tramitar tu solicitud.</p>
                 <div class="d-flex justify-content-center gap-3 mt-2">
-                    <span><i class="fas fa-square text-white border text-muted me-1"></i> Disponible</span>
+                    <span><i class="fas fa-square text-success me-1"></i> Disponible</span>
                     <span><i class="fas fa-square text-danger me-1"></i> Ocupado / Reservado</span>
                 </div>
             </div>
@@ -55,7 +55,7 @@
         <div class="card border-0 shadow-sm p-4 bg-white mx-auto" style="max-width: 900px;">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <button id="btn-prev-month" class="btn btn-outline-primary btn-sm"><i class="fas fa-chevron-left"></i> Anterior</button>
-                <h3 id="calendar-month-year" class="fw-bold text-uppercase m-0 style-color" style="color: #0033A0;">Junio 2026</h3>
+                <h3 id="calendar-month-year" class="fw-bold text-uppercase m-0 style-color" style="color: #0033A0;">Septiembre 2026</h3>
                 <button id="btn-next-month" class="btn btn-outline-primary btn-sm">Siguiente <i class="fas fa-chevron-right"></i></button>
             </div>
 
@@ -118,30 +118,34 @@
     <script src="js/components/footer.js"></script>
 
     <script>
-        let fechaActual = new Date(2026, 5, 1); // Junio de 2026
+        // 1. Iniciar directamente en el año y mes ACTUAL
+        const hoy = new Date();
+        let fechaActual = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
         const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
         const grid = document.getElementById("calendar-grid");
         const monthYearLabel = document.getElementById("calendar-month-year");
         const modalElement = new bootstrap.Modal(document.getElementById('modalReserva'));
+        const urlBackend = typeof BACKEND_URL !== "undefined" ? BACKEND_URL : "http://localhost:8000";
         
         let fechaSeleccionadaGlobal = "";
+        let reservasBackend = [];
 
-        function obtenerFechasOcupadasReales() {
-            let ocupadas = [];
-            for (let i = 0; i < localStorage.length; i++) {
-                let clave = localStorage.key(i);
-                if (clave.startsWith("reservas_socio_")) {
-                    let reservas = JSON.parse(localStorage.getItem(clave)) || [];
-                    reservas.forEach(res => {
-                        if (res.fecha) ocupadas.push(res.fecha);
-                    });
+        // 2. Obtener reservas reales desde FastAPI
+        async function cargarReservasBackend() {
+            try {
+                const res = await fetch(`${urlBackend}/reservas`);
+                if (res.ok) {
+                    reservasBackend = await res.json();
                 }
+            } catch (e) {
+                console.error("Error al obtener reservas del backend:", e);
             }
-            return ocupadas;
         }
 
-        function renderCalendar() {
+        async function renderCalendar() {
+            await cargarReservasBackend();
+
             grid.innerHTML = "";
             const año = fechaActual.getFullYear();
             const mes = fechaActual.getMonth();
@@ -158,9 +162,16 @@
                 grid.appendChild(emptyDiv);
             }
 
-            // Días del mes actual
             const totalDias = new Date(año, mes + 1, 0).getDate();
-            const fechasOcupadas = obtenerFechasOcupadasReales();
+
+            // Extraer las fechas ocupadas (reservas Aprobadas o Pendientes del Local)
+            const fechasOcupadas = reservasBackend
+                .filter(r => r.tipo_reserva === "Local" && r.estado_solicitud !== "Rechazada" && r.estado !== "Rechazada")
+                .map(r => {
+                    const f = r.fecha_solicitada || r.fecha_evento || r.fecha_reserva;
+                    return f ? f.split("T")[0] : null;
+                })
+                .filter(Boolean);
 
             for (let dia = 1; dia <= totalDias; dia++) {
                 const col = document.createElement("div");
@@ -171,7 +182,19 @@
                 col.className = "calendar-day bg-white border d-flex flex-column justify-content-between p-2";
                 col.innerHTML = `<span class="day-number">${dia}</span>`;
 
-                if (fechasOcupadas.includes(fechaString)) {
+                // Comparación de fechas exactas
+                const fechaIteracion = new Date(año, mes, dia);
+                fechaIteracion.setHours(0,0,0,0);
+                
+                const hoySinHora = new Date();
+                hoySinHora.setHours(0,0,0,0);
+
+                // 3. Validar si la fecha es pasada
+                if (fechaIteracion < hoySinHora) {
+                    col.classList.add("bg-ocupado");
+                    col.style.opacity = "0.6";
+                    col.innerHTML += `<span class="badge bg-secondary status-badge">Pasado</span>`;
+                } else if (fechasOcupadas.includes(fechaString)) {
                     col.classList.add("bg-ocupado");
                     col.innerHTML += `<span class="badge bg-danger status-badge">🔴 Ocupado</span>`;
                 } else {
@@ -187,7 +210,8 @@
             fechaSeleccionadaGlobal = fecha;
             document.getElementById("modal-fecha-display").value = fecha;
             
-            const socioId = localStorage.getItem("socio_id");
+            // Obtener ID del usuario/socio actual
+            const socioId = localStorage.getItem("socio_id") || localStorage.getItem("usuario_id");
             if (!socioId) {
                 document.getElementById("alerta-sesion").classList.remove("d-none");
                 document.getElementById("btn-enviar-reserva").disabled = true;
@@ -198,26 +222,45 @@
             modalElement.show();
         }
 
-        document.getElementById("form-solicitar-local").addEventListener("submit", (e) => {
+        // 4. Envío directo al Backend vía POST /reservas (FECHA BLINDADA)
+        document.getElementById("form-solicitar-local").addEventListener("submit", async (e) => {
             e.preventDefault();
-            const socioId = localStorage.getItem("socio_id");
+            const socioId = parseInt(localStorage.getItem("socio_id") || localStorage.getItem("usuario_id"));
             const motivo = document.getElementById("modal-motivo").value;
             const detalles = document.getElementById("modal-detalles").value;
 
-            const nuevaReserva = {
-                tipo: "Local",
-                detalle: `Reserva Local: ${motivo} (${detalles})`,
-                fecha: fechaSeleccionadaGlobal,
-                estado: "Pendiente"
+            // 🔧 CORRECCIÓN CLAVE: Agregamos T12:00:00 para evitar desplazamientos por huso horario (UTC)
+            const fechaISO = fechaSeleccionadaGlobal.includes("T") 
+                ? fechaSeleccionadaGlobal 
+                : `${fechaSeleccionadaGlobal}T12:00:00`;
+
+            const bodyData = {
+                usuario_id: socioId,
+                tipo_reserva: "Local",
+                asientos_reservados: 1,
+                motivo_evento: `${motivo} (${detalles})`,
+                fecha_solicitada: fechaISO
             };
 
-            let misReservas = JSON.parse(localStorage.getItem(`reservas_socio_${socioId}`)) || [];
-            misReservas.push(nuevaReserva);
-            localStorage.setItem(`reservas_socio_${socioId}`, JSON.stringify(misReservas));
+            try {
+                const resp = await fetch(`${urlBackend}/reservas`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(bodyData)
+                });
 
-            alert("¡Solicitud enviada con éxito! Redirigiendo a tu Área Privada...");
-            modalElement.hide();
-            window.location.href = "socio.html"; 
+                if (resp.ok) {
+                    alert("¡Solicitud enviada con éxito! Redirigiendo a tu Área Privada...");
+                    modalElement.hide();
+                    window.location.href = "socio.html"; 
+                } else {
+                    const errorData = await resp.json();
+                    alert(`Error al realizar la reserva: ${errorData.detail || 'Consulte al administrador.'}`);
+                }
+            } catch (err) {
+                console.error("Error al enviar solicitud:", err);
+                alert("No se pudo conectar con el servidor.");
+            }
         });
 
         document.getElementById("btn-prev-month").addEventListener("click", () => {

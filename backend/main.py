@@ -25,7 +25,7 @@ import models
 from database import engine, Base, get_db
 
 # Importamos los routers modulares
-from routers import auth, usuarios, noticias, reservas
+from routers import auth, usuarios, noticias, reservas, contacto
 from routers.zaragoza import router as zaragoza_router, iniciar_cron
 
 # ---------------------------------------------------------------------
@@ -112,6 +112,7 @@ app.include_router(usuarios.router, tags=["Usuarios"])
 app.include_router(noticias.router, prefix="/noticias", tags=["Noticias"])
 app.include_router(zaragoza_router)
 app.include_router(reservas.router, prefix="/reservas", tags=["Reservas"])
+app.include_router(contacto.router, prefix="/api/contacto", tags=["Contacto"])
 
 # ---------------------------------------------------------------------
 # Activar el Cron para actualizar datos de Zaragoza

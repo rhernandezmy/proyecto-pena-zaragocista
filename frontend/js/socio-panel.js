@@ -9,7 +9,6 @@ async function cargarSolicitudesDesdeBackend(socio) {
     if (!contenedorTabla) return;
 
     try {
-        // Petición al GET /reservas de tu FastAPI
         const response = await fetch(`${API_URL}/reservas`);
         if (!response.ok) throw new Error("Error en la respuesta del servidor");
         
@@ -33,30 +32,37 @@ async function cargarSolicitudesDesdeBackend(socio) {
             if (res.tipo_reserva === "Viaje") {
                 badgeTipo = '<span class="badge bg-info text-dark">🔹 Logística</span>';
                 
-                // Detectamos si es un alta de coche a través de la cadena de texto
                 if (res.motivo_evento && res.motivo_evento.includes("vehículo")) {
                     detalle = `🚗 Coche Compartido: ${res.motivo_evento}`;
                 } else {
                     detalle = `🚌 Autobús (Asientos reservados: ${res.asientos_reservados || 1})`;
                 }
                 
-                // Mapeamos el estado según tu backend ("Aprobada" por defecto)
-                badgeEstado = `<span class="badge bg-success">✓ ${res.estado_solicitud || 'Aprobada'}</span>`;
+                const estadoTexto = res.estado_solicitud || res.estado || 'Aprobada';
+                badgeEstado = `<span class="badge bg-success">✓ ${estadoTexto}</span>`;
             } else {
                 badgeTipo = '<span class="badge bg-warning text-dark">🏠 Sede Social</span>';
                 detalle = `Reserva de Local: ${res.motivo_evento || 'Evento común'}`;
                 
-                if (res.estado_solicitud === "Pendiente") {
+                // Mapeo seguro de estados
+                const estadoLocal = res.estado_solicitud || res.estado || "Pendiente";
+
+                if (estadoLocal === "Pendiente") {
                     badgeEstado = '<span class="badge bg-warning text-dark">⏳ Pendiente</span>';
-                } else if (res.estado_solicitud === "Aprobada" || res.estado_solicitud === "Aceptada") {
+                } else if (estadoLocal === "Aprobada" || estadoLocal === "Aceptada") {
                     badgeEstado = '<span class="badge bg-success">✓ Aprobada</span>';
                 } else {
                     badgeEstado = '<span class="badge bg-danger">✕ Rechazada</span>';
                 }
             }
 
-            // Usamos la columna real de tu base de datos para la fecha o un fallback por si viene nula
-            let fechaFormateada = res.fecha_solicitada || res.fecha_reserva || "Programada";
+            // ⚠️ CORRECCIÓN CLAVE DE FECHA: Priorizamos la fecha SOLICITADA/ELEGIDA por el socio (día 20)
+            let fechaRaw = res.fecha_solicitada || res.fecha_evento || res.fecha_reserva;
+            let fechaFormateada = "Programada";
+
+            if (fechaRaw) {
+                fechaFormateada = fechaRaw.split("T")[0]; 
+            }
 
             fila.innerHTML = `
                 <td>${badgeTipo}</td>
@@ -122,7 +128,46 @@ async function ofrecerCocheSocio(viajeId, plazasCoche) {
 }
 
 // =========================================================================
-// 3. CANCELAR / ELIMINAR RESERVA (Conectado a tu @router.delete)
+// 3. ENVIAR SOLICITUD DE RESERVA DE LOCAL AL BACKEND
+// =========================================================================
+async function solicitarReservaLocal(fechaSeleccionada, motivoTexto) {
+    const socioId = parseInt(localStorage.getItem("usuario_id")) || parseInt(localStorage.getItem("socio_id")) || 2;
+
+    if (!fechaSeleccionada) {
+        alert("⚠️ Por favor, selecciona una fecha para la reserva del local.");
+        return;
+    }
+
+    const payload = {
+        usuario_id: socioId,
+        tipo_reserva: "Local",               // 👈 AQUÍ YA QUEDA CONFIGURADO COMO LOCAL
+        fecha_solicitada: fechaSeleccionada, // 👈 ENVÍA LA FECHA ELEGIDA (Ej: "2026-09-27")
+        motivo_evento: motivoTexto || "Uso de Sede Social",
+        estado_solicitud: "Pendiente"
+    };
+
+    try {
+        const response = await fetch(`${API_URL}/reservas`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            alert("🏠 ¡Solicitud de reserva de local enviada con éxito!");
+            window.location.reload();
+        } else {
+            const err = await response.json();
+            alert(`⚠️ Error al enviar reserva: ${err.detail || "No se pudo completar."}`);
+        }
+    } catch (error) {
+        console.error("Error al solicitar el local:", error);
+        alert("Error de red: No se pudo contactar con el backend.");
+    }
+}
+
+// =========================================================================
+// 4. CANCELAR / ELIMINAR RESERVA (Conectado a tu @router.delete)
 // =========================================================================
 async function eliminarReservaBackend(reservaId) {
     if (!confirm("¿Seguro que deseas cancelar esta solicitud o retirar tu vehículo?")) return;
@@ -145,7 +190,7 @@ async function eliminarReservaBackend(reservaId) {
 }
 
 // =========================================================================
-// 4. ACTUALIZAR LOS DATOS DEL SOCIO Y CARGARLOS AL INICIAR
+// 5. ACTUALIZAR LOS DATOS DEL SOCIO Y CARGARLOS AL INICIAR
 // =========================================================================
 document.addEventListener("DOMContentLoaded", async () => {
     // Obtenemos el ID del socio de forma consistente priorizando usuario_id (Admin es 2)
