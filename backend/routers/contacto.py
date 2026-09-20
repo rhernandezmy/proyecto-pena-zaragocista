@@ -63,8 +63,8 @@ class MensajeContactoOut(BaseModel):
 # FUNCIÓN AUXILIAR DE ENVÍO DE EMAIL
 # ==========================================
 def enviar_notificacion_email(nombre: str, email_remitente: str, asunto_msg: str, mensaje_txt: str):
-    email_pena = os.getenv("MAIL_USERNAME", "presentesxelescudo@gmail.com")
-    password_app = os.getenv("MAIL_PASSWORD")
+    email_pena = os.getenv("EMAIL_REMITENTE", "presentesxelescudo@gmail.com")
+    password_app = os.getenv("EMAIL_PASSWORD")
 
     if not password_app:
         print("⚠️ Notificación no enviada: Falta MAIL_PASSWORD en el archivo .env")

@@ -1,9 +1,11 @@
 import re
 import asyncio
 from datetime import datetime
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from playwright.sync_api import sync_playwright
+import httpx
+from bs4 import BeautifulSoup
 
 router = APIRouter(tags=["Real Zaragoza"])
 
@@ -15,26 +17,135 @@ cache_zaragoza = {
 }
 
 scheduler = AsyncIOScheduler()
+
 MARCA_CALENDARIO_URL = "https://www.marca.com/futbol/primera-rfef/calendario/grupo-2.html?intcmp=MENUMIGA&s_kw=grupo-2"
-MARCA_CLASIFICACION_URL = "https://www.marca.com/futbol/primera-rfef/clasificacion.html"
+FUTBOLME_CLASIFICACION_URL = "https://futbolme.com/resultados-directo/torneo/primera-federacion-grupo-2/3056/"
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept-Language": "es-ES,es;q=0.9"
+}
 
 def extraer_datos_marca_sync():
     global cache_zaragoza
 
+    partidos_extraidos = []
+    clasificacion_extraida = []
+
+    # -----------------------------------------------------------------
+    # 1. CLASIFICACIÓN VÍA BEAUTIFULSOUP
+    # -----------------------------------------------------------------
+    try:
+        with httpx.Client(timeout=10.0, headers=HEADERS, follow_redirects=True) as client:
+            res = client.get(FUTBOLME_CLASIFICACION_URL)
+            if res.status_code == 200:
+                soup = BeautifulSoup(res.text, "html.parser")
+                filas = soup.select("table tbody tr")
+                
+                equipos_temporales = []
+
+                for fila in filas:
+                    celdas = fila.find_all(["td", "th"])
+                    if len(celdas) < 7:
+                        continue
+
+                    # --- A. NOMBRE LIMPIO (Obtener sólo la etiqueta de texto visible más larga) ---
+                    celda_equipo = celdas[1]
+                    # Buscar elementos dentro de la celda del equipo
+                    span_largo = celda_equipo.select_one(".hidden-xs, .nombre-largo, span:last-child")
+                    
+                    if span_largo and len(span_largo.get_text(strip=True)) > 2:
+                        equipo_nombre = span_largo.get_text(strip=True)
+                    else:
+                        # Si no hay etiqueta específica, tomar el texto del enlace principal
+                        link = celda_equipo.find("a")
+                        equipo_nombre = link.get_text(strip=True) if link else celda_equipo.get_text(strip=True)
+
+                    # Deduplicación por palabras si viene pegado tipo "Zaragoza Real Zaragoza"
+                    palabras = equipo_nombre.split()
+                    if len(palabras) > 2 and palabras[0].lower() == palabras[-1].lower():
+                        equipo_nombre = " ".join(palabras[1:])
+                    
+                    # Deduplicación por mitad de cadena tipo "Villarreal BVillarreal CF B"
+                    mitad = len(equipo_nombre) // 2
+                    if mitad > 3 and equipo_nombre[:mitad].strip().lower() in equipo_nombre[mitad:].strip().lower():
+                        equipo_nombre = equipo_nombre[mitad:].strip()
+
+                    if not equipo_nombre or len(equipo_nombre) < 2:
+                        continue
+
+                    # --- B. EXTRAER ESTADÍSTICAS OMITIENDO LA POSICIÓN (CELDA 0) ---
+                    # Celdas numéricas a partir de la columna de Puntos/PJ (índice >= 2)
+                    numeros = []
+                    for c in celdas[2:]:
+                        val = re.sub(r'[^\d-]', '', c.get_text(strip=True))
+                        if val.replace('-', '').isdigit() and val != '':
+                            numeros.append(int(val))
+
+                    # Se necesitan exactamente las 7 métricas clave: [PTS, PJ, PG, PE, PP, GF, GC]
+                    if len(numeros) >= 7:
+                        pts = numeros[0]
+                        pj = numeros[1]
+                        pg = numeros[2]
+                        pe = numeros[3]
+                        pp = numeros[4]
+                        gf = numeros[5]
+                        gc = numeros[6]
+
+                        equipos_temporales.append({
+                            "name": equipo_nombre,
+                            "points": pts,
+                            "pj": pj, "pg": pg, "pe": pe, "pp": pp,
+                            "gf": gf, "gc": gc, "dg": gf - gc
+                        })
+
+                # --- C. REORDENAR POR PUNTOS Y DIFERENCIA DE GOLES (1 A 20) ---
+                equipos_temporales.sort(key=lambda x: (x["points"], x["dg"], x["gf"]), reverse=True)
+
+                for pos_real, eq in enumerate(equipos_temporales, 1):
+                    if pos_real > 20:
+                        break
+
+                    clasificacion_extraida.append({
+                        "rank": pos_real,
+                        "team": {
+                            "name": eq["name"],
+                            "logo": "https://media.api-sports.io/football/teams/732.png" if "zaragoza" in eq["name"].lower() else ""
+                        },
+                        "points": eq["points"],
+                        "all": {
+                            "played": eq["pj"],
+                            "win": eq["pg"],
+                            "draw": eq["pe"],
+                            "lose": eq["pp"],
+                            "goals": {"for": eq["gf"], "against": eq["gc"]}
+                        },
+                        "goalsDiff": eq["dg"]
+                    })
+
+    except Exception as e_clas_bs4:
+        print(f"⚠️ Error obteniendo clasificación BS4: {str(e_clas_bs4)}")
+
+    # -----------------------------------------------------------------
+    # 2. SCRAPING DE PARTIDOS CON PLAYWRIGHT
+    # -----------------------------------------------------------------
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context()
+            browser = p.chromium.launch(
+                headless=True,
+                args=['--disable-blink-features=AutomationControlled', '--no-sandbox']
+            )
+            context = browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                viewport={"width": 1280, "height": 800}
+            )
             page = context.new_page()
-            
-            # -----------------------------------------------------------------
-            # 1. SCRAPING DE PARTIDOS
-            # -----------------------------------------------------------------
-            page.goto(MARCA_CALENDARIO_URL, wait_until="domcontentloaded", timeout=20000)
-            
+
+            page.goto(MARCA_CALENDARIO_URL, wait_until="domcontentloaded", timeout=25000)
+
             try:
                 btn_cookies = page.locator("#didomi-notice-agree-button")
-                if btn_cookies.is_visible(timeout=2000):
+                if btn_cookies.is_visible(timeout=3000):
                     btn_cookies.click()
             except Exception:
                 pass
@@ -74,14 +185,12 @@ def extraer_datos_marca_sync():
                 return resultados;
             }""")
 
-            partidos_extraidos = []
             id_counter = 1
-
             for p_data in partidos_dom:
                 raw_texto = p_data["rawTexto"]
                 fecha_cabecera = p_data["fechaCabecera"]
                 lineas = [l.strip() for l in raw_texto.split("\n") if l.strip()]
-                
+
                 if len(lineas) >= 2:
                     local = lineas[0]
                     visitante = lineas[-1] if len(lineas) > 2 else "Rival"
@@ -156,112 +265,28 @@ def extraer_datos_marca_sync():
                     })
                     id_counter += 1
 
-            # -----------------------------------------------------------------
-            # 2. SCRAPING DE LA CLASIFICACIÓN CON PARSEO COMPLETO Y FALLBACK
-            # -----------------------------------------------------------------
-            clasificacion_extraida = []
-            try:
-                page.goto(MARCA_CLASIFICACION_URL, wait_until="networkidle", timeout=15000)
-                
-                filas_tabla = page.evaluate("""() => {
-                    const datos = [];
-                    // Selector amplio para capturar tablas o listas de clasificación en MARCA
-                    const filas = document.querySelectorAll('table tr, .ue-c-table__row, .clasificacion-fila');
-                    
-                    filas.forEach((tr) => {
-                        const cols = tr.querySelectorAll('td, th, .ue-c-table__cell');
-                        if (cols.length >= 4) {
-                            const textos = Array.from(cols).map(c => c.innerText.trim()).filter(t => t.length > 0);
-                            if (textos.length >= 4) {
-                                datos.push(textos);
-                            }
-                        }
-                    });
-                    return datos;
-                }""")
-
-                for row in filas_tabla:
-                    try:
-                        # Filtrar cabeceras
-                        if "equipo" in str(row).lower() or "pts" in str(row).lower():
-                            continue
-
-                        posicion = int(re.sub(r'\D', '', row[0])) if re.sub(r'\D', '', row[0]) else len(clasificacion_extraida) + 1
-                        equipo_nombre = row[1].split("\n")[0]
-                        puntos = int(row[2]) if row[2].isdigit() else 0
-                        pj = int(row[3]) if len(row) > 3 and row[3].isdigit() else 0
-                        pg = int(row[4]) if len(row) > 4 and row[4].isdigit() else 0
-                        pe = int(row[5]) if len(row) > 5 and row[5].isdigit() else 0
-                        pp = int(row[6]) if len(row) > 6 and row[6].isdigit() else 0
-                        gf = int(row[7]) if len(row) > 7 and row[7].isdigit() else 0
-                        gc = int(row[8]) if len(row) > 8 and row[8].isdigit() else 0
-                        dg = gf - gc
-
-                        clasificacion_extraida.append({
-                            "rank": posicion,
-                            "team": {
-                                "name": equipo_nombre,
-                                "logo": "https://media.api-sports.io/football/teams/732.png" if "zaragoza" in equipo_nombre.lower() else ""
-                            },
-                            "points": puntos,
-                            "all": {
-                                "played": pj,
-                                "win": pg,
-                                "draw": pe,
-                                "lose": pp,
-                                "goals": {"for": gf, "against": gc}
-                            },
-                            "goalsDiff": dg
-                        })
-                    except Exception:
-                        continue
-            except Exception as e_clas:
-                print(f"⚠️ Aviso clasificatorio en MARCA: {str(e_clas)}")
-
             browser.close()
 
-            # Guardar resultados extraídos
-            if partidos_extraidos:
-                cache_zaragoza["partidos"] = partidos_extraidos
-            
-            if clasificacion_extraida:
-                cache_zaragoza["clasificacion"] = clasificacion_extraida
-            else:
-                # Fallback de datos reales actualizados si el DOM dinámico de MARCA no entregó filas
-                cache_zaragoza["clasificacion"] = [
-                    {"rank": 1, "team": {"name": "Villarreal B", "logo": ""}, "points": 9, "all": {"played": 3, "win": 3, "draw": 0, "lose": 0, "goals": {"for": 7, "against": 2}}, "goalsDiff": 5},
-                    {"rank": 2, "team": {"name": "Atlético Madrileño", "logo": ""}, "points": 7, "all": {"played": 3, "win": 2, "draw": 1, "lose": 0, "goals": {"for": 8, "against": 2}}, "goalsDiff": 6},
-                    {"rank": 3, "team": {"name": "Real Jaén", "logo": ""}, "points": 7, "all": {"played": 3, "win": 2, "draw": 1, "lose": 0, "goals": {"for": 6, "against": 2}}, "goalsDiff": 4},
-                    {"rank": 4, "team": {"name": "Nàstic de Tarragona", "logo": ""}, "points": 7, "all": {"played": 3, "win": 2, "draw": 1, "lose": 0, "goals": {"for": 6, "against": 2}}, "goalsDiff": 4},
-                    {"rank": 5, "team": {"name": "UD Ibiza", "logo": ""}, "points": 6, "all": {"played": 3, "win": 2, "draw": 0, "lose": 1, "goals": {"for": 6, "against": 4}}, "goalsDiff": 2},
-                    {"rank": 6, "team": {"name": "Real Murcia", "logo": ""}, "points": 6, "all": {"played": 3, "win": 2, "draw": 0, "lose": 1, "goals": {"for": 6, "against": 5}}, "goalsDiff": 1},
-                    {"rank": 7, "team": {"name": "Real Zaragoza", "logo": "https://media.api-sports.io/football/teams/732.png"}, "points": 6, "all": {"played": 3, "win": 2, "draw": 0, "lose": 1, "goals": {"for": 5, "against": 5}}, "goalsDiff": 0},
-                    {"rank": 8, "team": {"name": "FC Cartagena", "logo": ""}, "points": 5, "all": {"played": 3, "win": 1, "draw": 2, "lose": 0, "goals": {"for": 4, "against": 2}}, "goalsDiff": 2},
-                    {"rank": 9, "team": {"name": "Real Madrid Castilla", "logo": ""}, "points": 4, "all": {"played": 3, "win": 1, "draw": 1, "lose": 1, "goals": {"for": 2, "against": 1}}, "goalsDiff": 1},
-                    {"rank": 10, "team": {"name": "Antequera CF", "logo": ""}, "points": 4, "all": {"played": 3, "win": 1, "draw": 1, "lose": 1, "goals": {"for": 4, "against": 4}}, "goalsDiff": 0},
-                    {"rank": 11, "team": {"name": "Águilas FC", "logo": ""}, "points": 4, "all": {"played": 3, "win": 1, "draw": 1, "lose": 1, "goals": {"for": 3, "against": 4}}, "goalsDiff": -1},
-                    {"rank": 12, "team": {"name": "SD Huesca", "logo": ""}, "points": 4, "all": {"played": 3, "win": 1, "draw": 1, "lose": 1, "goals": {"for": 3, "against": 5}}, "goalsDiff": -2},
-                    {"rank": 13, "team": {"name": "AD Alcorcón", "logo": ""}, "points": 3, "all": {"played": 3, "win": 0, "draw": 3, "lose": 0, "goals": {"for": 3, "against": 3}}, "goalsDiff": 0},
-                    {"rank": 14, "team": {"name": "UE Sant Andreu", "logo": ""}, "points": 3, "all": {"played": 3, "win": 1, "draw": 0, "lose": 2, "goals": {"for": 2, "against": 3}}, "goalsDiff": -1},
-                    {"rank": 15, "team": {"name": "Hércules de Alicante", "logo": ""}, "points": 3, "all": {"played": 3, "win": 1, "draw": 0, "lose": 2, "goals": {"for": 3, "against": 5}}, "goalsDiff": -2},
-                    {"rank": 16, "team": {"name": "Rayo Majadahonda", "logo": ""}, "points": 1, "all": {"played": 3, "win": 0, "draw": 1, "lose": 2, "goals": {"for": 3, "against": 5}}, "goalsDiff": -2},
-                    {"rank": 17, "team": {"name": "Juventud Torremolinos", "logo": ""}, "points": 1, "all": {"played": 3, "win": 0, "draw": 1, "lose": 2, "goals": {"for": 5, "against": 8}}, "goalsDiff": -3},
-                    {"rank": 18, "team": {"name": "CE Europa", "logo": ""}, "points": 1, "all": {"played": 3, "win": 0, "draw": 1, "lose": 2, "goals": {"for": 1, "against": 5}}, "goalsDiff": -4},
-                    {"rank": 19, "team": {"name": "CD Teruel", "logo": ""}, "points": 1, "all": {"played": 3, "win": 0, "draw": 1, "lose": 2, "goals": {"for": 0, "against": 5}}, "goalsDiff": -5},
-                    {"rank": 20, "team": {"name": "Algeciras CF", "logo": ""}, "points": 0, "all": {"played": 3, "win": 0, "draw": 0, "lose": 3, "goals": {"for": 4, "against": 9}}, "goalsDiff": -5}
-                ]
-                
-            cache_zaragoza["ultima_actualizacion"] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            print(f"⚽ MARCA sincronizado ({datetime.now().strftime('%H:%M:%S')}) - {len(partidos_extraidos)} partidos / {len(cache_zaragoza['clasificacion'])} equipos clasif.")
-
     except Exception as e:
-        print(f"⚠️ Error al conectar con MARCA mediante Playwright: {str(e)}")
+        print(f"⚠️ Error general en Playwright: {str(e)}")
+
+    if partidos_extraidos:
+        cache_zaragoza["partidos"] = partidos_extraidos
+
+    if clasificacion_extraida:
+        cache_zaragoza["clasificacion"] = clasificacion_extraida
+
+    if partidos_extraidos or clasificacion_extraida:
+        cache_zaragoza["ultima_actualizacion"] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        print(f"⚽ Sincronizado ({datetime.now().strftime('%H:%M:%S')}) - {len(cache_zaragoza['partidos'])} partidos / {len(cache_zaragoza['clasificacion'])} equipos clasif.")
+    else:
+        print("⚠️ No se obtuvieron datos. Se mantiene el contenido en caché.")
 
 async def extraer_datos_marca():
     await asyncio.to_thread(extraer_datos_marca_sync)
 
 def iniciar_cron():
-    scheduler.add_job(extraer_datos_marca, 'interval', hours=12, id='job_marca_zaragoza')
+    scheduler.add_job(extraer_datos_marca, 'interval', minutes=30, id='job_marca_zaragoza')
     scheduler.start()
     asyncio.create_task(extraer_datos_marca())
 
@@ -279,3 +304,17 @@ async def obtener_clasificacion_zaragoza():
         "clasificacion": cache_zaragoza["clasificacion"],
         "ultima_actualizacion": cache_zaragoza["ultima_actualizacion"]
     }
+
+@router.post("/fuerza-sincronizacion-zaragoza")
+async def forzar_sincronizacion_zaragoza():
+    try:
+        await extraer_datos_marca()
+        return {
+            "status": "success",
+            "message": "Sincronización manual ejecutada",
+            "ultima_actualizacion": cache_zaragoza["ultima_actualizacion"],
+            "partidos_cargados": len(cache_zaragoza["partidos"]),
+            "equipos_clasificacion": len(cache_zaragoza["clasificacion"])
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al sincronizar: {str(e)}")
