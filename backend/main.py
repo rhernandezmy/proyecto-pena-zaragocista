@@ -1,37 +1,38 @@
-import os
-import sys
-import httpx
 import csv
 import io
-
-from datetime import datetime, timedelta
+import os
+import sys
 from typing import Optional
-from pydantic import BaseModel, EmailStr
-from fastapi.responses import StreamingResponse
-from fastapi import FastAPI, status, HTTPException, Depends, Form, UploadFile, File
+
+from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, EmailStr
+from sqlalchemy import Column, Integer, String, func, select
+from sqlalchemy.orm import Session
 
 # 🌟 PARCHE DE ENTORNO PARA WINDOWS (Acentos y Ñs)
 os.environ["PYTHONIOENCODING"] = "utf-8"
 if sys.platform == "win32":
     os.environ["PGCLIENTENCODING"] = "utf-8"
 
-# Herramientas de SQLAlchemy y Base de Datos Centralizada
-from sqlalchemy import Column, Integer, String, select, func
-from sqlalchemy.orm import Session
-
+# Módulos internos y Base de Datos Centralizada
 import models
-from database import engine, Base, get_db
+import schemas
+from database import Base, engine, get_db
 
-# Importamos los routers modulares
-from routers import auth, usuarios, noticias, reservas, contacto
-from routers.zaragoza import router as zaragoza_router, iniciar_cron
+# Routers Modulares
+from routers import auth, contacto, noticias, reservas, usuarios
+from routers.zaragoza import iniciar_cron
+from routers.zaragoza import router as zaragoza_router
 
 # ---------------------------------------------------------------------
 # CONFIGURACIÓN DE RUTAS Y ESTRUCTURA DE ARCHIVOS
 # ---------------------------------------------------------------------
-RUTA_FRONTEND_ASSETS = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "assets"))
+RUTA_FRONTEND_ASSETS = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "frontend", "assets")
+)
 
 if not os.path.exists(RUTA_FRONTEND_ASSETS):
     os.makedirs(RUTA_FRONTEND_ASSETS, exist_ok=True)
@@ -51,21 +52,14 @@ class ImagenGaleria(Base):
 Base.metadata.create_all(bind=engine)
 
 # ---------------------------------------------------------------------
-# BASES DE DATOS EN MEMORIA (Locales para administración)
+# BASES DE DATOS EN MEMORIA (Transitorias)
 # ---------------------------------------------------------------------
 DB_SOCIOS_FISICOS = []
 DB_USUARIOS_WEB = []
 DB_VIAJES = []
-DB_PARTNERS = [
-    {
-        "id": 1,
-        "categoria": "Desinfecciones",
-        "nombre_comercial": "Desinfecciones Herrera"
-    }
-]
 
 # ---------------------------------------------------------------------
-# MODELOS DE ENTRADA (Pydantic)
+# MODELOS DE ENTRADA (Pydantic Local)
 # ---------------------------------------------------------------------
 class SocioNuevo(BaseModel):
     nombre: str
@@ -85,9 +79,10 @@ class ViajeNuevo(BaseModel):
     tipo_transporte: str
     plazas_totales: int
 
-class PartnerNuevo(BaseModel):
-    categoria: str
-    nombre_comercial: str
+class RegistroUsuarioWeb(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
 
 # ---------------------------------------------------------------------
 # INSTANCIA DE FASTAPI Y MIDDLEWARES
@@ -115,7 +110,7 @@ app.include_router(reservas.router, prefix="/reservas", tags=["Reservas"])
 app.include_router(contacto.router, prefix="/api/contacto", tags=["Contacto"])
 
 # ---------------------------------------------------------------------
-# Activar el Cron para actualizar datos de Zaragoza
+# EVENTOS DE INICIALIZACIÓN
 # ---------------------------------------------------------------------
 @app.on_event("startup")
 async def startup_event():
@@ -197,7 +192,7 @@ async def registrar_socio_fisico(socio: SocioNuevo, db: Session = Depends(get_db
         }
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Error al guardar socio en Postgres: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error al guardar socio: {str(e)}")
 
 @app.patch("/socios/{socio_id}/cuota")
 async def actualizar_cuota_socio(socio_id: int, payload: CuotaActualizacion, db: Session = Depends(get_db)):
@@ -273,12 +268,10 @@ async def exportar_socios_csv(db: Session = Depends(get_db)):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-class RegistroUsuarioWeb(BaseModel):
-    username: str
-    email: EmailStr
-    password: str
 
+# ---------------------------------------------------------------------
+# ENDPOINTS: AUTENTICACIÓN WEB
+# ---------------------------------------------------------------------
 @app.post("/auth/registro-web", status_code=status.HTTP_201_CREATED)
 async def registrar_usuario_web(datos: RegistroUsuarioWeb, db: Session = Depends(get_db)):
     try:
@@ -376,7 +369,7 @@ async def eliminar_viaje(viaje_id: int):
     return {"status": "ok"}
 
 # ---------------------------------------------------------------------
-# ENDPOINTS: GALERÍA MULTIMEDIA (INTEGRACIÓN EN POSTGRESQL)
+# ENDPOINTS: GALERÍA MULTIMEDIA (INTEGRACIÓN EN BASE DE DATOS)
 # ---------------------------------------------------------------------
 @app.get("/galeria")
 async def obtener_imagenes_galeria(db: Session = Depends(get_db)):
@@ -449,25 +442,54 @@ async def eliminar_imagen_galeria(foto_id: int, db: Session = Depends(get_db)):
     return {"status": "ok"}
 
 # ---------------------------------------------------------------------
-# ENDPOINTS: SPONSORS Y PARTNERS
+# ENDPOINTS: SPONSORS Y PATROCINADORES (PERSISTENTES EN BASE DE DATOS)
 # ---------------------------------------------------------------------
-@app.get("/partners")
-async def obtener_partners():
-    return DB_PARTNERS
+# 1. OBTENER LISTA DE PATROCINADORES
+@app.get("/patrocinadores", response_model=list[schemas.Patrocinador], tags=["Patrocinadores"])
+def obtener_patrocinadores(db: Session = Depends(get_db)):
+    return db.query(models.Patrocinador).all()
 
-@app.post("/partners", status_code=status.HTTP_201_CREATED)
-async def añadir_partner(partner: PartnerNuevo):
-    nuevo_id = len(DB_PARTNERS) + 1
-    partner_dict = {
-        "id": nuevo_id,
-        "categoria": partner.categoria,
-        "nombre_comercial": partner.nombre_comercial
-    }
-    DB_PARTNERS.append(partner_dict)
-    return {"status": "ok", "partner": partner_dict}
+# 2. CREAR UN NUEVO PATROCINADOR
+@app.post("/patrocinadores", response_model=schemas.Patrocinador, status_code=status.HTTP_201_CREATED, tags=["Patrocinadores"])
+def crear_patrocinador(patrocinador: schemas.PatrocinadorCrear, db: Session = Depends(get_db)):
+    nuevo_patro = models.Patrocinador(**patrocinador.model_dump())
+    db.add(nuevo_patro)
+    db.commit()
+    db.refresh(nuevo_patro)
+    return nuevo_patro
 
-@app.delete("/partners/{partner_id}")
-async def eliminar_partner(partner_id: int):
-    global DB_PARTNERS
-    DB_PARTNERS = [p for p in DB_PARTNERS if p["id"] != partner_id]
-    return {"status": "ok"}
+# 3. ELIMINAR UN PATROCINADOR EXISTENTE
+@app.delete("/patrocinadores/{patrocinador_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Patrocinadores"])
+def eliminar_patrocinador(patrocinador_id: int, db: Session = Depends(get_db)):
+    patrocinador = db.query(models.Patrocinador).filter(models.Patrocinador.id == patrocinador_id).first()
+    
+    if not patrocinador:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="El patrocinador que intentas eliminar no existe."
+        )
+        
+    db.delete(patrocinador)
+    db.commit()
+    return None
+
+# 4. ACTUALIZAR UN PATROCINADOR EXISTENTE
+@app.put("/patrocinadores/{patrocinador_id}", response_model=schemas.Patrocinador, tags=["Patrocinadores"])
+def actualizar_patrocinador(patrocinador_id: int, patrocinador_actualizado: schemas.PatrocinadorCrear, db: Session = Depends(get_db)):
+    patrocinador = db.query(models.Patrocinador).filter(models.Patrocinador.id == patrocinador_id).first()
+    
+    if not patrocinador:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="El patrocinador que intentas actualizar no existe."
+        )
+        
+    # Actualizamos los campos en la BD
+    patrocinador.nombre = patrocinador_actualizado.nombre
+    patrocinador.tipo_negocio = patrocinador_actualizado.tipo_negocio
+    patrocinador.enlace_web = patrocinador_actualizado.enlace_web
+    patrocinador.logo_url = patrocinador_actualizado.logo_url
+
+    db.commit()
+    db.refresh(patrocinador)
+    return patrocinador

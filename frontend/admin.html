@@ -58,9 +58,9 @@
 
             <div class="tab-content" id="adminTabsContent">
                 
+                <!-- Pestaña Socios -->
                 <div class="tab-pane fade show active" id="socios-pane" role="tabpanel" aria-labelledby="socios-tab" tabindex="0">
                     <div class="card border-0 shadow-sm p-4">
-                        
                         <ul class="nav nav-pills mb-4 border-bottom pb-2" id="subTabsSocios" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active fw-bold me-2" id="libro-socios-tab" data-bs-toggle="pill" data-bs-target="#libro-socios-pane" type="button" role="tab" aria-controls="libro-socios-pane" aria-selected="true">
@@ -75,7 +75,6 @@
                         </ul>
 
                         <div class="tab-content" id="subTabsSociosContent">
-                            
                             <div class="tab-pane fade show active" id="libro-socios-pane" role="tabpanel" aria-labelledby="libro-socios-tab" tabindex="0">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h5 class="fw-bold mb-0 text-primary">📖 Socios Físicos de la Peña</h5>
@@ -137,11 +136,11 @@
                                     </table>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
 
+                <!-- Pestaña Viajes -->
                 <div class="tab-pane fade" id="viajes-pane" role="tabpanel" aria-labelledby="viajes-tab" tabindex="0">
                     <div class="row g-4">
                         <div class="col-12 col-md-4">
@@ -202,6 +201,7 @@
                     </div>
                 </div>
 
+                <!-- Pestaña Reservas Local -->
                 <div class="tab-pane fade" id="local-pane" role="tabpanel" aria-labelledby="local-tab" tabindex="0">
                     <div class="card border-0 shadow-sm p-4">
                         <h5 class="fw-bold mb-3">📅 Solicitudes de Reserva del Local</h5>
@@ -227,29 +227,20 @@
                     </div>
                 </div>
 
+                <!-- Pestaña Galería -->
                 <div class="tab-pane fade" id="galeria-pane" role="tabpanel" aria-labelledby="galeria-tab" tabindex="0">
                     <div class="row g-4">
                         <div class="col-12 col-md-4">
                             <div class="card border-0 shadow-sm p-4">
                                 <h5 class="fw-bold mb-3">📸 Subir Nueva Imagen</h5>
                                 <form id="form-nueva-foto" enctype="multipart/form-data">
-                                    
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">Seleccionar Imagen</label>
-                                        
                                         <input type="file" id="foto-archivo" class="d-none" accept="image/*" required onchange="actualizarNombreArchivo(this)">
-                                        
-                                        <label for="foto-archivo" id="label-foto-archivo" class="form-control text-center text-muted" style="
-                                            cursor: pointer; 
-                                            background-color: #f8f9fa; 
-                                            border: 1px solid #ced4da; 
-                                            padding: 8px 12px;
-                                            transition: all 0.2s ease-in-out;
-                                        " onmouseover="this.style.backgroundColor='#e2e6ea'" onmouseout="this.style.backgroundColor='#f8f9fa'">
+                                        <label for="foto-archivo" id="label-foto-archivo" class="form-control text-center text-muted" style="cursor: pointer; background-color: #f8f9fa; border: 1px solid #ced4da; padding: 8px 12px;" onmouseover="this.style.backgroundColor='#e2e6ea'" onmouseout="this.style.backgroundColor='#f8f9fa'">
                                             📸 Añadir foto
                                         </label>
                                     </div>
-
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">Título / Evento</label>
                                         <input type="text" id="foto-titulo" class="form-control" placeholder="Ej: Viaje a Burgos" required>
@@ -262,7 +253,6 @@
                                 </form>
                             </div>
                         </div>
-                        
                         <div class="col-12 col-md-8">
                             <div class="card border-0 shadow-sm p-4">
                                 <h5 class="fw-bold mb-3">🖼️ Fotos en la Web</h5>
@@ -288,6 +278,7 @@
                     </div>
                 </div>
 
+                <!-- Pestaña Partners -->
                 <div class="tab-pane fade" id="partners-pane" role="tabpanel" aria-labelledby="partners-tab" tabindex="0">
                     <div class="row g-4">
                         <div class="col-12 col-md-4">
@@ -296,11 +287,19 @@
                                 <form id="form-nuevo-partner">
                                     <div class="mb-3">
                                         <label class="form-label small fw-bold">Categoría / Sector</label>
-                                        <input type="text" id="partner-categoria" class="form-control" placeholder="Ej: Abogada Oficial, Bar..." required>
+                                        <input type="text" id="partner-categoria" class="form-control" placeholder="Ej: Bar, Desinfecciones..." required>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label small fw-bold">Nombre Comercial (con icono)</label>
-                                        <input type="text" id="partner-nombre" class="form-control" placeholder="Ej: 👩‍⚖️ Eva Galán" required>
+                                        <label class="form-label small fw-bold">Nombre Comercial</label>
+                                        <input type="text" id="partner-nombre" class="form-control" placeholder="Ej: Desinfecciones Herrera" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Sitio Web (Hipervínculo Opcional)</label>
+                                        <input type="url" id="partner-url" class="form-control" placeholder="Ej: https://midominio.com">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Descripción Personalizada (Opcional)</label>
+                                        <textarea id="partner-descripcion" class="form-control" rows="2" placeholder="Si se deja vacío usará el texto predeterminado"></textarea>
                                     </div>
                                     <button type="submit" class="btn btn-secondary w-100 fw-bold">Vincular Partner</button>
                                 </form>
@@ -315,12 +314,13 @@
                                             <tr>
                                                 <th>Categoría</th>
                                                 <th>Nombre comercial</th>
+                                                <th>Web</th>
                                                 <th class="text-center">Acción</th>
                                             </tr>
                                         </thead>
                                         <tbody id="tabla-partners-admin">
                                             <tr>
-                                                <td colspan="3" class="text-center text-muted py-3">Cargando sponsors...</td>
+                                                <td colspan="4" class="text-center text-muted py-3">Cargando sponsors...</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -334,6 +334,48 @@
         </div>
     </main>
 
+    <!-- ========================================================================= -->
+    <!-- MODALES DE LA APLICACIÓN (Agrupados al final para evitar fallos de capas) -->
+    <!-- ========================================================================= -->
+
+    <!-- MODAL 1: EDICIÓN DE PARTNER -->
+    <div class="modal fade" id="modalEditarPartner" tabindex="-1" aria-labelledby="modalEditarPartnerLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold" id="modalEditarPartnerLabel"><i class="fas fa-edit me-2"></i>Editar Partner</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="form-editar-partner">
+                    <div class="modal-body p-4">
+                        <input type="hidden" id="edit-partner-id">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Categoría / Sector</label>
+                            <input type="text" id="edit-partner-categoria" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Nombre Comercial</label>
+                            <input type="text" id="edit-partner-nombre" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Sitio Web (Hipervínculo)</label>
+                            <input type="url" id="edit-partner-url" class="form-control" placeholder="https://...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Descripción Personalizada</label>
+                            <textarea id="edit-partner-descripcion" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary fw-bold">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: NUEVO SOCIO -->
     <div class="modal fade" id="modalNuevoSocio" tabindex="-1" aria-labelledby="modalNuevoSocioLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -380,6 +422,7 @@
         </div>
     </div>
 
+    <!-- MODAL 3: VINCULAR SOCIO -->
     <div class="modal fade" id="modalVincularSocio" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-sm">
             <div class="modal-content">
@@ -411,6 +454,7 @@
 
         // 1. ARRANCAR TODO AL CARGAR LA PÁGINA
         document.addEventListener("DOMContentLoaded", () => {
+            // Carga de datos iniciales
             obtenerSociosAPI();
             obtenerPartidosAPI(); 
             obtenerViajesAPI();   
@@ -419,11 +463,22 @@
             obtenerPartnersAPI();
             obtenerUsuariosWebAPI();
 
-            // Escuchar los envíos de los formularios
-            document.getElementById("form-alta-socio").addEventListener("submit", enviarNuevoSocio);
-            document.getElementById("form-nuevo-viaje").addEventListener("submit", enviarNuevoViaje);
-            document.getElementById("form-nueva-foto").addEventListener("submit", enviarNuevaFoto);
-            document.getElementById("form-nuevo-partner").addEventListener("submit", enviarNuevoPartner);
+            // Escuchar los envíos de los formularios usando .onsubmit (evita eventos duplicados)
+            const formSocio = document.getElementById("form-alta-socio");
+            if (formSocio) formSocio.onsubmit = enviarNuevoSocio;
+
+            const formViaje = document.getElementById("form-nuevo-viaje");
+            if (formViaje) formViaje.onsubmit = enviarNuevoViaje;
+
+            const formFoto = document.getElementById("form-nueva-foto");
+            if (formFoto) formFoto.onsubmit = enviarNuevaFoto;
+
+            const formPartner = document.getElementById("form-nuevo-partner");
+            if (formPartner) formPartner.onsubmit = enviarNuevoPartner;
+
+            // Vincular el submit del modal de edición de patrocinadores
+            const formEditarPartner = document.getElementById("form-editar-partner");
+            if (formEditarPartner) formEditarPartner.onsubmit = guardarEdicionPartner;
         });
 
         // 2. CAMBIAR EL BOTÓN A VERDE CUANDO ELIGES UNA FOTO
@@ -806,7 +861,7 @@
             } catch (err) { console.error(err); }
         }
 
-        // 8. SECCIÓN: GALERÍA DE FOTOS (TOTALMENTE INTACTA)
+        // 8. SECCIÓN: GALERÍA DE FOTOS
         async function obtenerGaleriaAPI() {
             const tbody = document.getElementById("tabla-galeria-admin"); 
             if (!tbody) return;
@@ -879,108 +934,203 @@
             } catch (err) { console.error(err); }
         }
 
-        // 9. SECCIÓN: PARTNERS (CORREGIDA Y ADAPTADA A TU FORMULARIO REAL)
+        // 9. SECCIÓN: PARTNERS
+        let partnersCache = []; // Caché local para recuperar datos rápido al editar
 
-        // =========================================================================
-// 9. SECCIÓN: PARTNERS (SOLUCIÓN DEFINITIVA POR ID)
-// =========================================================================
-async function obtenerPartnersAPI() {
-    const tbody = document.getElementById("tabla-partners-admin");
-    if (!tbody) return;
-    try {
-        const res = await fetch(`${BACKEND_URL}/partners`);
-        if (!res.ok) throw new Error("Error al obtener partners");
-        const partners = await res.json();
-        
-        if (partners.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">No hay patrocinadores vigentes.</td></tr>';
-            return;
-        }
-        tbody.innerHTML = "";
-        
-        partners.forEach(partner => {
-            const categoriaTexto = partner.categoria || partner.sector || "General";
-            const nombreTexto = partner.nombre_comercial || partner.nombre || "Sponsor Activo";
+        async function obtenerPartnersAPI() {
+            const tbody = document.getElementById("tabla-partners-admin");
+            if (!tbody) return;
 
-            tbody.insertAdjacentHTML("beforeend", `
-                <tr>
-                    <td class="fw-bold text-dark">${categoriaTexto}</td>
-                    <td>${nombreTexto}</td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-outline-danger" onclick="eliminarPartner(${partner.id})">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
-                </tr>`);
-        });
-    } catch (err) { 
-        console.error("Error cargando la lista de partners:", err); 
-    }
-}
+            try {
+                const res = await fetch(`${BACKEND_URL}/patrocinadores`);
+                if (!res.ok) throw new Error("Error al obtener partners");
+                partnersCache = await res.json();
+                
+                if (partnersCache.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No hay patrocinadores vigentes.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = "";
+                
+                partnersCache.forEach(partner => {
+                    const categoriaTexto = partner.tipo_negocio || "General";
+                    const nombreTexto = partner.nombre || "Sponsor Activo";
+                    
+                    // Renderizado del enlace web opcional
+                    const webHtml = partner.enlace_web 
+                        ? `<a href="${partner.enlace_web}" target="_blank" class="text-primary text-decoration-none"><i class="fas fa-external-link-alt me-1"></i>Visitar</a>`
+                        : `<span class="text-muted small">Sin web</span>`;
 
-    async function enviarNuevoPartner(e) {
-        e.preventDefault();
-        
-        // Búsqueda directa y segura por ID (Asegúrate de tener estos IDs en tus inputs del HTML)
-        const inputCat = document.getElementById("partner-categoria") || document.querySelector('input[placeholder*="Sector"]');
-        const inputNom = document.getElementById("partner-nombre") || document.querySelector('input[placeholder*="Comercial"]');
-        
-        const categoriaValor = inputCat ? inputCat.value.trim() : "";
-        const nombreValor = inputNom ? inputNom.value.trim() : "";
-
-        if (!categoriaValor || !nombreValor) {
-            alert("⚠️ Por favor, rellena tanto la Categoría/Sector como el Nombre Comercial.");
-            return;
-        }
-
-        const payload = {
-            categoria: categoriaValor,
-            sector: categoriaValor,          
-            nombre: nombreValor,
-            nombre_comercial: nombreValor    
-        };
-
-        try {
-            const res = await fetch(`${BACKEND_URL}/partners`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-            
-            if (res.ok) {
-                alert("¡Patrocinador vinculado con éxito!");
-                if (inputCat) inputCat.value = "";
-                if (inputNom) inputNom.value = "";
-                obtenerPartnersAPI();
-            } else {
-                const errData = await res.json();
-                alert(`⚠️ No se pudo guardar: ${errData.detail || "Error de validación."}`);
+                    tbody.insertAdjacentHTML("beforeend", `
+                        <tr>
+                            <td class="fw-bold text-dark">${categoriaTexto}</td>
+                            <td><i class="fas fa-handshake text-primary me-2"></i>${nombreTexto}</td>
+                            <td>${webHtml}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarPartner(${partner.id})" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarPartner(${partner.id})" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>`);
+                });
+            } catch (err) { 
+                console.error("Error cargando la lista de partners:", err); 
             }
-        } catch (err) { 
-            console.error("Error al enviar el nuevo partner:", err); 
         }
-    }
 
-    async function eliminarPartner(partnerId) {
-        if (!partnerId) return;
-        if (!confirm("¿Seguro que deseas eliminar este patrocinador?")) return;
+        // Variable global para evitar doble clic en creación
+        let enviandoPartner = false;
 
-        try {
-            const res = await fetch(`${BACKEND_URL}/partners/${partnerId}`, {
-                method: "DELETE"
-            });
-
-            if (res.ok) {
-                alert("Patrocinador eliminado correctamente.");
-                obtenerPartnersAPI(); // Recarga la tabla automáticamente
-            } else {
-                alert("No se pudo eliminar el partner en el servidor.");
+        async function enviarNuevoPartner(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
             }
-        } catch (err) {
-            console.error("Error al eliminar partner:", err);
-            alert("Error de red al intentar borrar.");
+
+            if (enviandoPartner) return false;
+
+            const inputCat = document.getElementById("partner-categoria");
+            const inputNom = document.getElementById("partner-nombre");
+            const inputUrl = document.getElementById("partner-url");
+            const inputDesc = document.getElementById("partner-descripcion");
+
+            const categoriaValor = inputCat ? inputCat.value.trim() : "";
+            const nombreValor = inputNom ? inputNom.value.trim() : "";
+
+            if (!categoriaValor || !nombreValor) {
+                alert("⚠️ Por favor, rellena tanto la Categoría/Sector como el Nombre Comercial.");
+                return false;
+            }
+
+            enviandoPartner = true;
+            const btnSubmit = document.querySelector("#form-nuevo-partner button[type='submit']");
+            if (btnSubmit) btnSubmit.disabled = true;
+
+            const payload = {
+                nombre: nombreValor,
+                tipo_negocio: categoriaValor,
+                enlace_web: inputUrl ? inputUrl.value.trim() : "",
+                logo_url: inputDesc ? inputDesc.value.trim() : ""
+            };
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/patrocinadores`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    alert("¡Patrocinador vinculado con éxito!");
+                    document.getElementById("form-nuevo-partner").reset();
+                    await obtenerPartnersAPI();
+                } else {
+                    const errData = await res.json();
+                    alert(`⚠️ No se pudo guardar: ${JSON.stringify(errData.detail)}`);
+                }
+            } catch (err) {
+                console.error("Error al enviar el nuevo partner:", err);
+            } finally {
+                enviandoPartner = false;
+                if (btnSubmit) btnSubmit.disabled = false;
+            }
+
+            return false;
         }
-    }
+
+        // Función para rellenar y abrir el modal de edición
+        function abrirModalEditarPartner(id) {
+            const partner = partnersCache.find(p => p.id === id);
+            if (!partner) return;
+
+            document.getElementById("edit-partner-id").value = partner.id;
+            document.getElementById("edit-partner-categoria").value = partner.tipo_negocio || "";
+            document.getElementById("edit-partner-nombre").value = partner.nombre || "";
+            document.getElementById("edit-partner-url").value = partner.enlace_web || "";
+            document.getElementById("edit-partner-descripcion").value = partner.logo_url || "";
+
+            const modalEl = document.getElementById("modalEditarPartner");
+            if (modalEl) {
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            }
+        }
+
+        // Función para enviar los cambios del modal a la API (PUT)
+        async function guardarEdicionPartner(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            const id = document.getElementById("edit-partner-id").value;
+            const cat = document.getElementById("edit-partner-categoria").value.trim();
+            const nom = document.getElementById("edit-partner-nombre").value.trim();
+            const url = document.getElementById("edit-partner-url").value.trim();
+            const desc = document.getElementById("edit-partner-descripcion").value.trim();
+
+            if (!cat || !nom) {
+                alert("⚠️ Por favor, indica la Categoría y el Nombre Comercial.");
+                return false;
+            }
+
+            const payload = {
+                nombre: nom,
+                tipo_negocio: cat,
+                enlace_web: url,
+                logo_url: desc
+            };
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/patrocinadores/${id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    // Ocultar modal
+                    const modalEl = document.getElementById("modalEditarPartner");
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    if (modalInstance) modalInstance.hide();
+
+                    alert("¡Patrocinador actualizado con éxito!");
+                    await obtenerPartnersAPI();
+                } else {
+                    const errData = await res.json();
+                    alert(`⚠️ No se pudo actualizar: ${JSON.stringify(errData.detail || "Error en la petición.")}`);
+                }
+            } catch (err) {
+                console.error("Error al actualizar partner:", err);
+                alert("Error de red al intentar actualizar.");
+            }
+
+            return false;
+        }
+
+        async function eliminarPartner(partnerId) {
+            if (!partnerId) return;
+            if (!confirm("¿Seguro que deseas eliminar este patrocinador?")) return;
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/patrocinadores/${partnerId}`, {
+                    method: "DELETE"
+                });
+
+                if (res.ok) {
+                    alert("Patrocinador eliminado correctamente.");
+                    obtenerPartnersAPI();
+                } else {
+                    alert("No se pudo eliminar el partner en el servidor.");
+                }
+            } catch (err) {
+                console.error("Error al eliminar partner:", err);
+                alert("Error de red al intentar borrar.");
+            }
+        }
     </script>
 </body>
 </html>
