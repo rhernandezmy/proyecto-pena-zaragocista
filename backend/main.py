@@ -23,7 +23,7 @@ import schemas
 from database import Base, engine, get_db
 
 # Routers Modulares
-from routers import auth, contacto, noticias, reservas, usuarios
+from routers import auth, contacto, noticias, reservas, usuarios, viajes
 from routers.zaragoza import iniciar_cron
 from routers.zaragoza import router as zaragoza_router
 
@@ -91,9 +91,16 @@ app = FastAPI(title="API Peña Zaragocista")
 
 app.mount("/assets", StaticFiles(directory=RUTA_FRONTEND_ASSETS), name="assets")
 
+origins = [
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -107,6 +114,7 @@ app.include_router(usuarios.router, tags=["Usuarios"])
 app.include_router(noticias.router, prefix="/noticias", tags=["Noticias"])
 app.include_router(zaragoza_router)
 app.include_router(reservas.router, prefix="/reservas", tags=["Reservas"])
+app.include_router(viajes.router)
 app.include_router(contacto.router, prefix="/api/contacto", tags=["Contacto"])
 
 # ---------------------------------------------------------------------

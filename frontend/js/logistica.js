@@ -1,5 +1,5 @@
 // URL base de tu servidor backend de FastAPI
-const API_URL = "http://localhost:8000"; 
+const API_URL = "http://127.0.0.1:8000"; 
 
 // Ejecutar automáticamente al cargar la página para dar vida a los formularios y tablas
 document.addEventListener("DOMContentLoaded", () => {
@@ -36,7 +36,10 @@ async function cargarPartidosEnDesplegable() {
         }
 
         partidos.forEach(p => {
-            const nombreRival = p.rival || "Rival Desconocido";
+            let nombreRival = p.rival || "Rival Desconocido";
+            // 🎯 Limpiar prefijo "vs" en el desplegable
+            nombreRival = nombreRival.replace(/^vs\s+/i, '').trim();
+
             const lugarPartido = p.lugar || "Fuera";
             const fechaPartido = p.fecha || "";
             
@@ -72,10 +75,19 @@ async function cargarViajesAdmin() {
             const fila = document.createElement("tr");
             const iconoTransporte = v.tipo_transporte === "Autobús" ? "🚌 Autobús" : "🚗 Coche";
 
+            // 🎯 CORRECCIÓN FECHA Y DESTINO (Limpia "vs" y recupera la fecha)
+            let fechaViaje = v.fecha || v.fecha_partido || "";
+            let fechaLimpia = fechaViaje ? String(fechaViaje).split('T')[0] : "Sin fecha";
+            
+            let destinoLimpio = (v.rival || v.destino || "Destino Vinculado")
+                .replace(/^vs\s+/i, '')
+                .replace(/^desplazamiento\s+/i, '')
+                .trim();
+
             fila.innerHTML = `
                 <td class="fw-bold">#${v.id}</td>
-                <td><strong>${v.destino || 'Destino Vinculado'}</strong></td>
-                <td>${v.fecha || 'Sin fecha'}</td>
+                <td><strong>${destinoLimpio}</strong></td>
+                <td>${fechaLimpia}</td>
                 <td><span class="badge bg-secondary">${iconoTransporte}</span></td>
                 <td><span class="badge bg-primary">${v.plazas_totales} disponibles</span></td>
                 <td class="text-center">
@@ -117,7 +129,7 @@ function configurarFormularioViajeAdmin() {
         }
 
         const textoCompletoPartido = selectPartido.options[selectPartido.selectedIndex].text;
-        const destinoTextoLimpio = textoCompletoPartido.split("-")[0].trim();
+        const destinoTextoLimpio = textoCompletoPartido.split("-")[0].replace(/^vs\s+/i, '').trim();
 
         const payload = {
             partido_id: parseInt(selectPartido.value),

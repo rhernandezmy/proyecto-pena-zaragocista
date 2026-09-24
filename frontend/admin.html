@@ -481,6 +481,25 @@
             if (formEditarPartner) formEditarPartner.onsubmit = guardarEdicionPartner;
         });
 
+        // Persistencia de pestañas en el Admin
+        const adminTabs = document.querySelectorAll('#adminTabs button[data-bs-toggle="tab"]');
+        const savedAdminTab = localStorage.getItem("activeTab_admin");
+
+        if (savedAdminTab) {
+            const targetTab = document.querySelector(`button[data-bs-target="${savedAdminTab}"]`);
+            if (targetTab) {
+                const bsTab = new bootstrap.Tab(targetTab);
+                bsTab.show();
+            }
+        }
+
+        adminTabs.forEach(btn => {
+            btn.addEventListener("shown.bs.tab", (e) => {
+                const target = e.target.getAttribute("data-bs-target");
+                if (target) localStorage.setItem("activeTab_admin", target);
+            });
+        });
+
         // 2. CAMBIAR EL BOTÓN A VERDE CUANDO ELIGES UNA FOTO
         function actualizarNombreArchivo(input) {
             const label = document.getElementById('label-foto-archivo');
@@ -687,90 +706,181 @@
             } catch (err) { console.error(err); }
         }
 
-        // 5. SECCIÓN: PARTIDOS
+        // 5. SECCIÓN: PARTIDOS (Carga de partidos fuera de casa para la creación de viajes)
         async function obtenerPartidosAPI() {
-            const selectPartido = document.querySelector("select[class*='form-select']") || document.getElementById("admin-viaje-destino"); 
+            const selectPartido = document.getElementById("viaje-partido-select") || document.getElementById("select-partido-admin"); 
             if (!selectPartido) return;
+
             try {
-                const res = await fetch(`${BACKEND_URL}/partidos`);
-                if (!res.ok) throw new Error();
-                const partidos = await res.json();
+                // 1. Usamos la ruta real que sí existe en tu FastAPI
+                const res = await fetch(`${BACKEND_URL}/partidos-zaragoza`);
+                if (!res.ok) throw new Error("Error HTTP al obtener los partidos");
                 
-                selectPartido.innerHTML = '<option value="">Selecciona un partido / destino...</option>';
-                
-                if (partidos.length === 0) {
-                    selectPartido.innerHTML = '<option value="">No hay partidos disponibles</option>';
+                const data = await res.json();
+                const partidos = data.partidos || [];
+
+                // 2. Filtrar exclusivamente partidos fuera de casa no finalizados
+                const partidosFuera = partidos.filter(p => {
+                    const fixture = p.fixture || {};
+                    const teams = p.teams || {};
+                    const estadoShort = fixture.status?.short;
+                    const haTerminado = ['FT', 'AET', 'PEN'].includes(estadoShort);
+
+                    if (haTerminado) return false;
+
+                    const equipoLocal = (teams.home?.name || "").toLowerCase();
+                    const equipoVisitante = (teams.away?.name || "").toLowerCase();
+
+                    // Es fuera de casa si el visitante es el Zaragoza o el local no es el Zaragoza
+                    return equipoVisitante.includes("zaragoza") || (!equipoLocal.includes("zaragoza") && equipoLocal.length > 0);
+                });
+
+                if (partidosFuera.length === 0) {
+                    selectPartido.innerHTML = '<option value="">No hay partidos fuera de casa disponibles</option>';
                     return;
                 }
-                
-                partidos.forEach(partido => {
+
+                selectPartido.innerHTML = '<option value="">-- Selecciona un partido / destino fuera --</option>';
+
+                // 3. Iterar y rellenar usando el formato dinámico de la API de fútbol
+                partidosFuera.forEach(p => {
+                    const fixture = p.fixture || {};
+                    const teams = p.teams || {};
+
+                    const equipoLocal = teams.home?.name || "Local";
+                    const equipoVisitante = teams.away?.name || "Visitante";
+                    const rival = equipoLocal.toLowerCase().includes("zaragoza") ? equipoVisitante : equipoLocal;
+                    const estadio = fixture.venue?.name || `Estadio de ${rival}`;
+                    const partidoId = fixture.id || p.id || "";
+
+                    const fechaObj = fixture.date ? new Date(fixture.date) : null;
+                    const fechaStr = fechaObj ? fechaObj.toLocaleDateString('es-ES') : "Fecha por confirmar";
+
                     selectPartido.insertAdjacentHTML("beforeend", `
-                        <option value="${partido.id}">vs ${partido.rival} (${partido.fecha || 'Sin fecha'})</option>
+                        <option value="${partidoId}" data-rival="${rival}" data-fecha="${fechaStr}">
+                            vs ${rival} (${fechaStr}) - ${estadio}
+                        </option>
                     `);
                 });
+
             } catch (err) { 
-                console.error(err); 
-                selectPartido.innerHTML = '<option value="">Error al cargar partidos</option>';
+                console.error("Error al cargar partidos en admin:", err); 
+                selectPartido.innerHTML = '<option value="">Error al cargar partidos desde el servidor</option>';
             }
         }
 
-        // 6. SECCIÓN: VIAJES
+        // 6. SECCIÓN: VIAJES (Listado y publicación de desplazamientos)
         async function obtenerViajesAPI() {
-            const tablas = document.querySelectorAll("table");
-            let tbody = document.getElementById("tabla-viajes-admin");
-            
-            if (!tbody && tablas.length > 0) {
-                tablas.forEach(tabla => {
-                    if (tabla.innerText.includes("Plazas Libres")) {
-                        tbody = tabla.querySelector("tbody");
-                    }
-                });
-            }
-
+            const tbody = document.getElementById("tabla-viajes-admin");
             if (!tbody) return;
 
             try {
                 const res = await fetch(`${BACKEND_URL}/viajes`); 
-                if (!res.ok) throw new Error();
+                if (!res.ok) throw new Error("Error al consultar viajes");
                 const viajes = await res.json();
                 
                 if (viajes.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay viajes programados.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">No hay viajes programados.</td></tr>';
                     return;
                 }
+
                 tbody.innerHTML = "";
+                
+                // Iterar sobre cada viaje y formatear la información para la tabla
                 viajes.forEach(viaje => {
-                    tbody.innerHTML += `
+                    // Destino sin "vs " repetido
+                    const destinoTexto = (viaje.destino || viaje.rival || "Desplazamiento").replace(/^vs\s+/i, '');
+                    
+                    // Formateo flexible de la fecha (si viene en fecha, fecha_partido o fecha_solicitada)
+                    let fechaMostrar = viaje.fecha || viaje.fecha_partido;
+                    if (fechaMostrar && fechaMostrar.includes("T")) {
+                        fechaMostrar = fechaMostrar.split("T")[0]; // Quedarse solo con YYYY-MM-DD
+                    }
+                    if (!fechaMostrar) fechaMostrar = "Sin fecha";
+
+                    const tipoTransporte = viaje.tipo_transporte || "Autobús";
+                    const plazas = viaje.plazas_disponibles ?? viaje.plazas_totales ?? 0;
+                    
+                    // Badge de tipo (Coche o Bus)
+                    const esCoche = tipoTransporte.toLowerCase().includes("coche");
+                    const badgeColor = esCoche ? "bg-info text-dark" : "bg-primary";
+
+                    tbody.insertAdjacentHTML("beforeend", `
                         <tr>
-                            <td>#${viaje.id}</td>
-                            <td class="fw-bold">${viaje.destino || viaje.rival}</td>
-                            <td>${viaje.fecha}</td>
-                            <td><span class="badge bg-info text-dark">${viaje.tipo_transporte || 'Autobús'}</span></td>
-                            <td>${viaje.plazas_libres ?? viaje.plazas_totales}</td>
+                            <td class="fw-bold">#${viaje.id}</td>
+                            <td class="fw-bold text-dark">${destinoTexto}</td>
+                            <td>${fechaMostrar}</td>
+                            <td><span class="badge ${badgeColor}">${tipoTransporte}</span></td>
+                            <td class="fw-bold text-success">${plazas} libres</td>
                             <td class="text-center">
-                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarViaje(${viaje.id})"><i class="fas fa-trash"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="eliminarViaje(${viaje.id})" title="Cancelar viaje">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </td>
-                        </tr>`;
+                        </tr>`);
                 });
             } catch (err) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error al cargar la logística de viajes.</td></tr>';
+                console.error("Error al obtener viajes en admin:", err);
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-3">Error al cargar la logística de viajes.</td></tr>';
             }
         }
 
         async function enviarNuevoViaje(e) {
-            e.preventDefault();
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
             
-            const selectDestino = document.querySelector("select[class*='form-select']");
-            const inputFecha = document.querySelector("input[type='date']");
-            const selectTransporte = document.querySelectorAll("select")[1];
-            const inputPlazas = document.querySelector("input[type='number']");
+            const selectDestino = document.getElementById("viaje-partido-select") || document.getElementById("select-partido-admin");
+            const inputFecha = document.getElementById("viaje-fecha");
+            const selectTransporte = document.getElementById("viaje-transporte");
+            const inputPlazas = document.getElementById("viaje-plazas");
 
+            if (!selectDestino || !selectDestino.value) {
+                alert("⚠️ Por favor, selecciona un partido de destino.");
+                return false;
+            }
+
+            const opcionSeleccionada = selectDestino.options[selectDestino.selectedIndex];
+            
+            // 1. Extraer rival limpio
+            const rivalNombre = opcionSeleccionada.getAttribute("data-rival") || 
+                                opcionSeleccionada.text.replace(/^vs\s+/i, '').split('(')[0].trim();
+            
+            // 2. Extraer fecha (Si el input manual está vacío, tomar la fecha del atributo data-fecha del <option>)
+            let fechaFinalStr = "";
+            if (inputFecha && inputFecha.value) {
+                fechaFinalStr = inputFecha.value; // Formato YYYY-MM-DD
+            } else {
+                const fechaAttr = opcionSeleccionada.getAttribute("data-fecha"); // Ej: "25/9/2026"
+                if (fechaAttr && fechaAttr !== "Fecha por confirmar") {
+                    // Convertir DD/MM/YYYY a YYYY-MM-DD si es necesario
+                    const partes = fechaAttr.split('/');
+                    if (partes.length === 3) {
+                        fechaFinalStr = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+                    } else {
+                        fechaFinalStr = fechaAttr;
+                    }
+                }
+            }
+
+            const plazasVal = inputPlazas && inputPlazas.value ? parseInt(inputPlazas.value) : 55;
+            const tipoTransVal = selectTransporte ? selectTransporte.value : "Autobús de la Peña";
+
+            // PAYLOAD LIMPIO Y UNIFICADO
             const payload = {
-                partido_id: parseInt(selectDestino.value) || null,
-                destino: selectDestino.options[selectDestino.selectedIndex].text.replace("vs ", ""), 
-                fecha: inputFecha.value,
-                tipo_transporte: selectTransporte ? selectTransporte.value : "Autobús de la Peña",
-                plazas_totales: parseInt(inputPlazas.value) || 55
+                rival: rivalNombre,
+                destino: rivalNombre, // Guardamos solo el nombre del destino/rival sin el "vs "
+                partido_id: parseInt(selectDestino.value),
+                partido_api_id: parseInt(selectDestino.value),
+                fecha: fechaFinalStr, // Campo estandarizado de fecha corta (YYYY-MM-DD)
+                fecha_partido: fechaFinalStr ? new Date(fechaFinalStr).toISOString() : null,
+                email_conductor: "admin@pena.com",
+                tipo_transporte: tipoTransVal,
+                plazas_totales: plazasVal,
+                plazas_disponibles: plazasVal,
+                precio: 0.0,
+                hace_noche: false
             };
 
             try {
@@ -779,22 +889,40 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
                 });
+
                 if (res.ok) {
-                    alert("¡Viaje On Tour publicado con éxito!");
-                    document.getElementById("form-nuevo-viaje").reset();
-                    obtenerViajesAPI();
+                    alert("¡Viaje creado con éxito en el sistema!");
+                    obtenerViajesAPI(); // Recarga la tabla del admin sin refrescar la página entera
+                    const form = selectDestino.closest("form");
+                    if (form) form.reset();
                 } else {
-                    alert("Error al guardar el viaje.");
+                    const errData = await res.json().catch(() => ({}));
+                    console.error("Error validación backend:", errData);
+                    alert(`Error al crear el viaje: ${JSON.stringify(errData.detail || errData)}`);
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error("Error en la petición POST /viajes:", err);
+                alert("Error de conexión con el servidor.");
+            }
+
+            return false;
         }
 
         async function eliminarViaje(id) {
-            if (!confirm("¿Seguro que quieres borrar este viaje?")) return;
+            if (!id) return;
+            if (!confirm("¿Seguro que quieres borrar este viaje organizado?")) return;
+
             try {
                 const res = await fetch(`${BACKEND_URL}/viajes/${id}`, { method: "DELETE" });
-                if (res.ok) obtenerViajesAPI();
-            } catch (err) { console.error(err); }
+                if (res.ok) {
+                    alert("Viaje eliminado correctamente.");
+                    obtenerViajesAPI();
+                } else {
+                    alert("No se pudo borrar el viaje en el servidor.");
+                }
+            } catch (err) { 
+                console.error("Error al eliminar viaje:", err); 
+            }
         }
 
         // 7. SECCIÓN: RESERVAS

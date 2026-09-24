@@ -4,7 +4,6 @@ from datetime import datetime
 import models, schemas
 from database import get_db
 
-# Dejamos el prefijo vacío porque main.py ya le añade "/reservas"
 router = APIRouter(prefix="", tags=["Reservas"])
 
 # =========================================================================
@@ -25,11 +24,9 @@ def obtener_reservas(db: Session = Depends(get_db)):
         
         if r.usuario:
             socio_email = r.usuario.email
-            # Comprobamos si la cuenta web está vinculada a una ficha de SocioPena
             if r.usuario.socio_interno:
                 socio_nombre = f"{r.usuario.socio_interno.nombre} {r.usuario.socio_interno.apellidos}".strip()
             else:
-                # Si es un usuario web sin ficha de socio asociada aún, mostramos su username
                 socio_nombre = r.usuario.username
 
         resultado.append({
@@ -48,71 +45,103 @@ def obtener_reservas(db: Session = Depends(get_db)):
 
 
 # =========================================================================
-# 2. CREAR NUEVA RESERVA (Viajes y Local)
+# 2. CREAR NUEVA RESERVA (Viajes, Coche Compartido y Local)
 # =========================================================================
 @router.post("")
 def crear_reserva(reserva: schemas.ReservaCrear, db: Session = Depends(get_db)):
-    # Validar que el usuario existe obligatoriamente en usuarios_web
     usuario = db.query(models.Usuario).filter(models.Usuario.id == reserva.usuario_id).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado.")
 
-    # CASO A: Reserva para VIAJE On Tour
-    if reserva.tipo_reserva == "Viaje":
-        if not reserva.viaje_id:
-            raise HTTPException(status_code=400, detail="El viaje_id es obligatorio para reservas de tipo 'Viaje'.")
-            
-        viaje = db.query(models.Viaje).filter(models.Viaje.id == reserva.viaje_id).first()
-        if not viaje:
-            raise HTTPException(status_code=404, detail="Viaje no encontrado.")
-        
-        # Lógica de coche compartido: Si ofrece plazas
-        if reserva.motivo_evento and "Ofrece" in reserva.motivo_evento:
-            try:
-                palabras = reserva.motivo_evento.split()
-                idx = palabras.index("plazas.") if "plazas." in palabras else palabras.index("plazas")
-                plazas_ofrecidas = int(palabras[idx - 1])
-            except (ValueError, IndexError):
-                plazas_ofrecidas = 4
-            
-            viaje.plazas_disponibles += plazas_ofrecidas
-            
-        # Lógica de reserva normal
-        else:
-            if viaje.plazas_disponibles < reserva.asientos_reservados:
-                raise HTTPException(status_code=400, detail=f"Plazas insuficientes. Quedan {viaje.plazas_disponibles}.")
-            
-            viaje.plazas_disponibles -= reserva.asientos_reservados
-        
-        estado_inicial = "Aprobada"
+    motivo_texto = reserva.motivo_evento or ""
+    es_oferta_coche = "Ofrece" in motivo_texto or reserva.tipo_reserva == "Coche"
+    es_viaje = reserva.tipo_reserva in ["Viaje", "Coche", "Logistica"] or es_oferta_coche or bool(reserva.viaje_id)
 
-    # CASO B: Solicitud para usar el LOCAL
-    else:
-        if not reserva.motivo_evento:
-            raise HTTPException(status_code=400, detail="Debes especificar el motivo para reservar el local.")
+    if es_viaje:
+        if not reserva.viaje_id:
+            raise HTTPException(status_code=400, detail="El viaje_id es obligatorio para reservas de viajes o vehículos.")
         
+        plazas_ofrecidas = reserva.asientos_reservados or 4
+        viaje = db.query(models.Viaje).filter(models.Viaje.id == reserva.viaje_id).first()
+        
+        fecha_dt = datetime.now()
+        if reserva.fecha_solicitada:
+            try:
+                fecha_clean = str(reserva.fecha_solicitada).split("T")[0]
+                fecha_dt = datetime.strptime(fecha_clean, "%Y-%m-%d")
+            except Exception:
+                fecha_dt = datetime.now()
+
+        # Si el viaje NO existe en la BD, lo insertamos dinámicamente
+        if not viaje:
+            rival_nombre = "Partido Fuera"
+            if "ir a ver al" in motivo_texto:
+                rival_nombre = motivo_texto.split("ir a ver al")[-1].strip()
+            elif "ir a ver" in motivo_texto:
+                rival_nombre = motivo_texto.split("ir a ver")[-1].strip()
+            elif "contra" in motivo_texto:
+                rival_nombre = motivo_texto.split("contra")[-1].strip()
+
+            rival_nombre = rival_nombre.rstrip(".")
+
+            # Nombre real del usuario logueado
+            nombre_real_socio = usuario.username
+            if usuario.socio_interno and usuario.socio_interno.nombre:
+                nombre_real_socio = f"{usuario.socio_interno.nombre} {usuario.socio_interno.apellidos}".strip()
+
+            viaje = models.Viaje(
+                id=reserva.viaje_id,
+                partido_id=reserva.viaje_id,
+                partido_api_id=reserva.viaje_id,
+                destino=f"vs {rival_nombre}",
+                rival=rival_nombre,
+                fecha_partido=fecha_dt,
+                tipo_transporte="Coche",
+                plazas_totales=plazas_ofrecidas,
+                plazas_disponibles=plazas_ofrecidas,
+                email_conductor=nombre_real_socio,  # 👈 Guardamos directamente el Nombre Completo del Socio
+                precio=0.0
+            )
+            db.add(viaje)
+            db.commit()
+            db.refresh(viaje)
+
+        else:
+            if es_oferta_coche:
+                viaje.plazas_disponibles += plazas_ofrecidas
+            else:
+                if viaje.plazas_disponibles < reserva.asientos_reservados:
+                    raise HTTPException(status_code=400, detail="Plazas insuficientes.")
+                viaje.plazas_disponibles -= reserva.asientos_reservados
+            db.commit()
+
+        estado_inicial = "Aprobada"
+    else:
         estado_inicial = "Pendiente"
 
-    # 🔧 PROCESAMIENTO DE LA FECHA SELECCIONADA
-    datos_reserva = reserva.model_dump()
-    
+    fecha_reserva_dt = datetime.now()
     if reserva.fecha_solicitada:
         try:
-            # Extrae la parte YYYY-MM-DD y la convierte a objeto datetime
-            fecha_str = str(reserva.fecha_solicitada).split("T")[0]
-            datos_reserva["fecha_solicitada"] = datetime.strptime(fecha_str, "%Y-%m-%d")
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Formato de fecha inválido. Usa YYYY-MM-DD")
+            fecha_clean = str(reserva.fecha_solicitada).split("T")[0]
+            fecha_reserva_dt = datetime.strptime(fecha_clean, "%Y-%m-%d")
+        except Exception:
+            pass
 
     nueva_reserva = models.Reserva(
-        **datos_reserva,
+        usuario_id=reserva.usuario_id,
+        viaje_id=reserva.viaje_id,
+        asientos_reservados=reserva.asientos_reservados,
+        tipo_reserva="Viaje" if es_viaje else "Local",
+        motivo_evento=reserva.motivo_evento,
+        fecha_solicitada=fecha_reserva_dt,
         estado_solicitud=estado_inicial
     )
     
     db.add(nueva_reserva)
     db.commit()
     db.refresh(nueva_reserva)
-    return {"ok": True, "reserva": nueva_reserva}
+
+    return {"ok": True, "reserva_id": nueva_reserva.id, "viaje_id": reserva.viaje_id}
 
 
 # =========================================================================
@@ -144,28 +173,25 @@ def resolver_reserva_local(reserva_id: int, estado: str, db: Session = Depends(g
 
 
 # =========================================================================
-# 5. CANCELAR / ELIMINAR RESERVA
+# 5. CANCELAR / ELIMINAR RESERVA (LÓGICA DE BORRADO SEGURO)
 # =========================================================================
 @router.delete("/{reserva_id}")
 def cancelar_reserva(reserva_id: int, db: Session = Depends(get_db)):
     reserva = db.query(models.Reserva).filter(models.Reserva.id == reserva_id).first()
     if not reserva:
-        raise HTTPException(status_code=404, detail="Reserva no encontrada.")
+        raise HTTPException(status_code=404, detail=f"Reserva con ID {reserva_id} no encontrada.")
     
-    if reserva.tipo_reserva == "Viaje" and reserva.viaje_id:
+    # Si la reserva tenía un viaje/coche asociado
+    if reserva.viaje_id:
         viaje = db.query(models.Viaje).filter(models.Viaje.id == reserva.viaje_id).first()
         if viaje:
-            if reserva.motivo_evento and "Ofrece" in reserva.motivo_evento:
-                try:
-                    palabras = reserva.motivo_evento.split()
-                    idx = palabras.index("plazas.") if "plazas." in palabras else palabras.index("plazas")
-                    plazas_ofrecidas = int(palabras[idx - 1])
-                except (ValueError, IndexError):
-                    plazas_ofrecidas = 4
-                viaje.plazas_disponibles -= plazas_ofrecidas
+            es_oferta_coche = (reserva.tipo_reserva == "Coche") or (reserva.motivo_evento and "Ofrece" in reserva.motivo_evento)
+            if es_oferta_coche:
+                # Si se cancela la oferta del coche, eliminamos la expedición/viaje asociada al coche
+                db.delete(viaje)
             else:
-                viaje.plazas_disponibles += reserva.asientos_reservados
-    
+                viaje.plazas_disponibles += (reserva.asientos_reservados or 1)
+
     db.delete(reserva)
     db.commit()
     return {"ok": True, "mensaje": "Reserva eliminada con éxito."}

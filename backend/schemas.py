@@ -6,17 +6,26 @@ from datetime import datetime
 # 🚌 VIAJES
 # =========================================================================
 class ViajeCrear(BaseModel):
-    rival: str
-    destino: str
+    rival: Optional[str] = "Partido Fuera"
+    destino: Optional[str] = "Desplazamiento Oficial"
+    partido_id: Optional[int] = None
     partido_api_id: Optional[int] = None
     fecha_partido: Optional[datetime] = None
-    email_conductor: EmailStr
+    nombre_conductor: Optional[str] = None  # 👈 Añadido explícitamente para el nombre real del socio
+    email_conductor: Optional[EmailStr] = None
     tipo_transporte: str = "Coche"
-    plazas_totales: int
-    plazas_disponibles: int
+    plazas_totales: int = 4
+    plazas_disponibles: int = 4
     precio: float = 0.0
     detalles_precio: Optional[str] = None
     hace_noche: bool = False
+
+    class Config:
+        from_attributes = True
+
+# Esquema de respuesta para incluir el ID del viaje generado en PostgreSQL
+class Viaje(ViajeCrear):
+    id: int
 
     class Config:
         from_attributes = True
@@ -31,7 +40,14 @@ class ReservaCrear(BaseModel):
     asientos_reservados: int = 1
     tipo_reserva: str = "Viaje"          # "Viaje" o "Local"
     motivo_evento: Optional[str] = None  # Ej: "Ver partido contra Castellón"
-    fecha_solicitada: Optional[str] = None # 👈 ¡AGREGAR ESTA LÍNEA! (Formato YYYY-MM-DD o ISO)
+    fecha_solicitada: Optional[str] = None # Formato YYYY-MM-DD o ISO
+
+    class Config:
+        from_attributes = True
+
+class ReservaResponse(ReservaCrear):
+    id: int
+    estado: str = "Pendiente"
 
     class Config:
         from_attributes = True

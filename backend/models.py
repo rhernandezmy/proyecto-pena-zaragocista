@@ -79,7 +79,8 @@ class Vehiculo(Base):
 class Viaje(Base):
     __tablename__ = "viajes"
     id = Column(Integer, primary_key=True, index=True)
-    
+
+    partido_id = Column(Integer, nullable=True)
     # En lugar de enlazar a una tabla 'partidos', guardamos los datos directamente o el API_ID del partido
     partido_api_id = Column(Integer, nullable=True) # ID que viene de API-Football
     rival = Column(String(100), nullable=False)     # Ej: "Nàstic de Tarragona"
