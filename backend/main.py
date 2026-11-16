@@ -6,7 +6,7 @@ from typing import Optional
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import Column, Integer, String, func, select
@@ -108,6 +108,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ---------------------------------------------------------------------
+# RUTA PARA SERVIR EL FRONTEND (PÁGINA PRINCIPAL Y ESTÁTICOS)
+# ---------------------------------------------------------------------
+
+# Apuntamos a la carpeta frontend que está al mismo nivel que backend
+RUTA_FRONTEND_GENERAL = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "frontend")
+)
+
+# Si tienes archivos generales en frontend (como index.html, contacto.html, etc.), 
+# montamos la carpeta frontend completa si existe:
+if os.path.exists(RUTA_FRONTEND_GENERAL):
+    app.mount("/web", StaticFiles(directory=RUTA_FRONTEND_GENERAL), name="frontend_files")
+
+# Endpoint raíz para servir el index.html principal automáticamente
+@app.get("/")
+def read_root():
+    ruta_index = os.path.join(RUTA_FRONTEND_GENERAL, "index.html")
+    if os.path.exists(ruta_index):
+        return FileResponse(ruta_index)
+    return {
+        "status": "success", 
+        "message": "¡API de la Peña Zaragocista funcionando correctamente ⚽!"
+    }
 
 # =========================================================================
 # CONTROL DE ENRUTAMIENTO (Routers Modulares)
