@@ -127,13 +127,6 @@ app.include_router(patrocinadores.router)
 @app.on_event("startup")
 async def startup_event():
     iniciar_cron()
-    
-# ---------------------------------------------------------------------
-# ENDPOINTS: RAÍZ Y ESTADO DE LA API
-# ---------------------------------------------------------------------
-@app.get("/")
-def read_root():
-    return {"mensaje": "API de la Peña Zaragocista funcionando correctamente ⚽"}
 
 # ---------------------------------------------------------------------
 # ENDPOINTS: PANEL ADMINISTRACIÓN Y CONTROL DE SOCIOS
