@@ -4,7 +4,7 @@ from datetime import datetime
 from xmlrpc import client
 
 import httpx
-from bs4 import BeautifulSoup, soup
+from bs4 import BeautifulSoup
 from fastapi import APIRouter, HTTPException
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
