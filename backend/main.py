@@ -30,16 +30,16 @@ from routers.zaragoza import router as zaragoza_router
 # ---------------------------------------------------------------------
 # CONFIGURACIÓN DE RUTAS Y ESTRUCTURA DE ARCHIVOS
 # ---------------------------------------------------------------------
-RUTA_FRONTEND_ASSETS = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "frontend", "assets")
-)
-
-if not os.path.exists(RUTA_FRONTEND_ASSETS):
-    os.makedirs(RUTA_FRONTEND_ASSETS, exist_ok=True)
-
 RUTA_FRONTEND_GENERAL = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "frontend")
 )
+
+RUTA_FRONTEND_ASSETS = os.path.join(RUTA_FRONTEND_GENERAL, "assets")
+RUTA_FRONTEND_CSS = os.path.join(RUTA_FRONTEND_GENERAL, "css")
+RUTA_FRONTEND_JS = os.path.join(RUTA_FRONTEND_GENERAL, "js")
+
+if not os.path.exists(RUTA_FRONTEND_ASSETS):
+    os.makedirs(RUTA_FRONTEND_ASSETS, exist_ok=True)
 
 # ---------------------------------------------------------------------
 # MODELOS DE BASE DE DATOS LOCALES
@@ -93,8 +93,15 @@ class RegistroUsuarioWeb(BaseModel):
 # ---------------------------------------------------------------------
 app = FastAPI(title="API Peña Zaragocista")
 
-# Montaje de archivos estáticos y assets
-app.mount("/assets", StaticFiles(directory=RUTA_FRONTEND_ASSETS), name="assets")
+# 🌟 MONTAJE DE ARCHIVOS ESTÁTICOS EN LA RAÍZ (Soluciona los errores 404 de CSS, JS y Assets)
+if os.path.exists(RUTA_FRONTEND_CSS):
+    app.mount("/css", StaticFiles(directory=RUTA_FRONTEND_CSS), name="css")
+
+if os.path.exists(RUTA_FRONTEND_JS):
+    app.mount("/js", StaticFiles(directory=RUTA_FRONTEND_JS), name="js")
+
+if os.path.exists(RUTA_FRONTEND_ASSETS):
+    app.mount("/assets", StaticFiles(directory=RUTA_FRONTEND_ASSETS), name="assets")
 
 os.makedirs("static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -120,17 +127,15 @@ app.add_middleware(
 )
 
 # =========================================================================
-# CONTROL DE ENRUTAMIENTO (Routers Modulares y Ruta Raíz)
+# CONTROL DE ENRUTAMIENTO (Routers Modulares y Páginas Web)
 # =========================================================================
 
 @app.get("/")
 def read_root():
-    # 1. Intentar servir desde la carpeta general del frontend hermana
     ruta_index_frontend = os.path.join(RUTA_FRONTEND_GENERAL, "index.html")
     if os.path.exists(ruta_index_frontend):
         return FileResponse(ruta_index_frontend)
     
-    # 2. Intentar servir desde la carpeta local 'static'
     ruta_index_static = os.path.join("static", "index.html")
     if os.path.exists(ruta_index_static):
         return FileResponse(ruta_index_static)
@@ -139,6 +144,14 @@ def read_root():
         "status": "success", 
         "message": "¡API de la Peña Zaragocista funcionando correctamente ⚽!"
     }
+
+# 🌟 RUTA DINÁMICA PARA SERVIR CUALQUIER PÁGINA HTML SECUNDARIA (noticias.html, partidos.html, etc.)
+@app.get("/{nombre_pagina}.html")
+def servir_paginas_html(nombre_pagina: str):
+    ruta_archivo = os.path.join(RUTA_FRONTEND_GENERAL, f"{nombre_pagina}.html")
+    if os.path.exists(ruta_archivo):
+        return FileResponse(ruta_archivo)
+    raise HTTPException(status_code=404, detail="Página no encontrada")
 
 # Routers
 app.include_router(auth.router, prefix="/auth", tags=["Autenticación"])
@@ -485,12 +498,10 @@ async def eliminar_imagen_galeria(foto_id: int, db: Session = Depends(get_db)):
 # ---------------------------------------------------------------------
 # ENDPOINTS: SPONSORS Y PATROCINADORES (PERSISTENTES EN BASE DE DATOS)
 # ---------------------------------------------------------------------
-# 1. OBTENER LISTA DE PATROCINADORES
 @app.get("/patrocinadores", response_model=list[schemas.Patrocinador], tags=["Patrocinadores"])
 def obtener_patrocinadores(db: Session = Depends(get_db)):
     return db.query(models.Patrocinador).all()
 
-# 2. CREAR UN NUEVO PATROCINADOR
 @app.post("/patrocinadores", response_model=schemas.Patrocinador, status_code=status.HTTP_201_CREATED, tags=["Patrocinadores"])
 def crear_patrocinador(patrocinador: schemas.PatrocinadorCrear, db: Session = Depends(get_db)):
     nuevo_patro = models.Patrocinador(**patrocinador.model_dump())
@@ -499,33 +510,26 @@ def crear_patrocinador(patrocinador: schemas.PatrocinadorCrear, db: Session = De
     db.refresh(nuevo_patro)
     return nuevo_patro
 
-# 3. ELIMINAR UN PATROCINADOR EXISTENTE
 @app.delete("/patrocinadores/{patrocinador_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Patrocinadores"])
 def eliminar_patrocinador(patrocinador_id: int, db: Session = Depends(get_db)):
     patrocinador = db.query(models.Patrocinador).filter(models.Patrocinador.id == patrocinador_id).first()
-    
     if not patrocinador:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
             detail="El patrocinador que intentas eliminar no existe."
         )
-        
     db.delete(patrocinador)
     db.commit()
     return None
 
-# 4. ACTUALIZAR UN PATROCINADOR EXISTENTE
 @app.put("/patrocinadores/{patrocinador_id}", response_model=schemas.Patrocinador, tags=["Patrocinadores"])
 def actualizar_patrocinador(patrocinador_id: int, patrocinador_actualizado: schemas.PatrocinadorCrear, db: Session = Depends(get_db)):
     patrocinador = db.query(models.Patrocinador).filter(models.Patrocinador.id == patrocinador_id).first()
-    
     if not patrocinador:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
             detail="El patrocinador que intentas actualizar no existe."
         )
-        
-    # Actualizamos los campos en la BD
     patrocinador.nombre = patrocinador_actualizado.nombre
     patrocinador.tipo_negocio = patrocinador_actualizado.tipo_negocio
     patrocinador.enlace_web = patrocinador_actualizado.enlace_web
