@@ -83,7 +83,6 @@
                         </div>
 
                         <div id="contenedor-noticias" class="row g-3 justify-content-center">
-                            <!-- Se rellenará desde JS o mostrará mensaje por defecto -->
                             <div class="col-12 text-center text-muted small py-2">
                                 No hay noticias recientes publicadas.
                             </div>
@@ -202,14 +201,13 @@
     <div id="footer-placeholder"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/components/header.js"></script>
-    <script src="js/components/footer.js"></script>
+    <script src="js/components/header.js" onerror="this.onerror=null; this.src='components/header.js';"></script>
+    <script src="js/components/footer.js" onerror="this.onerror=null; this.src='components/footer.js';"></script>
     <script src="js/app.js"></script>
     <script src="js/partners.js"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
-            // --- LÓGICA HÍBRIDA INTELIGENTE PARA LA PORTADA ---
             const urlBackend = typeof BACKEND_URL !== "undefined" 
                 ? BACKEND_URL 
                 : (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
@@ -248,7 +246,6 @@
                         const data = await res.json();
                         const partidos = data.partidos || [];
                         
-                        // Buscar el primer partido pendiente (NS o que no haya terminado)
                         const proximo = partidos.find(p => p.fixture?.status?.short === 'NS') || partidos[0];
 
                         if (proximo) {
@@ -376,10 +373,8 @@
                                 const titulo = noticia.titulo || noticia.title || "Noticia Zaragocista";
                                 const enlace = noticia.link || noticia.url || noticia.enlace || `noticias.html?id=${noticia.id || ''}`;
                                 
-                                // 1. Buscador de imagen con extracción de HTML como respaldo
                                 let imagen = noticia.imagen_url || noticia.imagen || noticia.image || noticia.thumbnail || noticia.enclosure?.url || noticia.media_thumbnail?.url || "";
                                 
-                                // Si no hay campo explícito de imagen, busca la primera <img> del contenido/descripción del RSS
                                 if (!imagen) {
                                     const htmlContent = noticia.content || noticia.description || noticia["content:encoded"] || "";
                                     const match = htmlContent.match(/<img[^>]+src=["']([^"']+)["']/i);
@@ -388,12 +383,10 @@
                                     }
                                 }
 
-                                // Si sigue sin encontrar nada, usa la imagen por defecto
                                 if (!imagen) {
                                     imagen = "assets/logo.png";
                                 }
 
-                                // 2. Formato de Fecha
                                 let fechaStr = "Reciente";
                                 const rawFecha = noticia.fecha || noticia.pubDate || noticia.published_at;
                                 if (rawFecha) {
@@ -410,8 +403,8 @@
                                         <div class="card h-100 border-0 shadow-sm overflow-hidden text-start rounded-3">
                                             <div style="height: 110px; overflow: hidden; background-color: #e9ecef; position: relative;">
                                                 <img src="${imagen}" class="card-img-top img-fluid" alt="${titulo}" 
-                                                     style="object-fit: cover; height: 100%; width: 100%;"
-                                                     onerror="this.onerror=null; this.src='assets/logo.png';">
+                                                   style="object-fit: cover; height: 100%; width: 100%;"
+                                                   onerror="this.onerror=null; this.src='assets/logo.png';">
                                                 <span class="badge bg-primary position-absolute top-0 start-0 m-2 shadow-sm" style="font-size: 0.6rem; opacity: 0.90;">
                                                     ${fuente}
                                                 </span>
