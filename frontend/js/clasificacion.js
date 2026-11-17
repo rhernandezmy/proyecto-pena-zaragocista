@@ -42,15 +42,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         let tabla = [];
 
-        if (Array.isArray(data.clasificacion)) {
+        // El backend devuelve directamente un array
+        if (Array.isArray(data)) {
+            tabla = data;
+        }
 
-            if (
-                data.clasificacion.length > 0 && data.clasificacion[0].league?.standings
-            ) {
-                tabla = data.clasificacion[0].league.standings[0] || [];
-            } else {
-                tabla = data.clasificacion;
-            }
+        // Compatibilidad con respuestas que contienen clasificacion
+        else if (Array.isArray(data.clasificacion)) {
+            tabla = data.clasificacion;
         }
 
         tbody.innerHTML = "";
@@ -74,17 +73,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         tabla.forEach((item, index) => {
 
-            const posicion = item.rank ?? item.posicion ?? (index + 1);
-            const equipo = item.team?.name || item.equipo || "Equipo";
-            const escudo = item.team?.logo || item.escudo || "";
-            const puntos = item.points ?? item.puntos ?? 0;
-            const pj = item.all?.played ?? item.pj ?? 0;
-            const pg = item.all?.win ?? item.pg ?? 0;
-            const pe = item.all?.draw ?? item.pe ?? 0;
-            const pp =item.all?.lose ?? item.pp ?? 0;
-            const gf = item.all?.goals?.for ?? item.gf ?? 0;
-            const gc = item.all?.goals?.against ?? item.gc ?? 0;
-            const dg = item.goalsDiff ?? item.dg ?? (gf - gc);
+            const posicion = item.posicion ?? item.rank ?? (index + 1);
+
+            const equipo = item.equipo || item.team?.name || "Equipo";
+
+            const escudo = item.escudo || item.team?.logo || "";
+
+            // Obtener estadísticas del array datos
+            const datos = item.datos || [];
+
+            const puntos = datos[0] ?? item.points ?? 0;
+            const pj = datos[1] ?? item.pj ?? 0;
+            const pg = datos[2] ?? item.pg ?? 0;
+            const pe = datos[3] ?? item.pe ?? 0;
+            const pp = datos[4] ?? item.pp ?? 0;
+            const gf = datos[5] ?? item.gf ?? 0;
+            const gc = datos[6] ?? item.gc ?? 0;
+            const dg = datos[7] ?? item.dg ?? (gf - gc);
 
             // ==============================================
             // DETECTAR REAL ZARAGOZA
