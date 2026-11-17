@@ -116,6 +116,7 @@ const footerHTML = `
 </div>
 `;
 
-if (document.getElementById('footer-placeholder')) {
-    document.getElementById('footer-placeholder').innerHTML = footerHTML;
+const footerPlaceholder = document.getElementById('footer-placeholder');
+if (footerPlaceholder) {
+    footerPlaceholder.innerHTML = footerHTML;
 }

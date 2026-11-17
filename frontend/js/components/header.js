@@ -55,7 +55,10 @@ const headerHTML = `
     </nav>
 `;
 
-document.getElementById('header-placeholder').innerHTML = headerHTML;
+const headerPlaceholder = document.getElementById('header-placeholder');
+if (headerPlaceholder) {
+    headerPlaceholder.innerHTML = headerHTML;
+}
 
 // Lógica para cerrar sesión
 if (socioLogado) {
