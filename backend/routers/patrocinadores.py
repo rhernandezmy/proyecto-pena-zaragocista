@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 import models, schemas
 from database import get_db
 
-router = APIRouter(prefix="/patrocinadores", tags=["Patrocinadores"])
+router = APIRouter(prefix="/partners", tags=["Patrocinadores"])
 
 UPLOAD_DIR = "static/uploads/patrocinadores"
 os.makedirs(UPLOAD_DIR, exist_ok=True)

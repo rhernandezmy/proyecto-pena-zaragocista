@@ -237,55 +237,54 @@
                 });
             }
 
+            
             // 2. PRÓXIMO PARTIDO DINÁMICO EN LA PORTADA
             const contenedorProximo = document.getElementById("contenedor-proximo-partido");
+
             if (contenedorProximo) {
                 try {
                     const res = await fetch(`${urlBackend}/partidos-zaragoza`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        const partidos = data.partidos || [];
-                        
-                        const proximo = partidos.find(p => p.fixture?.status?.short === 'NS') || partidos[0];
+                    if (!res.ok) throw new Error("Error API");
 
-                        if (proximo) {
-                            const local = proximo.teams?.home?.name || "Real Zaragoza";
-                            const visitante = proximo.teams?.away?.name || "Rival";
-                            const escLocal = proximo.teams?.home?.logo || "";
-                            const escVisitante = proximo.teams?.away?.logo || "";
-                            const round = proximo.league?.round?.replace(/[^0-9]/g, '') || '1';
-                            
-                            const fechaObj = proximo.fixture?.date ? new Date(proximo.fixture.date) : null;
-                            const fecha = fechaObj ? fechaObj.toLocaleDateString('es-ES') : 'Fecha pendiente';
-                            const hora = fechaObj ? fechaObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                    const data = await res.json();
+                    const ahora = new Date();
 
-                            contenedorProximo.innerHTML = `
-                                <div class="col-12 col-md-8">
-                                    <div class="card border rounded p-2 bg-light text-center shadow-sm">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <span class="badge bg-primary style-lh-sm" style="font-size: 0.65rem;">Jornada ${round}</span>
-                                            <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">Próximo Encuentro</span>
-                                        </div>
-                                        <div class="d-flex align-items-center justify-content-center gap-3 my-2">
-                                            <div class="text-center" style="width: 40%;">
-                                                ${escLocal ? `<img src="${escLocal}" width="28" height="28" alt="logo">` : ''}
-                                                <div class="fw-bold text-dark text-truncate small">${local}</div>
-                                            </div>
-                                            <div class="fw-bold text-primary fs-5">VS</div>
-                                            <div class="text-center" style="width: 40%;">
-                                                ${escVisitante ? `<img src="${escVisitante}" width="28" height="28" alt="logo">` : ''}
-                                                <div class="fw-bold text-dark text-truncate small">${visitante}</div>
-                                            </div>
-                                        </div>
-                                        <div class="border-top pt-1 text-muted small" style="font-size: 0.75rem;">
-                                            <i class="far fa-calendar-alt me-1"></i>${fecha} ${hora ? `| ${hora} h` : ''}
-                                        </div>
+                    const proximo = (data.partidos || [])
+                        .filter(p => p.fixture?.status?.short === "NS" && new Date(p.fixture.date) >= ahora)
+                        .sort((a, b) => new Date(a.fixture.date) - new Date(b.fixture.date))[0];
+
+                    if (!proximo) {
+                        contenedorProximo.innerHTML = '<div class="col-12 text-center text-muted py-3">No hay próximos partidos pendientes.</div>';
+                    } else {
+                        const local = proximo.teams?.home?.name || "Real Zaragoza";
+                        const visitante = proximo.teams?.away?.name || "Rival";
+                        const escLocal = proximo.teams?.home?.logo || "";
+                        const escVisitante = proximo.teams?.away?.logo || "";
+                        const round = proximo.league?.round?.replace(/[^0-9]/g, '') || '1';
+                        const fechaObj = new Date(proximo.fixture.date);
+                        const fecha = fechaObj.toLocaleDateString('es-ES');
+                        const hora = fechaObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+                        contenedorProximo.innerHTML = `
+                            <div class="col-12 col-md-8">
+                                <div class="card border rounded p-2 bg-light text-center shadow-sm">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="badge bg-primary style-lh-sm" style="font-size:0.65rem;">Jornada ${round}</span>
+                                        <span class="badge bg-warning text-dark" style="font-size:0.65rem;">Próximo Encuentro</span>
+                                    </div>
+                                    <div class="d-flex align-items-center justify-content-center gap-3 my-2">
+                                        <div class="text-center" style="width:40%;">${escLocal ? `<img src="${escLocal}" width="28" height="28" alt="logo">` : ''}<div class="fw-bold text-dark text-truncate small">${local}</div></div>
+                                        <div class="fw-bold text-primary fs-5">VS</div>
+                                        <div class="text-center" style="width:40%;">${escVisitante ? `<img src="${escVisitante}" width="28" height="28" alt="logo">` : ''}<div class="fw-bold text-dark text-truncate small">${visitante}</div></div>
+                                    </div>
+                                    <div class="border-top pt-1 text-muted small" style="font-size:0.75rem;">
+                                        <i class="far fa-calendar-alt me-1"></i>${fecha} | ${hora} h
                                     </div>
                                 </div>
-                            `;
-                        }
+                            </div>`;
                     }
                 } catch (e) {
+                    console.error("Error cargando próximo partido:", e);
                     contenedorProximo.innerHTML = '<div class="text-muted small py-2">No se pudo cargar el próximo partido.</div>';
                 }
             }
