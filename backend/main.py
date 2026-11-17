@@ -37,6 +37,10 @@ RUTA_FRONTEND_ASSETS = os.path.abspath(
 if not os.path.exists(RUTA_FRONTEND_ASSETS):
     os.makedirs(RUTA_FRONTEND_ASSETS, exist_ok=True)
 
+RUTA_FRONTEND_GENERAL = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "frontend")
+)
+
 # ---------------------------------------------------------------------
 # MODELOS DE BASE DE DATOS LOCALES
 # ---------------------------------------------------------------------
@@ -89,16 +93,22 @@ class RegistroUsuarioWeb(BaseModel):
 # ---------------------------------------------------------------------
 app = FastAPI(title="API Peña Zaragocista")
 
+# Montaje de archivos estáticos y assets
 app.mount("/assets", StaticFiles(directory=RUTA_FRONTEND_ASSETS), name="assets")
 
 os.makedirs("static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+if os.path.exists(RUTA_FRONTEND_GENERAL):
+    app.mount("/web", StaticFiles(directory=RUTA_FRONTEND_GENERAL), name="frontend_files")
+
+# Configuración de CORS (Incluye local y tu dominio oficial de Render)
 origins = [
     "http://127.0.0.1:5500",
     "http://localhost:5500",
     "http://127.0.0.1:8000",
     "http://localhost:8000",
+    "https://proyecto-pena-zaragocista.onrender.com",
 ]
 
 app.add_middleware(
@@ -109,34 +119,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ---------------------------------------------------------------------
-# RUTA PARA SERVIR EL FRONTEND (PÁGINA PRINCIPAL Y ESTÁTICOS)
-# ---------------------------------------------------------------------
+# =========================================================================
+# CONTROL DE ENRUTAMIENTO (Routers Modulares y Ruta Raíz)
+# =========================================================================
 
-# Apuntamos a la carpeta frontend que está al mismo nivel que backend
-RUTA_FRONTEND_GENERAL = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "frontend")
-)
-
-# Si tienes archivos generales en frontend (como index.html, contacto.html, etc.), 
-# montamos la carpeta frontend completa si existe:
-if os.path.exists(RUTA_FRONTEND_GENERAL):
-    app.mount("/web", StaticFiles(directory=RUTA_FRONTEND_GENERAL), name="frontend_files")
-
-# Endpoint raíz para servir el index.html principal automáticamente
 @app.get("/")
 def read_root():
-    ruta_index = os.path.join(RUTA_FRONTEND_GENERAL, "index.html")
-    if os.path.exists(ruta_index):
-        return FileResponse(ruta_index)
+    # 1. Intentar servir desde la carpeta general del frontend hermana
+    ruta_index_frontend = os.path.join(RUTA_FRONTEND_GENERAL, "index.html")
+    if os.path.exists(ruta_index_frontend):
+        return FileResponse(ruta_index_frontend)
+    
+    # 2. Intentar servir desde la carpeta local 'static'
+    ruta_index_static = os.path.join("static", "index.html")
+    if os.path.exists(ruta_index_static):
+        return FileResponse(ruta_index_static)
+        
     return {
         "status": "success", 
         "message": "¡API de la Peña Zaragocista funcionando correctamente ⚽!"
     }
 
-# =========================================================================
-# CONTROL DE ENRUTAMIENTO (Routers Modulares)
-# =========================================================================
+# Routers
 app.include_router(auth.router, prefix="/auth", tags=["Autenticación"])
 app.include_router(usuarios.router, tags=["Usuarios"])
 app.include_router(noticias.router, prefix="/noticias", tags=["Noticias"])
@@ -416,7 +420,7 @@ async def obtener_imagenes_galeria(db: Session = Depends(get_db)):
     
     galeria_con_rutas_reales = []
     for foto in fotos_db:
-        url_servidor = f"http://localhost:8000/assets/{foto.filename}"
+        url_servidor = f"/assets/{foto.filename}"
         galeria_con_rutas_reales.append({
             "id": foto.id,
             "titulo": foto.titulo,

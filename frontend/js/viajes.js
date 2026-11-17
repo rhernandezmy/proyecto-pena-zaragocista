@@ -17,8 +17,8 @@ async function cargarModuloViajes() {
     try {
         // Peticiones paralelas al backend y a la API de partidos
         const [resViajes, resPartidos] = await Promise.all([
-            fetch("http://127.0.0.1:8000/viajes").catch(err => { console.error("Error fetch viajes:", err); return null; }),
-            fetch("http://127.0.0.1:8000/partidos-zaragoza").catch(err => { console.error("Error fetch partidos:", err); return null; })
+            fetch("/viajes").catch(err => { console.error("Error fetch viajes:", err); return null; }),
+            fetch("/partidos-zaragoza").catch(err => { console.error("Error fetch partidos:", err); return null; })
         ]);
 
         const viajes = (resViajes && resViajes.ok) ? await resViajes.json() : [];
@@ -163,7 +163,7 @@ async function reservarPlazaViaje(viajeId) {
     };
 
     try {
-        const response = await fetch("http://127.0.0.1:8000/reservas", {
+        const response = await fetch("/reservas", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)

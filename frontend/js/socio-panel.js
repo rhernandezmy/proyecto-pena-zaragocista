@@ -1,4 +1,7 @@
-const API_URL = "http://127.0.0.1:8000"; 
+// URL base inteligente (Híbrida para local y producción en Render)
+const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+    ? "http://127.0.0.1:8000" 
+    : "";
 
 // Variable global para almacenar las solicitudes y permitir ordenarlas
 let solicitudesGlobales = [];

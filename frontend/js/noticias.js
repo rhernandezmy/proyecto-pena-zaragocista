@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const contenedor = document.getElementById('lista-noticias');
 
-    fetch('http://localhost:8000/noticias')
+    fetch('/noticias')
         .then(response => response.json())
         .then(data => {
             contenedor.innerHTML = '';

@@ -1,5 +1,7 @@
-// URL base de tu servidor backend de FastAPI
-const API_URL = "http://127.0.0.1:8000"; 
+// URL base inteligente (Híbrida para local y producción en Render)
+const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+    ? "http://127.0.0.1:8000" 
+    : "";
 
 // Ejecutar automáticamente al cargar la página para dar vida a los formularios y tablas
 document.addEventListener("DOMContentLoaded", () => {

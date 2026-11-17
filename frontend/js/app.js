@@ -4,8 +4,12 @@
  * Gestión dinámica del DOM sin destrucción de elementos estáticos.
  */
 
-// --- CONFIGURACIÓN GLOBAL ---
-const API_BASE_URL = "http://localhost:8000";
+// --- CONFIGURACIÓN GLOBAL HÍBRIDA ---
+// Si la web está en Render u otro dominio público, usa la misma URL del navegador. 
+// Si estás en tu PC (localhost o 127.0.0.1), usa el puerto 8000.
+const API_BASE_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+    ? "http://localhost:8000" 
+    : "";
 
 // --- FUNCIONES AUXILIARES DE CREACIÓN DE NODOS (EVITA INNERHTML DESTRUCTIVO) ---
 

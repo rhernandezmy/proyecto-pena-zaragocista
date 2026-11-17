@@ -1,6 +1,12 @@
 document.addEventListener("DOMContentLoaded", async () => {
     const tbody = document.getElementById("clasificacion-body");
-    const urlBackend = typeof BACKEND_URL !== "undefined" ? BACKEND_URL : "http://localhost:8000";
+    
+    // --- LÓGICA HÍBRIDA INTELIGENTE ---
+    const urlBackend = typeof BACKEND_URL !== "undefined" 
+        ? BACKEND_URL 
+        : (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+            ? "http://localhost:8000" 
+            : "");
 
     try {
         const response = await fetch(`${urlBackend}/clasificacion-zaragoza`);

@@ -1,4 +1,6 @@
-const API_URL = "http://127.0.0.1:8000"; // Puerto de tu FastAPI
+const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+    ? "http://127.0.0.1:8000" 
+    : "";
 
 document.addEventListener("DOMContentLoaded", () => {
     const formSocio = document.getElementById("form-nuevo-socio");

@@ -10,7 +10,7 @@ async function cargarPartner() {
     if (!contenedor) return;
 
     try {
-        const response = await fetch("http://127.0.0.1:8000/patrocinadores");
+        const response = await fetch("/patrocinadores");
         
         if (!response.ok) {
             throw new Error(`Error en el servidor: ${response.status}`);

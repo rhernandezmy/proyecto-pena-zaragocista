@@ -209,7 +209,12 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
-            const urlBackend = typeof BACKEND_URL !== "undefined" ? BACKEND_URL : "http://localhost:8000";
+            // --- LÓGICA HÍBRIDA INTELIGENTE PARA LA PORTADA ---
+            const urlBackend = typeof BACKEND_URL !== "undefined" 
+                ? BACKEND_URL 
+                : (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+                    ? "http://localhost:8000" 
+                    : "");
 
             // 1. SESIÓN DE SOCIO
             const panelAnonimo = document.getElementById("panel-anonimo");
